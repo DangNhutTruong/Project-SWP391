@@ -1,0 +1,40 @@
+import React from 'react';
+import { createBrowserRouter } from 'react-router-dom';
+import Home from '../page/Home';
+import Tools from '../page/Tools';
+
+/**
+ * AppRoutes - Cung cấp cấu hình định tuyến (routing) cho toàn bộ ứng dụng
+ * 
+ * Component này định nghĩa các routes chính sử dụng React Router v7
+ * và liên kết chúng với các component tương ứng.
+ */
+
+// Layout component để bọc nội dung của trang
+const Layout = ({ children }) => (
+  <>
+    {children}
+  </>
+);
+
+// Cấu hình router
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout><Home /></Layout>,
+  },
+  {
+    path: "/home",
+    loader: () => { return window.location.replace('/') },
+  },
+  {
+    path: "/tools",
+    element: <Layout><Tools /></Layout>,
+  },
+  {
+    path: "*",
+    loader: () => { return window.location.replace('/') },
+  }
+]);
+
+export default router;
