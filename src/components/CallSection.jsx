@@ -2,7 +2,7 @@ export default function CallSection() {
   return (
     <section className="call-section">
       <div className="container">
-        <h2>Call Quitline 13 7848</h2>
+        <h2>Call Quitline 0988</h2>
         <div className="support-now">
           <h3>Need support now? Contact Quit</h3>
           <p>There are many ways to connect with us wherever you are in Australia.</p>
