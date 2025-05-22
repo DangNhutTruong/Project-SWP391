@@ -13,7 +13,7 @@ import Register from './page/Register.jsx'; // Import component Register
 import ProtectedRoute from './components/ProtectedRoute.jsx'; // Import ProtectedRoute
 import { AuthProvider } from './context/AuthContext.jsx'; // Import AuthProvider
 import './style.css';
-
+import JourneyStepper from './components/JourneyStepper.jsx';
 /**
  * App - Component chính của ứng dụng
  * 
@@ -51,7 +51,8 @@ const router = createBrowserRouter([
   {
     path: "/home",
     loader: () => { return window.location.replace('/') },
-  },  {
+  },
+  {
     path: "/profile",
     element: <Layout><ProtectedRoute><ProfilePage /></ProtectedRoute></Layout>,
   },
@@ -65,8 +66,9 @@ const router = createBrowserRouter([
   },
   {
     path: "/journey",
-    element: <Layout><ComingSoon title="Hành trình cai thuốc" /></Layout>,
-  },  {
+    element: <Layout><JourneyStepper /></Layout>, // Sử dụng JourneyStepper cho trang Công Cụ
+  },
+  {
     path: "/blog",
     element: <Layout><Blog /></Layout>,
   },
@@ -109,7 +111,7 @@ const router = createBrowserRouter([
   {
     path: "/sitemap",
     element: <Layout><ComingSoon title="Sơ đồ trang" /></Layout>,
-  },  {
+  }, {
     path: "/login",
     element: <Layout><Login /></Layout>,
   },

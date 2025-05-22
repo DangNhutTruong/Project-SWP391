@@ -1,0 +1,729 @@
+.journey-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.stepper-wrapper {
+  background-color: #f8f9fb;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.stepper-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a73e8;
+  margin-bottom: 30px;
+}
+
+.steps-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  position: relative;
+  cursor: default;
+}
+
+.step-item.completed {
+  cursor: pointer;
+}
+
+.step-item.completed:hover .step-circle {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+}
+
+.step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #e4e8ed;
+  color: #757575;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.step-item.active .step-circle {
+  background-color: #4285f4;
+  color: white;
+}
+
+.step-item.completed .step-circle {
+  background-color: #34a853; /* Xanh lá nhạt hơn cho các bước đã hoàn thành */
+  color: white;
+}
+
+.step-name {
+  font-size: 14px;
+  color: #5f6368;
+}
+
+.step-line {
+  position: absolute;
+  height: 3px;
+  background-color: #e4e8ed;
+  top: 18px;
+  width: calc((100% - (36px * 5)) / 4); /* Adjust based on number of steps */
+  z-index: 1;
+  transition: background-color 0.5s ease;
+}
+
+.step-line.active {
+  background-color: #4285f4;
+  background-image: linear-gradient(to right, #4285f4, #34a853);
+}
+
+.stepper-content {
+  background-color: white;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.step-form {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.form-icon {
+  font-size: 24px;
+  margin-right: 10px;
+}
+
+.form-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: #4285f4;
+}
+
+.form-description {
+  color: #5f6368;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #3c4043;
+  font-size: 15px;
+}
+
+.input-group {
+  display: flex;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.input-icon {
+  padding: 12px 15px;
+  background-color: #f1f3f4;
+  display: flex;
+  align-items: center;
+}
+
+.form-input {
+  flex: 1;
+  padding: 12px 15px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 30px;
+}
+
+.btn-next, .btn-submit {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.btn-next:hover, .btn-submit:hover {
+  background-color: #3367d6;
+}
+
+.btn-back {
+  background-color: transparent;
+  border: 1px solid #dadce0;
+  padding: 10px 20px;
+  border-radius: 4px;
+  margin-right: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #5f6368;
+  transition: background-color 0.2s ease;
+}
+
+.btn-back:hover {
+  background-color: #f1f3f4;
+}
+
+.btn-arrow {
+  margin: 0 5px;
+}
+
+/* Step 1: Thói quen */
+.input-tip {
+  font-size: 12px;
+  color: #5f6368;
+  margin-top: 4px;
+}
+
+.stats-summary {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  gap: 15px;
+}
+
+.stats-card {
+  flex: 1;
+  background-color: #f1f3f4;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+}
+
+.stats-card.highlight {
+  background-color: #e8f0fe;
+  border-left: 3px solid #4285f4;
+}
+
+.stats-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a73e8;
+  margin-bottom: 5px;
+}
+
+.stats-label {
+  font-size: 14px;
+  color: #5f6368;
+}
+
+/* Step 2: Mục tiêu */
+.reasons-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.reason-option {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reason-option:hover {
+  border-color: #4285f4;
+  background-color: #f8f9fa;
+}
+
+.reason-option input[type="radio"] {
+  margin-right: 10px;
+}
+
+.reason-content {
+  display: flex;
+  align-items: center;
+}
+
+.reason-icon {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.motivational-quote {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-left: 3px solid #4285f4;
+  font-style: italic;
+  color: #3c4043;
+}
+
+/* Step 3: Quá trình */
+.plan-description {
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.timeline-container {
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.timeline-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  background-color: #f1f3f4;
+  padding: 15px;
+  font-weight: 500;
+  color: #3c4043;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  padding: 12px 15px;
+  border-top: 1px solid #dadce0;
+  align-items: center;
+}
+
+.timeline-week {
+  font-weight: 500;
+}
+
+.timeline-amount {
+  color: #3c4043;
+}
+
+.timeline-progress {
+  background-color: #f1f3f4;
+  height: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #4285f4;
+  border-radius: 10px;
+}
+
+.timeline-item.complete .timeline-amount {
+  color: #0b8043;
+  font-weight: 500;
+}
+
+.timeline-item.complete .progress-bar {
+  background-color: #0b8043;
+}
+
+.tips-container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 25px;
+}
+
+.tips-title {
+  font-weight: 500;
+  margin-bottom: 15px;
+  color: #3c4043;
+}
+
+.tips-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.tips-list li {
+  margin-bottom: 10px;
+  position: relative;
+  padding-left: 25px;
+  line-height: 1.5;
+}
+
+.tips-list li:before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #4285f4;
+  font-weight: bold;
+}
+
+/* Step 4: Lợi ích */
+.benefits-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.benefit-category {
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background-color: #f1f3f4;
+  border-bottom: 1px solid #dadce0;
+}
+
+.category-icon {
+  font-size: 24px;
+  margin-right: 15px;
+}
+
+.category-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #3c4043;
+  margin: 0;
+}
+
+.savings-calculator {
+  padding: 20px;
+}
+
+.savings-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px dashed #dadce0;
+}
+
+.savings-item.total {
+  font-weight: 600;
+  color: #1a73e8;
+  border-top: 2px solid #dadce0;
+  border-bottom: none;
+  margin-top: 10px;
+  padding-top: 20px;
+}
+
+.savings-suggestion {
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+}
+
+.savings-suggestion p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.savings-suggestion ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.health-timeline {
+  padding: 20px;
+}
+
+.health-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.health-time {
+  min-width: 120px;
+  font-weight: 500;
+  color: #1a73e8;
+}
+
+.health-connector {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #e8f0fe;
+  border: 2px solid #4285f4;
+  margin: 0 15px;
+  position: relative;
+}
+
+.health-connector:before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  bottom: -30px;
+  width: 2px;
+  background-color: #4285f4;
+  transform: translateX(-50%);
+}
+
+.health-item:last-child .health-connector:before {
+  display: none;
+}
+
+.health-benefit {
+  flex: 1;
+  padding-top: 2px;
+}
+
+.other-benefits {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
+}
+
+.benefit-icon {
+  font-size: 24px;
+  margin-right: 15px;
+}
+
+.benefit-text h4 {
+  margin: 0 0 5px 0;
+  color: #3c4043;
+}
+
+.benefit-text p {
+  margin: 0;
+  color: #5f6368;
+  font-size: 14px;
+}
+
+/* Step 5: Xác nhận */
+.summary-container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.summary-title {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #1a73e8;
+  font-size: 18px;
+  text-align: center;
+}
+
+.summary-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 16px;
+  color: #3c4043;
+  border-bottom: 1px solid #e8eaed;
+  padding-bottom: 10px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.summary-item {
+  padding: 10px;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: #5f6368;
+  margin-bottom: 5px;
+}
+
+.summary-value {
+  font-weight: 500;
+  color: #3c4043;
+}
+
+.summary-value.reason {
+  color: #1a73e8;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.commitment-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.commitment-section h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #3c4043;
+}
+
+.commitment-text {
+  background-color: #f1f3f4;
+  padding: 15px;
+  border-radius: 4px;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+.reminder-section h4 {
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.reminder-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.reminder-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.reminder-option .checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #dadce0;
+  border-radius: 4px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reminder-option input {
+  display: none;
+}
+
+.reminder-option input:checked + .checkmark {
+  background-color: #4285f4;
+  border-color: #4285f4;
+}
+
+.reminder-option input:checked + .checkmark:after {
+  content: "✓";
+  color: white;
+}
+
+.congratulations-message {
+  display: flex;
+  align-items: center;
+  background-color: #e8f0fe;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 30px 0;
+}
+
+.congrats-icon {
+  font-size: 40px;
+  margin-right: 20px;
+}
+
+.congrats-text h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #1a73e8;
+}
+
+.congrats-text p {
+  margin: 0;
+  color: #3c4043;
+}
+
+.support-options h4 {
+  margin-bottom: 15px;
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.support-item {
+  background-color: white;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.support-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.support-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.support-title {
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: #3c4043;
+}
+
+.support-desc {
+  font-size: 12px;
+  color: #5f6368;
+}
+
+.stepper-footer {
+  text-align: center;
+  color: #5f6368;
+  font-size: 12px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
