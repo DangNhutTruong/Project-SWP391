@@ -1,12 +1,11 @@
 import './style.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Route } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Nav from './components/Nav.jsx';
 import Footer from './components/Footer.jsx';
 import ChatButton from './components/ChatButton.jsx';
 import Home from './page/Home.jsx';
-import Tools from './page/Tools.jsx';
+import ProfilePage from './page/Tools.jsx'; // Đổi tên từ Tools sang ProfilePage
 import './style.css';
 
 /**
@@ -29,6 +28,14 @@ const Layout = ({ children }) => (
   </>
 );
 
+// Placeholder component cho các trang đang phát triển
+const ComingSoon = ({ title }) => (
+  <div className="container py-20">
+    <h1 className="text-4xl font-bold text-center">{title}</h1>
+    <p className="text-center mt-4">Trang này đang được phát triển</p>
+  </div>
+);
+
 // Cấu hình router sử dụng React Router v7
 const router = createBrowserRouter([
   {
@@ -38,30 +45,77 @@ const router = createBrowserRouter([
   {
     path: "/home",
     loader: () => { return window.location.replace('/') },
+  },  {
+    path: "/profile",
+    element: <Layout><ProfilePage /></Layout>,
   },
   {
-    path: "/tools",
-    element: <Layout><Tools /></Layout>,
+    path: "/about",
+    element: <Layout><ComingSoon title="Về chúng tôi" /></Layout>,
   },
   {
-    path: "/reasons",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Tôi đến đây vì...</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    path: "/journey",
+    element: <Layout><ComingSoon title="Hành trình cai thuốc" /></Layout>,
+  },
+  {
+    path: "/blog",
+    element: <Layout><ComingSoon title="Blog kinh nghiệm" /></Layout>,
+  },
+  {
+    path: "/testimonials",
+    element: <Layout><ComingSoon title="Câu chuyện thành công" /></Layout>,
+  },
+  {
+    path: "/contact",
+    element: <Layout><ComingSoon title="Liên hệ" /></Layout>,
   },
   {
     path: "/support",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Hỗ Trợ</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    element: <Layout><ComingSoon title="Hỗ trợ" /></Layout>,
   },
   {
-    path: "/resources",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Tài Nguyên</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    path: "/team",
+    element: <Layout><ComingSoon title="Đội ngũ" /></Layout>,
   },
   {
-    path: "/health-professionals",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Dành Cho Nhân Viên Y Tế</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    path: "/partners",
+    element: <Layout><ComingSoon title="Đối tác" /></Layout>,
   },
   {
-    path: "/communities",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Dành Cho Cộng Đồng</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    path: "/community",
+    element: <Layout><ComingSoon title="Cộng đồng hỗ trợ" /></Layout>,
+  },
+  {
+    path: "/feedback",
+    element: <Layout><ComingSoon title="Góp ý" /></Layout>,
+  },
+  {
+    path: "/privacy",
+    element: <Layout><ComingSoon title="Chính sách bảo mật" /></Layout>,
+  },
+  {
+    path: "/terms",
+    element: <Layout><ComingSoon title="Điều khoản sử dụng" /></Layout>,
+  },
+  {
+    path: "/sitemap",
+    element: <Layout><ComingSoon title="Sơ đồ trang" /></Layout>,
+  },
+  {
+    path: "/login",
+    element: <Layout><ComingSoon title="Đăng nhập" /></Layout>,
+  },
+  {
+    path: "/signup",
+    element: <Layout><ComingSoon title="Đăng ký" /></Layout>,
+  },
+  {
+    path: "/signup/premium",
+    element: <Layout><ComingSoon title="Đăng ký gói Premium" /></Layout>,
+  },
+  {
+    path: "/signup/pro",
+    element: <Layout><ComingSoon title="Đăng ký gói Pro" /></Layout>,
   },
   {
     path: "*",

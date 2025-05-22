@@ -1,12 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Hero from '../components/Hero.jsx';
-import ScrollDown from '../components/ScrollDown.jsx';
-import CallSection from '../components/CallSection.jsx';
-import FocusSection from '../components/FocusSection.jsx';
-import ToolsSection from '../components/ToolsSection.jsx';
-import StartSection from '../components/StartSection.jsx';
-import ExploreSection from '../components/ExploreSection.jsx';
+import FeatureSection from '../components/FeatureSection.jsx';
+import BlogSection from '../components/BlogSection.jsx';
+import PricingSection from '../components/PricingSection.jsx';
 import BackToTop from '../components/BackToTop.jsx';
 
 /**
@@ -19,12 +16,9 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <ScrollDown />
-      <CallSection />
-      <FocusSection />
-      <ToolsSection />
-      <StartSection />
-      <ExploreSection />
+      <FeatureSection />
+      <BlogSection />
+      <PricingSection />
       <BackToTop />
     </>
   );
