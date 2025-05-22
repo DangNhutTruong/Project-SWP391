@@ -6,7 +6,7 @@ import Footer from './components/Footer.jsx';
 import ChatButton from './components/ChatButton.jsx';
 import Home from './page/Home.jsx';
 import ProfilePage from './page/Tools.jsx'; // Đổi tên từ Tools sang ProfilePage
-import './style.css';
+import JourneyStepper from './components/JourneyStepper.jsx';
 
 /**
  * App - Component chính của ứng dụng
@@ -45,7 +45,8 @@ const router = createBrowserRouter([
   {
     path: "/home",
     loader: () => { return window.location.replace('/') },
-  },  {
+  },  
+  {
     path: "/profile",
     element: <Layout><ProfilePage /></Layout>,
   },
@@ -55,7 +56,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/journey",
-    element: <Layout><ComingSoon title="Hành trình cai thuốc" /></Layout>,
+    element: <Layout><JourneyStepper /></Layout>, // Sử dụng JourneyStepper cho trang Công Cụ
   },
   {
     path: "/blog",
