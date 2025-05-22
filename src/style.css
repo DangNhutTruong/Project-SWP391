@@ -195,6 +195,25 @@ nav {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+.btn-outline-blue {
+  background-color: transparent;
+  color: #2570e8;
+  border: 2px solid #2570e8;
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.btn-outline-blue:hover {
+  background-color: #2570e8;
+  color: #fff;
+}
+
 /* Button styling */
 .button-list {
   margin-top: 30px;
@@ -611,6 +630,12 @@ footer {
 
 .read-more:hover {
   text-decoration: underline;
+}
+
+/* Thêm CSS cho view-all-blogs */
+.view-all-blogs {
+  text-align: center;
+  margin-top: 40px;
 }
 
 /* Pricing Section Styles */

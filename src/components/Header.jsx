@@ -1,6 +1,28 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import LoginModal from './LoginModal';
+import { useAuth } from '../context/AuthContext';
+import './Header.css';
 
 export default function Header() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+
+  const handleLoginClick = (e) => {
+    e.preventDefault();
+    setIsLoginModalOpen(true);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsUserMenuOpen(false);
+  };
+
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
   return (
     <header className="nosmoke-header">
       <div className="container">
@@ -14,7 +36,35 @@ export default function Header() {
             <i className="fas fa-headset"></i> Hỗ trợ cai thuốc: 1800-xxxx
           </Link>
           <button className="search-btn"><i className="fas fa-search"></i></button>
-          <Link to="/login" className="login-btn">Đăng nhập</Link>
+          
+          {user ? (
+            <div className="user-menu-container">
+              <button className="user-menu-button" onClick={toggleUserMenu}>
+                <span className="user-initial">{user.name.charAt(0)}</span>
+                <span className="user-name">{user.name}</span>
+              </button>
+              
+              {isUserMenuOpen && (
+                <div className="user-dropdown-menu">
+                  <Link to="/profile" className="dropdown-item">
+                    <i className="fas fa-user"></i> Hồ sơ cá nhân
+                  </Link>
+                  <Link to="/settings" className="dropdown-item">
+                    <i className="fas fa-cog"></i> Cài đặt
+                  </Link>
+                  <button onClick={handleLogout} className="dropdown-item logout-btn">
+                    <i className="fas fa-sign-out-alt"></i> Đăng xuất
+                  </button>
+                </div>
+              )}            </div>
+          ) : (
+            <>
+              <a href="#" className="login-btn" onClick={handleLoginClick}>Đăng nhập</a>
+              <Link to="/signup" className="signup-btn">Đăng ký</Link>
+            </>
+          )}
+          
+          <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
         </div>
       </div>
     </header>

@@ -33,8 +33,7 @@ export default function BlogSection() {
   ];
 
   return (
-    <section className="blog-section">
-      <div className="container">
+    <section className="blog-section">      <div className="container">
         <h2>Blog chia sẻ kinh nghiệm</h2>
         <p className="blog-subtitle">Khám phá những bài viết hữu ích từ cộng đồng người cai thuốc thành công</p>
 
@@ -57,6 +56,12 @@ export default function BlogSection() {
               </div>
             </div>
           ))}
+        </div>
+        
+        <div className="view-all-blogs">
+          <Link to="/blog" className="btn btn-outline-blue">
+            Xem tất cả bài viết <i className="fas fa-arrow-right"></i>
+          </Link>
         </div>
       </div>
     </section>

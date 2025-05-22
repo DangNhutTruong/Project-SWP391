@@ -5,7 +5,13 @@ import Nav from './components/Nav.jsx';
 import Footer from './components/Footer.jsx';
 import ChatButton from './components/ChatButton.jsx';
 import Home from './page/Home.jsx';
-import ProfilePage from './page/Tools.jsx'; // Đổi tên từ Tools sang ProfilePage
+import ProfilePage from './page/Profile.jsx'; // Đổi tên từ Tools sang ProfilePage
+import TestPage from './page/TestPage.jsx'; // Thêm trang test đơn giản
+import Blog from './page/Blog.jsx'; // Import component Blog
+import Login from './page/Login.jsx'; // Import component Login
+import Register from './page/Register.jsx'; // Import component Register
+import ProtectedRoute from './components/ProtectedRoute.jsx'; // Import ProtectedRoute
+import { AuthProvider } from './context/AuthContext.jsx'; // Import AuthProvider
 import './style.css';
 
 /**
@@ -47,7 +53,11 @@ const router = createBrowserRouter([
     loader: () => { return window.location.replace('/') },
   },  {
     path: "/profile",
-    element: <Layout><ProfilePage /></Layout>,
+    element: <Layout><ProtectedRoute><ProfilePage /></ProtectedRoute></Layout>,
+  },
+  {
+    path: "/test",
+    element: <Layout><TestPage /></Layout>,
   },
   {
     path: "/about",
@@ -56,10 +66,9 @@ const router = createBrowserRouter([
   {
     path: "/journey",
     element: <Layout><ComingSoon title="Hành trình cai thuốc" /></Layout>,
-  },
-  {
+  },  {
     path: "/blog",
-    element: <Layout><ComingSoon title="Blog kinh nghiệm" /></Layout>,
+    element: <Layout><Blog /></Layout>,
   },
   {
     path: "/testimonials",
@@ -100,14 +109,13 @@ const router = createBrowserRouter([
   {
     path: "/sitemap",
     element: <Layout><ComingSoon title="Sơ đồ trang" /></Layout>,
-  },
-  {
+  },  {
     path: "/login",
-    element: <Layout><ComingSoon title="Đăng nhập" /></Layout>,
+    element: <Layout><Login /></Layout>,
   },
   {
     path: "/signup",
-    element: <Layout><ComingSoon title="Đăng ký" /></Layout>,
+    element: <Layout><Register /></Layout>,
   },
   {
     path: "/signup/premium",
@@ -125,6 +133,8 @@ const router = createBrowserRouter([
 
 export default function App() {
   return (
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }
