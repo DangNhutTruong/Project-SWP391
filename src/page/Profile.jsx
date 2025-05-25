@@ -1,8 +1,87 @@
 import React, { useState } from 'react';
-import { FaUserAlt, FaChartLine, FaCalendarAlt, FaHeartbeat, FaTrophy, FaComment, FaHeart, FaCheckCircle, FaExclamationCircle, FaCog, FaBell } from 'react-icons/fa';
+import { FaUserAlt, FaChartLine, FaCalendarAlt, FaHeartbeat, FaTrophy, FaComment, FaHeart, FaCheckCircle, FaExclamationCircle, FaCog, FaBell, FaTimes } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import './Profile.css';
 import { useAuth } from '../context/AuthContext';
+
+// Component Modal chỉnh sửa kế hoạch
+function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
+  const [planData, setPlanData] = useState({
+    strategy: currentPlan.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
+    startDate: currentPlan.startDate ? new Date(currentPlan.startDate.split('/').reverse().join('-')).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    goal: currentPlan.goal || "Cai thuốc hoàn toàn và duy trì lâu dài"
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setPlanData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(planData);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h2>Điều chỉnh kế hoạch cai thuốc</h2>
+          <button className="close-button" onClick={onClose}><FaTimes /></button>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Phương pháp cai thuốc</label>
+            <select 
+              name="strategy" 
+              value={planData.strategy}
+              onChange={handleChange}
+              className="form-control"
+            >
+              <option value="Cai thuốc hoàn toàn và duy trì lâu dài">Cai thuốc hoàn toàn</option>
+              <option value="Giảm dần số điếu thuốc">Giảm dần số điếu thuốc</option>
+              <option value="Sử dụng sản phẩm thay thế nicotine">Sử dụng sản phẩm thay thế nicotine</option>
+            </select>
+          </div>
+          
+          <div className="form-group">
+            <label>Ngày bắt đầu</label>
+            <input 
+              type="date" 
+              name="startDate" 
+              value={planData.startDate}
+              onChange={handleChange}
+              className="form-control"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Mục tiêu</label>
+            <textarea 
+              name="goal" 
+              value={planData.goal}
+              onChange={handleChange}
+              rows="3"
+              className="form-control"
+            ></textarea>
+          </div>
+          
+          <div className="form-actions">
+            <button type="button" className="cancel-btn" onClick={onClose}>Hủy</button>
+            <button type="submit" className="save-btn">Lưu thay đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 // Component theo dõi tiến trình với biểu đồ giả
 function ProgressTracker() {
@@ -314,6 +393,7 @@ export default function ProfilePage() {
   const [todayMood, setTodayMood] = useState('');
   const [smokedToday, setSmokedToday] = useState(null);
   const [todaySymptoms, setTodaySymptoms] = useState([]);
+  const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const { user, logout } = useAuth();
 
   // Tính toán các giá trị
@@ -394,6 +474,12 @@ export default function ProfilePage() {
     alert('Đã lưu cập nhật của bạn!');
   };
 
+  // Xử lý lưu kế hoạch
+  const handleSavePlan = (planData) => {
+    console.log('Dữ liệu kế hoạch mới:', planData);
+    alert('Đã lưu kế hoạch của bạn!');
+  };
+
   return (
     <div className="profile-container">
       {/* Sidebar */}
@@ -438,7 +524,7 @@ export default function ProfilePage() {
           <div className="profile-overview">
             <div className="section-header">
               <h1>Hồ sơ cá nhân</h1>
-              <button className="update-btn">Cập nhật</button>
+              <button className="update-btn" onClick={() => setIsPlanEditOpen(true)}>Cập nhật</button>
             </div>
             
             <div className="overview-stats">
@@ -549,7 +635,7 @@ export default function ProfilePage() {
                     ))}
                   </div>
                   
-                  <button className="edit-plan-btn">Điều chỉnh kế hoạch</button>
+                  <button className="edit-plan-btn" onClick={() => setIsPlanEditOpen(true)}>Điều chỉnh kế hoạch</button>
                 </div>
               </div>
             </div>
@@ -633,6 +719,18 @@ export default function ProfilePage() {
             <ProgressTracker />
           </div>
         )}
+        
+        {/* Modal chỉnh sửa kế hoạch */}
+        <PlanEditModal 
+          isOpen={isPlanEditOpen} 
+          onClose={() => setIsPlanEditOpen(false)} 
+          currentPlan={{
+            strategy: userData.planStrategy,
+            startDate: userData.startDate,
+            goal: userData.planGoal
+          }}
+          onSave={handleSavePlan}
+        />
       </div>
     </div>
   );
