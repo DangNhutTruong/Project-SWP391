@@ -8,7 +8,7 @@ export default function Blog() {
   const blogPosts = [
     {
       id: 1,
-      image: "/image/articles/a.jpg",
+      image: "/image/articles/OIP.jpg",
       title: "7 ngày đầu không thuốc lá – Làm thế nào để vượt qua?",
       excerpt:
         "Tuần đầu tiên luôn là giai đoạn khó khăn nhất. Hãy tìm hiểu những phương pháp hiệu quả để vượt qua cơn thèm thuốc và duy trì quyết tâm cai thuốc lá của bạn.",
@@ -22,7 +22,7 @@ export default function Blog() {
     },
     {
       id: 2,
-      image: "/image/articles/b.jpg",
+      image: "/image/articles/th.jpg",
       title: "Chia sẻ từ một người đã bỏ thuốc 1 năm",
       excerpt:
         "Câu chuyện cảm động về hành trình 365 ngày không thuốc lá và những thay đổi tích cực trong cuộc sống, sức khỏe và mối quan hệ của một người đã thành công.",
@@ -50,7 +50,7 @@ export default function Blog() {
     },
     {
       id: 4,
-      image: "/image/articles/a.jpg",
+      image: "/image/articles/th.jpg",
       title: "Tác hại của thuốc lá điện tử - Sự thật bạn nên biết",
       excerpt:
         "Nhiều người nghĩ rằng thuốc lá điện tử an toàn hơn thuốc lá thông thường. Hãy cùng tìm hiểu sự thật về những tác hại của chúng.",
@@ -78,7 +78,7 @@ export default function Blog() {
     },
     {
       id: 6,
-      image: "/image/articles/b.jpg",
+      image: "/image/articles/th.jpg",
       title: "Hỗ trợ người thân cai thuốc - Điều bạn nên và không nên làm",
       excerpt:
         "Khi người thân đang cố gắng cai thuốc lá, sự hỗ trợ từ gia đình rất quan trọng. Bài viết này sẽ giúp bạn biết cách đồng hành hiệu quả.",
@@ -92,7 +92,7 @@ export default function Blog() {
     },
     {
       id: 7,
-      image: "/image/articles/a.jpg",
+      image: "/image/articles/th.jpg",
       title: "Ứng dụng thiền và yoga trong quá trình cai thuốc lá",
       excerpt:
         "Thiền và yoga không chỉ giúp giảm stress mà còn hỗ trợ đáng kể trong việc kiểm soát cơn thèm thuốc. Tìm hiểu cách áp dụng hiệu quả.",
