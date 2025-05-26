@@ -736,6 +736,29 @@
   animation: fadeIn 0.6s ease-in-out;
 }
 
+.back-to-plan {
+  margin-top: 30px;
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px dashed #ccc;
+}
+
+.btn-back-to-summary {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-back-to-summary:hover {
+  background-color: #3d9c40;
+}
+
 .completion-checkmark-container {
   margin: 0 auto 25px;
   width: 120px;
