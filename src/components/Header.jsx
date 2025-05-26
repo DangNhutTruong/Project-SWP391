@@ -33,17 +33,17 @@ export default function Header() {
         </div>
         <div className="nav-actions">
           <Link to="/support" className="phone-link">
-            <i className="fas fa-headset"></i> Hỗ trợ cai thuốc: 1800-xxxx
+            <i className="fas fa-headset"></i> Liên Hệ: 1800-xxxx
           </Link>
           <button className="search-btn"><i className="fas fa-search"></i></button>
-          
+
           {user ? (
             <div className="user-menu-container">
               <button className="user-menu-button" onClick={toggleUserMenu}>
                 <span className="user-initial">{user.name.charAt(0)}</span>
                 <span className="user-name">{user.name}</span>
               </button>
-              
+
               {isUserMenuOpen && (
                 <div className="user-dropdown-menu">
                   <Link to="/profile" className="dropdown-item">
@@ -63,7 +63,7 @@ export default function Header() {
               <Link to="/signup" className="signup-btn">Đăng ký</Link>
             </>
           )}
-          
+
           <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
         </div>
       </div>
