@@ -4,6 +4,7 @@ import '../styles/JourneyStepper.css';
 export default function JourneyStepper() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionScreen, setShowCompletionScreen] = useState(false);
   const [formData, setFormData] = useState({
     cigarettesPerDay: 10,
     packPrice: 25000,
@@ -34,6 +35,10 @@ export default function JourneyStepper() {
       animateProgressBar(currentStep - 1);
     }
   };
+    const handleBackToSummary = () => {
+    setCurrentStep(5);  // Always go to step 5 (confirmation step)
+    setShowCompletionScreen(true);
+  };
   
   // Function to animate the progress bar when changing steps
   const animateProgressBar = (newStep) => {
@@ -63,8 +68,11 @@ export default function JourneyStepper() {
       document.querySelectorAll('.step-item').forEach((item) => {
         item.classList.add('completed');
       });
-      
-      // Set completion state after a short delay
+        // Set completion state after a short delay
+      setTimeout(() => {
+        setIsCompleted(true);
+        setShowCompletionScreen(true);
+      }, 1000);
       setTimeout(() => {
         setIsCompleted(true);
       }, 1000);
@@ -121,7 +129,6 @@ export default function JourneyStepper() {
 
   const reductionPlan = generateReductionPlan();
 
-
   return (
     <div className="journey-container">
       <div className="stepper-wrapper">
@@ -129,13 +136,16 @@ export default function JourneyStepper() {
           {/* Stepper header */}
         <div className="steps-container">
           {steps.map((step, index) => (
-            <React.Fragment key={step.id}>              <div 
-                className={`step-item ${currentStep >= step.id ? 'active' : ''} ${currentStep > step.id ? 'completed' : ''}`}
+            <React.Fragment key={step.id}>              <div                className={`step-item ${currentStep >= step.id ? 'active' : ''} ${currentStep > step.id || isCompleted ? 'completed' : ''}`}
                 onClick={() => {
-                  if (step.id <= currentStep) {
+                  if (step.id <= currentStep || isCompleted) {
                     // Add animation for progress bar and step changes
                     setCurrentStep(step.id);
-                    animateProgressBar(step.id);
+                    
+                    // Nếu đã hoàn thành, có thể xem lại nhưng không đổi trạng thái hoàn thành
+                    if (!isCompleted) {
+                      animateProgressBar(step.id);
+                    }
                     
                     // Add visual feedback on click
                     const circle = document.querySelector(`.step-item:nth-child(${step.id * 2 - 1}) .step-circle`);
@@ -143,24 +153,27 @@ export default function JourneyStepper() {
                       circle.classList.add('pulse');
                       setTimeout(() => circle.classList.remove('pulse'), 500);
                     }
+                    
+                    // Tạm thời ẩn màn hình hoàn thành để xem chi tiết các bước
+                    if (isCompleted) {
+                      setShowCompletionScreen(false);
+                    }
                   }
                 }}
               >
                 <div className="step-circle">
-                  {currentStep > step.id ? '✓' : step.id}
+                  {currentStep > step.id || isCompleted ? '✓' : step.id}
                 </div>
                 <div className="step-name">{step.name}</div>
               </div>
               {index < steps.length - 1 && (
-                <div className={`step-line ${currentStep > index + 1 ? 'active' : ''}`}></div>
+                <div className={`step-line ${currentStep > index + 1 || isCompleted ? 'active' : ''}`}></div>
               )}
             </React.Fragment>
           ))}
-        </div>
-        
-        {/* Form content */}
+        </div>        {/* Form content */}
         <div className="stepper-content">
-          {isCompleted ? (
+          {isCompleted && showCompletionScreen ? (
             <div className="completion-screen">
               <div className="completion-checkmark-container">
                 <div className="completion-checkmark">✓</div>
@@ -224,6 +237,9 @@ export default function JourneyStepper() {
                 <blockquote>
                   "Hành trình ngàn dặm bắt đầu từ một bước chân. Hôm nay bạn đã bước những bước đầu tiên để hướng tới cuộc sống khỏe mạnh hơn."
                 </blockquote>
+              </div>
+                <div className="back-to-plan">
+                <p>Bạn có thể nhấn vào các bước phía trên để xem lại thông tin chi tiết mỗi bước trong kế hoạch.</p>
               </div>
             </div>
           ) : (
@@ -295,12 +311,16 @@ export default function JourneyStepper() {
                       <div className="stats-label">Chi phí mỗi năm</div>
                     </div>
                   </div>
-                  
-                  <div className="form-actions">
-                    <button className="btn-next" onClick={handleContinue}>
-                      Tiếp tục <span className="btn-arrow">→</span>
-                    </button>
-                  </div>
+                        <div className="form-actions">                {isCompleted ? (
+                  <button className="btn-back-to-summary" onClick={handleBackToSummary}>
+                    Xem màn hình hoàn thành
+                  </button>
+                ) : (
+                  <button className="btn-next" onClick={handleContinue}>
+                    Tiếp tục <span className="btn-arrow">→</span>
+                  </button>
+                )}
+              </div>
                 </div>
               )}
               
@@ -698,15 +718,19 @@ export default function JourneyStepper() {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="form-actions">
-                    <button className="btn-back" onClick={handleBack}>
-                      <span className="btn-arrow">←</span> Quay lại
-                    </button>
-                    <button className="btn-submit" onClick={handleSubmit}>
-                      Hoàn thành kế hoạch
-                    </button>
-                  </div>
+                        <div className="form-actions">                <button className="btn-back" onClick={handleBack}>
+                  <span className="btn-arrow">←</span> Quay lại
+                </button>
+                {isCompleted ? (
+                  <button className="btn-back-to-summary" onClick={handleBackToSummary}>
+                    Xem màn hình hoàn thành
+                  </button>
+                ) : (
+                  <button className="btn-submit" onClick={handleSubmit}>
+                    Hoàn thành kế hoạch
+                  </button>
+                )}
+              </div>
                 </div>
               )}
             </>
