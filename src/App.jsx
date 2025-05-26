@@ -5,6 +5,7 @@ import Header from './components/Header.jsx';
 import Nav from './components/Nav.jsx';
 import Footer from './components/Footer.jsx';
 import ChatButton from './components/ChatButton.jsx';
+import BackToTop from './components/BackToTop.jsx';
 import Home from './page/Home.jsx';
 import Tools from './page/Tools.jsx';
 import './style.css';
@@ -26,6 +27,7 @@ const Layout = ({ children }) => (
     </main>
     <Footer />
     <ChatButton />
+    <BackToTop />
   </>
 );
 
@@ -69,8 +71,43 @@ const router = createBrowserRouter([
   }
 ]);
 
+// Simple BackToTopButton component nếu thành phần kia không hoạt động
+const SimpleBackToTop = () => {
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  return (
+    <button
+      onClick={scrollToTop}
+      style={{
+        position: 'fixed',
+        bottom: '30px',
+        right: '30px',
+        width: '50px',
+        height: '50px',
+        backgroundColor: 'red',
+        color: 'white',
+        borderRadius: '50%',
+        border: 'none',
+        fontSize: '20px',
+        cursor: 'pointer',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
+        zIndex: 9999
+      }}
+    >
+      ↑
+    </button>
+  );
+};
+
 export default function App() {
   return (
+<<<<<<< Updated upstream
     <RouterProvider router={router} />
+=======
+    <AuthProvider>
+      <RouterProvider router={router} />
+      <SimpleBackToTop /> {/* Thêm nút back-to-top trực tiếp vào App */}
+    </AuthProvider>
+>>>>>>> Stashed changes
   );
 }
