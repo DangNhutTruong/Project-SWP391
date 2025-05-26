@@ -22,7 +22,7 @@ export default function Blog() {
     },
     {
       id: 2,
-      image: "/image/articles/th.jpg",
+      image: "/image/articles/r.jpg",
       title: "Chia sẻ từ một người đã bỏ thuốc 1 năm",
       excerpt:
         "Câu chuyện cảm động về hành trình 365 ngày không thuốc lá và những thay đổi tích cực trong cuộc sống, sức khỏe và mối quan hệ của một người đã thành công.",
@@ -64,7 +64,7 @@ export default function Blog() {
     },
     {
       id: 5,
-      image: "/image/hero/quit-smoking-2.png",
+      image: "/image/articles/d.jpg",
       title: "Lợi ích sức khỏe khi bỏ thuốc lá - Từng ngày một",
       excerpt:
         "Cơ thể bạn bắt đầu hồi phục ngay từ 20 phút đầu tiên sau khi bỏ thuốc lá. Hãy xem những thay đổi tích cực qua từng mốc thời gian.",
@@ -78,7 +78,7 @@ export default function Blog() {
     },
     {
       id: 6,
-      image: "/image/articles/th.jpg",
+      image: "/image/articles/c.jpg",
       title: "Hỗ trợ người thân cai thuốc - Điều bạn nên và không nên làm",
       excerpt:
         "Khi người thân đang cố gắng cai thuốc lá, sự hỗ trợ từ gia đình rất quan trọng. Bài viết này sẽ giúp bạn biết cách đồng hành hiệu quả.",
@@ -92,7 +92,7 @@ export default function Blog() {
     },
     {
       id: 7,
-      image: "/image/articles/th.jpg",
+      image: "/image/articles/e.jpg",
       title: "Ứng dụng thiền và yoga trong quá trình cai thuốc lá",
       excerpt:
         "Thiền và yoga không chỉ giúp giảm stress mà còn hỗ trợ đáng kể trong việc kiểm soát cơn thèm thuốc. Tìm hiểu cách áp dụng hiệu quả.",
