@@ -4,7 +4,6 @@ import Hero from '../components/Hero.jsx';
 import FeatureSection from '../components/FeatureSection.jsx';
 import BlogSection from '../components/BlogSection.jsx';
 import PricingSection from '../components/PricingSection.jsx';
-import BackToTop from '../components/BackToTop.jsx';
 
 /**
  * Home - Trang chủ của ứng dụng
@@ -19,7 +18,6 @@ export default function Home() {
       <FeatureSection />
       <BlogSection />
       <PricingSection />
-      <BackToTop />
     </>
   );
 }
