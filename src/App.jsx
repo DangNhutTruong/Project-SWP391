@@ -15,6 +15,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'; // Import Protecte
 import { AuthProvider } from './context/AuthContext.jsx'; // Import AuthProvider
 import './style.css';
 import JourneyStepper from './components/JourneyStepper.jsx';
+import Notification from './page/Notification.jsx'; // Import component Notification
 /**
  * App - Component chính của ứng dụng
  * 
@@ -128,6 +129,10 @@ const router = createBrowserRouter([
   {
     path: "/signup/pro",
     element: <Layout><ComingSoon title="Đăng ký gói Pro" /></Layout>,
+  },
+  {
+    path: "/notifications",
+    element: <Layout><Notification /></Layout>, // Đường dẫn đến trang thông báo
   },
   {
     path: "*",

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaUserAlt, FaChartLine, FaCalendarAlt, FaHeartbeat, FaTrophy, FaComment, FaHeart, FaCheckCircle, FaExclamationCircle, FaCog, FaBell, FaTimes } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Profile.css';
 import { useAuth } from '../context/AuthContext';
 
@@ -392,7 +392,8 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('profile');
   const [todayMood, setTodayMood] = useState('');
   const [smokedToday, setSmokedToday] = useState(null);
-  const [todaySymptoms, setTodaySymptoms] = useState([]);  const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
+  const [todaySymptoms, setTodaySymptoms] = useState([]);  
+  const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const [settings, setSettings] = useState({
     emailNotifications: true,
     pushNotifications: true,
@@ -402,6 +403,10 @@ export default function ProfilePage() {
     privacy: 'public'
   });
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  
+  // Add notification count state
+  const [notificationCount, setNotificationCount] = useState(3);
 
   // Tính toán các giá trị
   const calculateSavings = () => {
@@ -528,8 +533,10 @@ export default function ProfilePage() {
           </Link>
           <Link to="#" className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
             <FaCog /> Cài đặt
-          </Link>          <Link to="#" className={`nav-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>
-            <FaBell /> Nhận thông báo
+          </Link>
+          <Link to="/notifications" className="nav-item notification-nav-item">
+            <FaBell /> Thông báo
+            {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
           </Link>
           <button onClick={logout} className="nav-item logout-btn">
             <i className="fas fa-sign-out-alt"></i> Đăng xuất
