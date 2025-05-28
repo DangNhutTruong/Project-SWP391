@@ -498,6 +498,9 @@ footer {
   color: #333;
   font-size: 0.9rem;
   transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .nosmoke-nav .main-menu li.active a {
@@ -508,6 +511,11 @@ footer {
 
 .nosmoke-nav .main-menu a:hover {
   color: #2570e8;
+}
+
+.nosmoke-nav .nav-icon {
+  font-size: 1rem;
+  margin-right: 4px;
 }
 
 /* Feature Section Styles */

@@ -7,6 +7,7 @@ import ChatButton from './components/ChatButton.jsx';
 import BackToTop from './components/BackToTop.jsx';
 import Home from './page/Home.jsx';
 import ProfilePage from './page/Profile.jsx'; // Đổi tên từ Tools sang ProfilePage
+import ProgressPage from './page/Progress.jsx'; // Import component Progress
 import TestPage from './page/TestPage.jsx'; // Thêm trang test đơn giản
 import Blog from './page/Blog.jsx'; // Import component Blog
 import Login from './page/Login.jsx'; // Import component Login
@@ -17,6 +18,7 @@ import { AuthProvider } from './context/AuthContext.jsx'; // Import AuthProvider
 import './style.css';
 import JourneyStepper from './components/JourneyStepper.jsx';
 import Notification from './page/Notification.jsx'; // Import component Notification
+import SettingsPage from './page/Settings.jsx'; // Import component Settings
 /**
  * App - Component chính của ứng dụng
  * 
@@ -55,10 +57,13 @@ const router = createBrowserRouter([
   {
     path: "/home",
     loader: () => { return window.location.replace('/') },
-  },
-  {
+  },  {
     path: "/profile",
     element: <Layout><ProtectedRoute><ProfilePage /></ProtectedRoute></Layout>,
+  },
+  {
+    path: "/progress",
+    element: <Layout><ProtectedRoute><ProgressPage /></ProtectedRoute></Layout>,
   },
   {
     path: "/test",
@@ -133,10 +138,13 @@ const router = createBrowserRouter([
   {
     path: "/notifications",
     element: <Layout><Notification /></Layout>, // Đường dẫn đến trang thông báo
-  },
-  {
+  },  {
     path: "/membership",
     element: <Layout><MembershipPackage /></Layout>, // Đường dẫn đến trang gói thành viên
+  },
+  {
+    path: "/settings",
+    element: <Layout><ProtectedRoute><SettingsPage /></ProtectedRoute></Layout>,
   },
   {
     path: "*",
@@ -144,33 +152,7 @@ const router = createBrowserRouter([
   }
 ]);
 
-// Simple BackToTopButton component nếu thành phần kia không hoạt động
-const SimpleBackToTop = () => {
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  return (
-    <button
-      onClick={scrollToTop}
-      style={{
-        position: 'fixed',
-        bottom: '30px',
-        right: '30px',
-        width: '50px',
-        height: '50px',
-        backgroundColor: 'red',
-        color: 'white',
-        borderRadius: '50%',
-        border: 'none',
-        fontSize: '20px',
-        cursor: 'pointer',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
-        zIndex: 9999
-      }}
-    >
-      ↑
-    </button>
-  );
-};
+// Component BackToTop đã được import và sử dụng trong Layout
 
 export default function App() {
   return (
