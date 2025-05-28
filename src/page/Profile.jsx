@@ -12,6 +12,7 @@ import {
   FaCog,
   FaBell,
   FaCrown,
+  FaTimes,
 } from "react-icons/fa";
 
 import "./Profile.css";
@@ -21,16 +22,23 @@ import { Link, useNavigate } from "react-router-dom";
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
   const [planData, setPlanData] = useState({
-    strategy: currentPlan.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
-    startDate: currentPlan.startDate ? new Date(currentPlan.startDate.split('/').reverse().join('-')).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    goal: currentPlan.goal || "Cai thuốc hoàn toàn và duy trì lâu dài"
+    strategy:
+      currentPlan.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
+    startDate: currentPlan.startDate
+      ? new Date(
+          currentPlan.startDate.split("/").reverse().join("-")
+        )
+          .toISOString()
+          .split("T")[0]
+      : new Date().toISOString().split("T")[0],
+    goal: currentPlan.goal || "Cai thuốc hoàn toàn và duy trì lâu dài",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPlanData(prev => ({
+    setPlanData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -47,191 +55,61 @@ function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
       <div className="modal-content">
         <div className="modal-header">
           <h2>Điều chỉnh kế hoạch cai thuốc</h2>
-          <button className="close-button" onClick={onClose}><FaTimes /></button>
+          <button className="close-button" onClick={onClose}>
+            <FaTimes />
+          </button>
         </div>
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Phương pháp cai thuốc</label>
-            <select 
-              name="strategy" 
+            <select
+              name="strategy"
               value={planData.strategy}
               onChange={handleChange}
               className="form-control"
             >
-              <option value="Cai thuốc hoàn toàn và duy trì lâu dài">Cai thuốc hoàn toàn</option>
+              <option value="Cai thuốc hoàn toàn và duy trì lâu dài">
+                Cai thuốc hoàn toàn
+              </option>
               <option value="Giảm dần số điếu thuốc">Giảm dần số điếu thuốc</option>
-              <option value="Sử dụng sản phẩm thay thế nicotine">Sử dụng sản phẩm thay thế nicotine</option>
+              <option value="Sử dụng sản phẩm thay thế nicotine">
+                Sử dụng sản phẩm thay thế nicotine
+              </option>
             </select>
           </div>
-          
+
           <div className="form-group">
             <label>Ngày bắt đầu</label>
-            <input 
-              type="date" 
-              name="startDate" 
+            <input
+              type="date"
+              name="startDate"
               value={planData.startDate}
               onChange={handleChange}
               className="form-control"
             />
           </div>
-          
+
           <div className="form-group">
             <label>Mục tiêu</label>
-            <textarea 
-              name="goal" 
+            <textarea
+              name="goal"
               value={planData.goal}
               onChange={handleChange}
               rows="3"
               className="form-control"
             ></textarea>
           </div>
-          
+
           <div className="form-actions">
-            <button type="button" className="cancel-btn" onClick={onClose}>Hủy</button>
-            <button type="submit" className="save-btn">Lưu thay đổi</button>
+            <button type="button" className="cancel-btn" onClick={onClose}>
+              Hủy
+            </button>
+            <button type="submit" className="save-btn">
+              Lưu thay đổi
+            </button>
           </div>
         </form>
-      </div>
-    </div>
-  );
-}
-
-// Component theo dõi tiến trình với biểu đồ giả
-function ProgressTracker() {
-  const data = {
-    labels: ["1/5", "8/5", "15/5", "22/5"],
-    datasets: [
-      {
-        label: "Số ngày không hút thuốc",
-        data: [1, 7, 14, 28],
-        backgroundColor: "#2570e8",
-        borderColor: "#2570e8",
-      },
-    ],
-  };
-
-  return (
-    <div className="progress-tracker">
-      <div className="chart-container">
-        <h2>Tiến trình cai thuốc</h2>
-
-        {/* Mô phỏng biểu đồ bằng thanh tiến trình */}
-        <div className="chart-placeholder">
-          <div className="chart-bars">
-            <div className="chart-bar" style={{ height: "10%" }}>
-              <span>1</span>
-            </div>
-            <div className="chart-bar" style={{ height: "25%" }}>
-              <span>7</span>
-            </div>
-            <div className="chart-bar" style={{ height: "50%" }}>
-              <span>14</span>
-            </div>
-            <div className="chart-bar" style={{ height: "100%" }}>
-              <span>28</span>
-            </div>
-          </div>
-          <div className="chart-labels">
-            <span>1/5</span>
-            <span>8/5</span>
-            <span>15/5</span>
-            <span>22/5</span>
-          </div>
-        </div>
-
-        <div className="statistics-container">
-          <div className="statistic-card">
-            <h3>Thành tích tốt nhất</h3>
-            <p className="statistic-value">28 ngày</p>
-          </div>
-
-          <div className="statistic-card">
-            <h3>Số lần cai trước đây</h3>
-            <p className="statistic-value">1 lần</p>
-          </div>
-
-          <div className="statistic-card">
-            <h3>Thời gian cai hiện tại</h3>
-            <p className="statistic-value">28 ngày</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="health-recovery-timeline">
-        <h2>Lộ trình phục hồi sức khỏe</h2>
-
-        <div className="timeline">
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>20 phút</h3>
-              <p>Huyết áp và nhịp tim trở về bình thường</p>
-            </div>
-          </div>
-
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>8 giờ</h3>
-              <p>Nồng độ nicotin và carbon monoxid giảm một nửa</p>
-            </div>
-          </div>
-
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>24 giờ</h3>
-              <p>Carbon monoxid bị loại bỏ khỏi cơ thể</p>
-            </div>
-          </div>
-
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>48 giờ</h3>
-              <p>
-                Nicotine được thải ra hoàn toàn, các giác quan vị giác và khứu
-                giác bắt đầu cải thiện
-              </p>
-            </div>
-          </div>
-
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>72 giờ</h3>
-              <p>Hô hấp trở nên dễ dàng hơn, mức năng lượng tăng lên</p>
-            </div>
-          </div>
-
-          <div className="timeline-item active">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>1-3 tháng</h3>
-              <p>
-                Tuần hoàn máu cải thiện, đi bộ dễ dàng hơn, chức năng phổi tăng
-                lên 30%
-              </p>
-            </div>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>1-9 tháng</h3>
-              <p>Ho, nghẹt mũi và khó thở giảm, phổi tự làm sạch</p>
-            </div>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>1 năm</h3>
-              <p>Nguy cơ bệnh tim giảm một nửa so với người hút thuốc</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -322,6 +200,7 @@ function DailyUpdate({ onSubmit }) {
               type="button"
               className={`mood-option ${mood === "Tốt" ? "selected" : ""}`}
               onClick={() => setMood("Tốt")}
+              
             >
               <span className="mood-emoji">😃</span>
               <span>Tốt</span>
@@ -329,9 +208,7 @@ function DailyUpdate({ onSubmit }) {
 
             <button
               type="button"
-              className={`mood-option ${
-                mood === "Bình thường" ? "selected" : ""
-              }`}
+              className={`mood-option ${mood === "Bình thường" ? "selected" : ""}`}
               onClick={() => setMood("Bình thường")}
             >
               <span className="mood-emoji">😐</span>
@@ -340,9 +217,7 @@ function DailyUpdate({ onSubmit }) {
 
             <button
               type="button"
-              className={`mood-option ${
-                mood === "Không tốt" ? "selected" : ""
-              }`}
+              className={`mood-option ${mood === "Không tốt" ? "selected" : ""}`}
               onClick={() => setMood("Không tốt")}
             >
               <span className="mood-emoji">😔</span>
@@ -360,9 +235,7 @@ function DailyUpdate({ onSubmit }) {
 
             <button
               type="button"
-              className={`mood-option ${
-                mood === "Thèm thuốc" ? "selected" : ""
-              }`}
+              className={`mood-option ${mood === "Thèm thuốc" ? "selected" : ""}`}
               onClick={() => setMood("Thèm thuốc")}
             >
               <span className="mood-emoji">🚬</span>
@@ -375,9 +248,7 @@ function DailyUpdate({ onSubmit }) {
           <h3>Triệu chứng hôm nay</h3>
           <div className="symptoms-options">
             <label
-              className={`symptom-option ${
-                symptoms.includes("Ho") ? "selected" : ""
-              }`}
+              className={`symptom-option ${symptoms.includes("Ho") ? "selected" : ""}`}
             >
               <input
                 type="checkbox"
@@ -388,9 +259,7 @@ function DailyUpdate({ onSubmit }) {
             </label>
 
             <label
-              className={`symptom-option ${
-                symptoms.includes("Khó thở") ? "selected" : ""
-              }`}
+              className={`symptom-option ${symptoms.includes("Khó thở") ? "selected" : ""}`}
             >
               <input
                 type="checkbox"
@@ -401,9 +270,7 @@ function DailyUpdate({ onSubmit }) {
             </label>
 
             <label
-              className={`symptom-option ${
-                symptoms.includes("Mệt mỏi") ? "selected" : ""
-              }`}
+              className={`symptom-option ${symptoms.includes("Mệt mỏi") ? "selected" : ""}`}
             >
               <input
                 type="checkbox"
@@ -414,9 +281,7 @@ function DailyUpdate({ onSubmit }) {
             </label>
 
             <label
-              className={`symptom-option ${
-                symptoms.includes("Căng thẳng") ? "selected" : ""
-              }`}
+              className={`symptom-option ${symptoms.includes("Căng thẳng") ? "selected" : ""}`}
             >
               <input
                 type="checkbox"
@@ -448,23 +313,10 @@ function DailyUpdate({ onSubmit }) {
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
-  const [todayMood, setTodayMood] = useState("");
-  const [smokedToday, setSmokedToday] = useState(null);
-  const [todaySymptoms, setTodaySymptoms] = useState([]);  
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
-  const [settings, setSettings] = useState({
-    emailNotifications: true,
-    pushNotifications: true,
-    weeklyReport: true,
-    darkMode: false,
-    language: 'vi',
-    privacy: 'public'
-  });
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  
-  // Add notification count state
-  const [notificationCount, setNotificationCount] = useState(3);
+  const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị
 
   // Tính toán các giá trị
   const calculateSavings = () => {
@@ -613,8 +465,7 @@ export default function ProfilePage() {
         date: "Hôm nay",
         mood: "Bình thường",
         symptoms: "Không có triệu chứng",
-        notes:
-          '"Hôm nay là một ngày bình thường, không có cảm giác thèm thuốc."',
+        notes: '"Hôm nay là một ngày bình thường, không có cảm giác thèm thuốc."',
       },
       {
         id: 2,
@@ -635,21 +486,8 @@ export default function ProfilePage() {
   };
   // Xử lý lưu kế hoạch
   const handleSavePlan = (planData) => {
-    console.log('Dữ liệu kế hoạch mới:', planData);
-    alert('Đã lưu kế hoạch của bạn!');
-  };
-
-  // Xử lý cập nhật cài đặt
-  const handleSettingsChange = (key, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  const handleSaveSettings = () => {
-    console.log('Cài đặt mới:', settings);
-    alert('Đã lưu cài đặt của bạn!');
+    console.log("Dữ liệu kế hoạch mới:", planData);
+    alert("Đã lưu kế hoạch của bạn!");
   };
 
   return (
@@ -689,17 +527,15 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("achievements")}
           >
             <FaTrophy /> Huy hiệu
-          </Link>          <Link
+          </Link>
+          <Link
             to="#"
             className={`nav-item ${activeTab === "journal" ? "active" : ""}`}
             onClick={() => setActiveTab("journal")}
           >
             <FaComment /> Tư vấn
           </Link>
-          <Link
-            to="/membership"
-            className="nav-item"
-          >
+          <Link to="/membership" className="nav-item">
             <FaCrown /> Gói thành viên
           </Link>
           <Link
@@ -711,7 +547,9 @@ export default function ProfilePage() {
           </Link>
           <Link to="/notifications" className="nav-item notification-nav-item">
             <FaBell /> Thông báo
-            {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
+            {notificationCount > 0 && (
+              <span className="notification-badge">{notificationCount}</span>
+            )}
           </Link>
           <button onClick={logout} className="nav-item logout-btn">
             <i className="fas fa-sign-out-alt"></i> Đăng xuất
@@ -725,23 +563,24 @@ export default function ProfilePage() {
           <div className="profile-overview">
             <div className="section-header">
               <h1>Hồ sơ cá nhân</h1>
-              <button className="update-btn" onClick={() => setIsPlanEditOpen(true)}>Cập nhật</button>
+              <button
+                className="update-btn"
+                onClick={() => setIsPlanEditOpen(true)}
+              >
+                Cập nhật
+              </button>
             </div>
 
             <div className="overview-stats">
               <div className="stat-card">
                 <h3>Không hút thuốc</h3>
-                <div className="stat-value">
-                  {userData.daysWithoutSmoking} ngày
-                </div>
+                <div className="stat-value">{userData.daysWithoutSmoking} ngày</div>
                 <p className="stat-detail">672 giờ không hút thuốc</p>
               </div>
 
               <div className="stat-card">
                 <h3>Tiền tiết kiệm</h3>
-                <div className="stat-value">
-                  {userData.moneySaved.toLocaleString()} đ
-                </div>
+                <div className="stat-value">{userData.moneySaved.toLocaleString()} đ</div>
                 <p className="stat-detail">30.000 đ mỗi ngày</p>
               </div>
 
@@ -760,10 +599,7 @@ export default function ProfilePage() {
                   <div className="health-stat-row">
                     <div className="health-stat">
                       <h4>Tình trạng hút thuốc ban đầu</h4>
-                      <p>
-                        Cập nhật lần cuối: {userData.daysWithoutSmoking} ngày
-                        trước
-                      </p>
+                      <p>Cập nhật lần cuối: {userData.daysWithoutSmoking} ngày trước</p>
                     </div>
                   </div>
 
@@ -797,12 +633,8 @@ export default function ProfilePage() {
                   <div className="improvements-list">
                     {userData.healthImprovements.map((improvement, index) => (
                       <div key={index} className="improvement-item">
-                        <span className="improvement-time">
-                          {improvement.time}
-                        </span>
-                        <span className="improvement-description">
-                          {improvement.description}
-                        </span>
+                        <span className="improvement-time">{improvement.time}</span>
+                        <span className="improvement-description">{improvement.description}</span>
                         {improvement.completed ? (
                           <FaCheckCircle className="completed-icon" />
                         ) : (
@@ -829,8 +661,7 @@ export default function ProfilePage() {
                       <span>Ngày bắt đầu cai thuốc: {userData.startDate}</span>
                     </div>
                     <div className="plan-goal">
-                      <strong>Mục tiêu:</strong> Cai thuốc hoàn toàn và duy trì
-                      lâu dài
+                      <strong>Mục tiêu:</strong> Cai thuốc hoàn toàn và duy trì lâu dài
                     </div>
                   </div>
 
@@ -857,8 +688,13 @@ export default function ProfilePage() {
                       </div>
                     ))}
                   </div>
-                  
-                  <button className="edit-plan-btn" onClick={() => setIsPlanEditOpen(true)}>Điều chỉnh kế hoạch</button>
+
+                  <button
+                    className="edit-plan-btn"
+                    onClick={() => setIsPlanEditOpen(true)}
+                  >
+                    Điều chỉnh kế hoạch
+                  </button>
                 </div>
               </div>
             </div>
@@ -946,165 +782,15 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-          {activeTab === 'progress' && (
-          <div className="progress-section">
-            <h1>Theo dõi tiến trình</h1>
-            <ProgressTracker />
-          </div>
-        )}
-        
-        {activeTab === 'settings' && (
-          <div className="settings-section">
-            <h1>Cài đặt</h1>
-            
-            <div className="settings-container">
-              <div className="settings-group">
-                <h2>Thông báo</h2>
-                <div className="settings-item">
-                  <div className="setting-info">
-                    <h3>Thông báo Email</h3>
-                    <p>Nhận thông báo qua email về tiến trình cai thuốc</p>
-                  </div>
-                  <label className="switch">
-                    <input 
-                      type="checkbox" 
-                      checked={settings.emailNotifications}
-                      onChange={(e) => handleSettingsChange('emailNotifications', e.target.checked)}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-                
-                <div className="settings-item">
-                  <div className="setting-info">
-                    <h3>Thông báo Push</h3>
-                    <p>Nhận thông báo đẩy trên thiết bị</p>
-                  </div>
-                  <label className="switch">
-                    <input 
-                      type="checkbox" 
-                      checked={settings.pushNotifications}
-                      onChange={(e) => handleSettingsChange('pushNotifications', e.target.checked)}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-                
-                <div className="settings-item">
-                  <div className="setting-info">
-                    <h3>Báo cáo hàng tuần</h3>
-                    <p>Nhận báo cáo tiến trình hàng tuần qua email</p>
-                  </div>
-                  <label className="switch">
-                    <input 
-                      type="checkbox" 
-                      checked={settings.weeklyReport}
-                      onChange={(e) => handleSettingsChange('weeklyReport', e.target.checked)}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="settings-group">
-                <h2>Giao diện</h2>
-                <div className="settings-item">
-                  <div className="setting-info">
-                    <h3>Chế độ tối</h3>
-                    <p>Chuyển sang giao diện tối để bảo vệ mắt</p>
-                  </div>
-                  <label className="switch">
-                    <input 
-                      type="checkbox" 
-                      checked={settings.darkMode}
-                      onChange={(e) => handleSettingsChange('darkMode', e.target.checked)}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-                
-                <div className="settings-item">
-                  <div className="setting-info">
-                    <h3>Ngôn ngữ</h3>
-                    <p>Chọn ngôn ngữ hiển thị</p>
-                  </div>
-                  <select 
-                    value={settings.language}
-                    onChange={(e) => handleSettingsChange('language', e.target.value)}
-                    className="settings-select"
-                  >
-                    <option value="vi">Tiếng Việt</option>
-                    <option value="en">English</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="settings-group">
-                <h2>Quyền riêng tư</h2>
-                <div className="settings-item">
-                  <div className="setting-info">
-                    <h3>Chế độ hiển thị hồ sơ</h3>
-                    <p>Kiểm soát ai có thể xem hồ sơ của bạn</p>
-                  </div>
-                  <select 
-                    value={settings.privacy}
-                    onChange={(e) => handleSettingsChange('privacy', e.target.value)}
-                    className="settings-select"
-                  >
-                    <option value="public">Công khai</option>
-                    <option value="friends">Chỉ bạn bè</option>
-                    <option value="private">Riêng tư</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="settings-group">
-                <h2>Tài khoản</h2>
-                <div className="settings-item">
-                  <div className="setting-info">
-                    <h3>Đổi mật khẩu</h3>
-                    <p>Thay đổi mật khẩu để bảo mật tài khoản</p>
-                  </div>
-                  <button className="settings-btn">Đổi mật khẩu</button>
-                </div>
-                
-                <div className="settings-item">
-                  <div className="setting-info">
-                    <h3>Xuất dữ liệu</h3>
-                    <p>Tải xuống toàn bộ dữ liệu cá nhân</p>
-                  </div>
-                  <button className="settings-btn">Xuất dữ liệu</button>
-                </div>
-              </div>
-              
-              <div className="settings-group danger-zone">
-                <h2>Vùng nguy hiểm</h2>
-                <div className="settings-item">
-                  <div className="setting-info">
-                    <h3>Xóa tài khoản</h3>
-                    <p>Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu</p>
-                  </div>
-                  <button className="settings-btn danger">Xóa tài khoản</button>
-                </div>
-              </div>
-              
-              <div className="settings-actions">
-                <button className="save-settings-btn" onClick={handleSaveSettings}>
-                  Lưu tất cả thay đổi
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
+
         {/* Modal chỉnh sửa kế hoạch */}
-        <PlanEditModal 
-          isOpen={isPlanEditOpen} 
-          onClose={() => setIsPlanEditOpen(false)} 
+        <PlanEditModal
+          isOpen={isPlanEditOpen}
+          onClose={() => setIsPlanEditOpen(false)}
           currentPlan={{
             strategy: userData.planStrategy,
             startDate: userData.startDate,
-            goal: userData.planGoal
+            goal: userData.planGoal,
           }}
           onSave={handleSavePlan}
         />

@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import Home from '../page/Home';
 import Tools from '../page/Tools';
 import MembershipPackage from '../page/MembershipPackage';
+import SettingsPage from '../page/Settings';
 
 /**
  * AppRoutes - Cung cấp cấu hình định tuyến (routing) cho toàn bộ ứng dụng
@@ -30,10 +31,14 @@ const router = createBrowserRouter([
   },  {
     path: "/tools",
     element: <Layout><Tools /></Layout>,
+  }, {
+   path: "/settings",
+    element: <Layout><SettingsPage /></Layout>,
   },
   {
     path: "/membership",
     element: <Layout><MembershipPackage /></Layout>,
+  
   },
   {
     path: "*",

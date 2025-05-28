@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { FaBell } from 'react-icons/fa';
 import { useState } from 'react';
 import LoginModal from './LoginModal';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +8,7 @@ import './Header.css';
 export default function Header() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0); // Add this state for notification count
   const { user, logout } = useAuth();
 
   const handleLoginClick = (e) => {
@@ -38,25 +40,32 @@ export default function Header() {
           <button className="search-btn"><i className="fas fa-search"></i></button>
 
           {user ? (
-            <div className="user-menu-container">
-              <button className="user-menu-button" onClick={toggleUserMenu}>
-                <span className="user-initial">{user.name.charAt(0)}</span>
-                <span className="user-name">{user.name}</span>
-              </button>
+            <>
+              <Link to="/notifications" className="nav-item notification-nav-item">
+                <FaBell /> Thông báo
+                {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
+              </Link>
+              <div className="user-menu-container">
+                <button className="user-menu-button" onClick={toggleUserMenu}>
+                  <span className="user-initial">{user.name.charAt(0)}</span>
+                  <span className="user-name">{user.name}</span>
+                </button>
 
-              {isUserMenuOpen && (
-                <div className="user-dropdown-menu">
-                  <Link to="/profile" className="dropdown-item">
-                    <i className="fas fa-user"></i> Hồ sơ cá nhân
-                  </Link>
-                  <Link to="/settings" className="dropdown-item">
-                    <i className="fas fa-cog"></i> Cài đặt
-                  </Link>
-                  <button onClick={handleLogout} className="dropdown-item logout-btn">
-                    <i className="fas fa-sign-out-alt"></i> Đăng xuất
-                  </button>
-                </div>
-              )}            </div>
+                {isUserMenuOpen && (
+                  <div className="user-dropdown-menu">
+                    <Link to="/profile" className="dropdown-item">
+                      <i className="fas fa-user"></i> Hồ sơ cá nhân
+                    </Link>
+                    <Link to="/settings" className="dropdown-item">
+                      <i className="fas fa-cog"></i> Cài đặt
+                    </Link>
+                    <button onClick={handleLogout} className="dropdown-item logout-btn">
+                      <i className="fas fa-sign-out-alt"></i> Đăng xuất
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <>
               <a href="#" className="login-btn" onClick={handleLoginClick}>Đăng nhập</a>
