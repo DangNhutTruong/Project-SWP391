@@ -31,9 +31,9 @@ export default function Header() {
             <span className="logo-text">No<span className="smoke">Smoke</span></span>
           </Link>
         </div>
-        <div className="nav-actions">
-          <Link to="/support" className="phone-link">
-            <i className="fas fa-headset"></i> Liên Hệ: 1800-xxxx
+        <div className="nav-actions">          <Link to="/support" className="phone-link">
+            <i className="fas fa-headset"></i>
+            <span className="phone-text">Tư Vấn: 1800-1098</span>
           </Link>
           <button className="search-btn"><i className="fas fa-search"></i></button>
 

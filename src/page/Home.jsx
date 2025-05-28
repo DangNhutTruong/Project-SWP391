@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import Hero from "../components/Hero.jsx";
 import FeatureSection from "../components/FeatureSection.jsx";
 import BlogSection from "../components/BlogSection.jsx";
-import PricingSection from "../components/PricingSection.jsx";
+
 
 /**
  * Home - Trang chủ của ứng dụng
@@ -17,7 +17,7 @@ export default function Home() {
       <Hero />
       <FeatureSection />
       <BlogSection />
-      <PricingSection />
+     
     </>
   );
 }
