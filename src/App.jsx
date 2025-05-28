@@ -7,14 +7,18 @@ import ChatButton from './components/ChatButton.jsx';
 import BackToTop from './components/BackToTop.jsx';
 import Home from './page/Home.jsx';
 import ProfilePage from './page/Profile.jsx'; // Đổi tên từ Tools sang ProfilePage
+import ProgressPage from './page/Progress.jsx'; // Import component Progress
 import TestPage from './page/TestPage.jsx'; // Thêm trang test đơn giản
 import Blog from './page/Blog.jsx'; // Import component Blog
 import Login from './page/Login.jsx'; // Import component Login
 import Register from './page/Register.jsx'; // Import component Register
+import MembershipPackage from './page/MembershipPackage.jsx'; // Import component MembershipPackage
 import ProtectedRoute from './components/ProtectedRoute.jsx'; // Import ProtectedRoute
 import { AuthProvider } from './context/AuthContext.jsx'; // Import AuthProvider
 import './style.css';
 import JourneyStepper from './components/JourneyStepper.jsx';
+import Notification from './page/Notification.jsx'; // Import component Notification
+import SettingsPage from './page/Settings.jsx'; // Import component Settings
 /**
  * App - Component chính của ứng dụng
  * 
@@ -53,10 +57,13 @@ const router = createBrowserRouter([
   {
     path: "/home",
     loader: () => { return window.location.replace('/') },
-  },
-  {
+  },  {
     path: "/profile",
     element: <Layout><ProtectedRoute><ProfilePage /></ProtectedRoute></Layout>,
+  },
+  {
+    path: "/progress",
+    element: <Layout><ProtectedRoute><ProgressPage /></ProtectedRoute></Layout>,
   },
   {
     path: "/test",
@@ -124,11 +131,24 @@ const router = createBrowserRouter([
   {
     path: "/signup/premium",
     element: <Layout><ComingSoon title="Đăng ký gói Premium" /></Layout>,
-  },
-  {
+  },  {
     path: "/signup/pro",
     element: <Layout><ComingSoon title="Đăng ký gói Pro" /></Layout>,
   },
+  {
+    path: "/notifications",
+    element: <Layout><Notification /></Layout>, // Đường dẫn đến trang thông báo
+  },
+  {
+    path: "/membership",
+    element: <Layout><MembershipPackage /></Layout>, // Đường dẫn đến trang gói thành viên
+    
+  },
+  {
+    path: "/settings",
+    element: <Layout><ProtectedRoute><SettingsPage /></ProtectedRoute></Layout>,
+  },
+
   {
     path: "*",
     loader: () => { return window.location.replace('/') },
@@ -167,7 +187,8 @@ export default function App() {
   return (
     <AuthProvider>
       <RouterProvider router={router} />
-      <SimpleBackToTop /> {/* Thêm nút back-to-top trực tiếp vào App */}
     </AuthProvider>
   );
 }
+
+
