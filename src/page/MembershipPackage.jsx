@@ -6,7 +6,10 @@ import { Link } from 'react-router-dom';
 export default function MembershipPackage() {
   return (
       <section className="pricing-section">
-        <div className="container">
+        <div className="container">          <div className="hero-image-container">
+            <img src="/image/hero/winners-two-color.png" alt="Cai thuốc thành công" className="membership-hero-image" />
+            <h1 className="hero-title">Cam kết bỏ thuốc - Bước tới cuộc sống khỏe mạnh</h1>
+          </div>
           <h2>So sánh gói dịch vụ</h2>
           <p className="pricing-subtitle">Chọn gói phù hợp với nhu cầu của bạn</p>
   
