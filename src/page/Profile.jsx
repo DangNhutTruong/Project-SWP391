@@ -11,18 +11,11 @@ import {
   FaExclamationCircle,
   FaCog,
   FaBell,
-<<<<<<< Updated upstream
-  FaCrown,
-} from "react-icons/fa";
-
-=======
   FaTimes,
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
->>>>>>> Stashed changes
 import "./Profile.css";
 import { useAuth } from "../context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
 
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
@@ -679,18 +672,13 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("achievements")}
           >
             <FaTrophy /> Huy hiệu
-          </Link>          <Link
+          </Link>
+          <Link
             to="#"
             className={`nav-item ${activeTab === "journal" ? "active" : ""}`}
             onClick={() => setActiveTab("journal")}
           >
             <FaComment /> Tư vấn
-          </Link>
-          <Link
-            to="/membership"
-            className="nav-item"
-          >
-            <FaCrown /> Gói thành viên
           </Link>
           <Link
             to="#"
