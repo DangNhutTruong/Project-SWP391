@@ -176,7 +176,6 @@ export default function App() {
   return (
     <AuthProvider>
       <RouterProvider router={router} />
-      <SimpleBackToTop /> {/* Thêm nút back-to-top trực tiếp vào App */}
     </AuthProvider>
   );
 }

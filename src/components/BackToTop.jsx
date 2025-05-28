@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaArrowUp } from 'react-icons/fa';
+import '../styles/BackToTop.css';
 
 export default function BackToTop() {
   const [isVisible, setIsVisible] = useState(true); // Mặc định hiển thị
@@ -28,18 +29,14 @@ export default function BackToTop() {
     window.addEventListener('scroll', toggleVisibility);
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
-
   // Luôn render nút, chỉ ẩn bằng CSS khi không isVisible
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed bottom-8 right-8 bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-all z-50 flex items-center justify-center ${isVisible ? 'opacity-100' : 'opacity-0'}`}
-      style={{
-        display: 'flex',
-        transition: 'opacity 0.3s ease-in-out'
-      }}
+      className={`back-to-top ${isVisible ? 'visible' : ''}`}
+      aria-label="Quay lại đầu trang"
     >
-      <FaArrowUp size={24} />
+      <FaArrowUp className="back-to-top-icon" />
     </button>
   );
 }
