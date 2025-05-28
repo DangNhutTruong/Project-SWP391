@@ -13,9 +13,11 @@ export default function Nav() {
           </li>
           <li className={pathname.includes('/journey') ? 'active' : ''}>
             <Link to="/journey">Công Cụ</Link>
-          </li>
-          <li className={pathname.includes('/profile') ? 'active' : ''}>
+          </li>          <li className={pathname.includes('/profile') ? 'active' : ''}>
             <Link to="/profile">Hồ sơ cá nhân</Link>
+          </li>
+          <li className={pathname.includes('/membership') ? 'active' : ''}>
+            <Link to="/membership">Gói thành viên</Link>
           </li>
           <li className={pathname.includes('/blog') ? 'active' : ''}>
             <Link to="/blog">Blog kinh nghiệm</Link>

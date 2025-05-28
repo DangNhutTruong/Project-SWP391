@@ -11,8 +11,9 @@ import {
   FaExclamationCircle,
   FaCog,
   FaBell,
+  FaTimes,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Profile.css";
 import { useAuth } from "../context/AuthContext";
 
@@ -97,18 +98,6 @@ function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
 
 // Component theo dõi tiến trình với biểu đồ giả
 function ProgressTracker() {
-  const data = {
-    labels: ["1/5", "8/5", "15/5", "22/5"],
-    datasets: [
-      {
-        label: "Số ngày không hút thuốc",
-        data: [1, 7, 14, 28],
-        backgroundColor: "#2570e8",
-        borderColor: "#2570e8",
-      },
-    ],
-  };
-
   return (
     <div className="progress-tracker">
       <div className="chart-container">
@@ -446,9 +435,6 @@ function DailyUpdate({ onSubmit }) {
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
-  const [todayMood, setTodayMood] = useState("");
-  const [smokedToday, setSmokedToday] = useState(null);
-  const [todaySymptoms, setTodaySymptoms] = useState([]);  
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -459,10 +445,9 @@ export default function ProfilePage() {
     privacy: 'public'
   });
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   
   // Add notification count state
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [notificationCount] = useState(3);
 
   // Tính toán các giá trị
   const calculateSavings = () => {
