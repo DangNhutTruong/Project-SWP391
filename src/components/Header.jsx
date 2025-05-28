@@ -37,7 +37,7 @@ export default function Header() {
             <i className="fas fa-headset"></i>
             <span className="phone-text">Tư Vấn: 1800-1098</span>
           </Link>
-          <button className="search-btn"><i className="fas fa-search"></i></button>
+          
 
           {user ? (
             <>

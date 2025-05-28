@@ -512,13 +512,7 @@ export default function ProfilePage() {
           >
             <FaUserAlt /> Hồ sơ cá nhân
           </Link>
-          <Link
-            to="#"
-            className={`nav-item ${activeTab === "progress" ? "active" : ""}`}
-            onClick={() => setActiveTab("progress")}
-          >
-            <FaChartLine /> Tiến trình
-          </Link>
+          
           <Link
             to="#"
             className={`nav-item ${
@@ -528,29 +522,10 @@ export default function ProfilePage() {
           >
             <FaTrophy /> Huy hiệu
           </Link>
-          <Link
-            to="#"
-            className={`nav-item ${activeTab === "journal" ? "active" : ""}`}
-            onClick={() => setActiveTab("journal")}
-          >
-            <FaComment /> Tư vấn
-          </Link>
-          <Link to="/membership" className="nav-item">
-            <FaCrown /> Gói thành viên
-          </Link>
-          <Link
-            to="#"
-            className={`nav-item ${activeTab === "settings" ? "active" : ""}`}
-            onClick={() => setActiveTab("settings")}
-          >
-            <FaCog /> Cài đặt
-          </Link>
-          <Link to="/notifications" className="nav-item notification-nav-item">
-            <FaBell /> Thông báo
-            {notificationCount > 0 && (
-              <span className="notification-badge">{notificationCount}</span>
-            )}
-          </Link>
+         
+         
+          
+          
           <button onClick={logout} className="nav-item logout-btn">
             <i className="fas fa-sign-out-alt"></i> Đăng xuất
           </button>
