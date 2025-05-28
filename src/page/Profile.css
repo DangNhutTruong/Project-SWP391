@@ -67,9 +67,17 @@
   width: 16px;
 }
 
+.nav-item .fa-crown {
+  color: #f7b733;
+}
+
 .nav-item:hover {
   background-color: #f0f4f8;
   color: #2570e8;
+}
+
+.nav-item:hover .fa-crown {
+  color: #e7a722;
 }
 
 .nav-item.active {
