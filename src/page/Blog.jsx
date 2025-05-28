@@ -5,7 +5,6 @@ import "./Blog.css";
 
 export default function Blog() {
   // Dữ liệu mẫu cho bài viết blog
-  //yeye
   const blogPosts = [
     {
       id: 1,
