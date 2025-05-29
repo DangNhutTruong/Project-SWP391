@@ -101,13 +101,9 @@ const SimpleBackToTop = () => {
 
 export default function App() {
   return (
-<<<<<<< Updated upstream
-    <RouterProvider router={router} />
-=======
     <AuthProvider>
       <RouterProvider router={router} />
       <SimpleBackToTop /> {/* Thêm nút back-to-top trực tiếp vào App */}
     </AuthProvider>
->>>>>>> Stashed changes
   );
 }
