@@ -1,0 +1,394 @@
+.appointment-section {
+  padding: 40px 0;
+}
+
+.appointment-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.appointment-header h1 {
+  font-size: 2.5rem;
+  color: #2570e8;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.appointment-icon {
+  margin-right: 10px;
+}
+
+.appointment-header p {
+  font-size: 1.1rem;
+  color: #555;
+}
+
+/* Stepper */
+.appointment-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.step-label {
+  font-size: 14px;
+  color: #777;
+  transition: all 0.3s ease;
+}
+
+.stepper-line {
+  flex-grow: 1;
+  height: 2px;
+  background-color: #e0e0e0;
+  max-width: 100px;
+  margin: 0 15px;
+  position: relative;
+  top: -20px;
+}
+
+.stepper-step.active .step-number {
+  background-color: #2570e8;
+  color: white;
+}
+
+.stepper-step.active .step-label {
+  color: #2570e8;
+  font-weight: 600;
+}
+
+/* Coach Selection */
+.coach-selection-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.coaches-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.coach-card {
+  width: 280px;
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid transparent;
+}
+
+.coach-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.coach-card.selected {
+  border-color: #2570e8;
+}
+
+.coach-avatar {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 15px;
+}
+
+.coach-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.coach-status {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  right: 0;
+  bottom: 5px;
+  border: 2px solid #fff;
+}
+
+.coach-status.available {
+  background-color: #4caf50;
+}
+
+.coach-info {
+  text-align: center;
+}
+
+.coach-info h3 {
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
+.coach-info p {
+  font-size: 0.9rem;
+  color: #777;
+  margin-bottom: 10px;
+}
+
+.coach-rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stars {
+  color: #ffba08;
+  margin-right: 5px;
+}
+
+.rating-value {
+  font-weight: 600;
+}
+
+/* Date Selection */
+.date-selection-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.selection-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.back-button svg {
+  margin-right: 5px;
+}
+
+.selection-header h2 {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.6rem;
+  color: #333;
+}
+
+.selected-coach {
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.small-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.calendar-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.month-nav {
+  background: none;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.month-nav:hover {
+  background-color: #f0f0f0;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.day-header {
+  text-align: center;
+  font-weight: 600;
+  color: #777;
+  padding: 5px;
+  font-size: 0.9rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.calendar-day:not(.empty):hover {
+  background-color: #e6f0ff;
+}
+
+.calendar-day.empty {
+  pointer-events: none;
+}
+
+.calendar-day.today {
+  background-color: #e6f0ff;
+  font-weight: bold;
+  color: #2570e8;
+}
+
+/* Time Selection */
+.time-selection-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.selection-details {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.selected-date {
+  display: flex;
+  align-items: center;
+  background-color: #f5f5f5;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-left: 10px;
+}
+
+.selected-date svg {
+  margin-right: 8px;
+  color: #2570e8;
+}
+
+.time-slots-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.time-slots-container p {
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.time-slot {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: none;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+.time-slot:hover {
+  border-color: #2570e8;
+  background-color: #f0f7ff;
+}
+
+.time-slot.selected {
+  border-color: #2570e8;
+  background-color: #2570e8;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .coaches-list {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .time-slots {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .selection-details {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .appointment-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .time-slots {
+    grid-template-columns: 1fr;
+  }
+  
+  .stepper-step .step-label {
+    font-size: 12px;
+  }
+}

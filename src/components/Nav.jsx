@@ -26,6 +26,11 @@ export default function Nav() {
               <FaChartLine className="nav-icon" /> Tiến trình
             </Link>
           </li>
+          <li className={pathname.includes('/appointment') ? 'active' : ''}>
+            <Link to="/appointment">
+              <FaCalendarAlt className="nav-icon" /> Đặt lịch Coach
+            </Link>
+          </li>
           <li className={pathname.includes('/membership') ? 'active' : ''}>
             <Link to="/membership">
              <FontAwesomeIcon icon={faWebAwesome} style={{ marginRight: 8 }} />
