@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { FaCalendarAlt, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaCalendarAlt, FaArrowLeft, FaArrowRight, FaCheck } from 'react-icons/fa';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './BookAppointment.css';
 
 export default function BookAppointment() {
@@ -8,6 +10,48 @@ export default function BookAppointment() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [appointmentId, setAppointmentId] = useState(null);
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [originalAppointment, setOriginalAppointment] = useState(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if we're rescheduling an appointment
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const isRescheduling = searchParams.get('reschedule') === 'true';
+    
+    if (isRescheduling) {
+      // Get the appointment to reschedule from localStorage
+      const appointmentToReschedule = JSON.parse(localStorage.getItem('appointmentToReschedule'));
+      
+      if (appointmentToReschedule) {
+        setIsRescheduling(true);
+        setOriginalAppointment(appointmentToReschedule);
+        setAppointmentId(appointmentToReschedule.id);
+        
+        // Find and preselect the coach
+        const coach = coaches.find(c => c.id === appointmentToReschedule.coachId);
+        if (coach) {
+          setSelectedCoach(coach);
+          setStep(2); // Move to date selection step
+          
+          // Set the current month to the appointment date month
+          const appointmentDate = new Date(appointmentToReschedule.date);
+          setCurrentMonth(new Date(
+            appointmentDate.getFullYear(),
+            appointmentDate.getMonth(),
+            1
+          ));
+          
+          // Preselect the date
+          setSelectedDate(appointmentDate);
+        }
+      }
+    }
+  }, [location]);
 
   // Mock data for coaches
   const coaches = [
@@ -97,8 +141,38 @@ export default function BookAppointment() {
 
   const handleSelectTime = (time) => {
     setSelectedTime(time);
-    alert(`Đặt lịch thành công với ${selectedCoach.name} vào ngày ${selectedDate.toLocaleDateString('vi-VN')} lúc ${time}`);
-    // Sau đó có thể thêm logic để lưu lịch hẹn vào cơ sở dữ liệu
+    
+    // Tạo ID ngẫu nhiên cho cuộc hẹn
+    const newAppointmentId = Math.floor(Math.random() * 1000000);
+    setAppointmentId(newAppointmentId);
+    
+    // Tạo đối tượng lịch hẹn
+    const appointment = {
+      id: newAppointmentId,
+      coachId: selectedCoach.id,
+      coachName: selectedCoach.name,
+      coachAvatar: selectedCoach.avatar,
+      coachRole: selectedCoach.role,
+      date: selectedDate.toISOString(),
+      time: time,
+      status: 'confirmed',
+      createdAt: new Date().toISOString()
+    };
+    
+    // Lưu vào localStorage
+    const existingAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
+    const updatedAppointments = [...existingAppointments, appointment];
+    localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+      // Hiển thị thông báo thành công
+    setShowSuccess(true);
+    
+    // Lưu trạng thái tab trong localStorage để Profile page hiển thị tab lịch hẹn
+    localStorage.setItem('activeProfileTab', 'appointments');
+    
+    // Sau 3 giây chuyển hướng đến trang hồ sơ
+    setTimeout(() => {
+      navigate('/profile');
+    }, 3000);
   };
 
   const renderCoachSelection = () => {
@@ -117,7 +191,7 @@ export default function BookAppointment() {
                 {coach.available && <div className="coach-status available"></div>}
               </div>
               <div className="coach-info">
-                <h3>{coach.name}</h3>
+                <h3>{coach.name}</h3> 
                 <p>{coach.role}</p>
                 <div className="coach-rating">
                   <span className="stars">{'★'.repeat(Math.floor(coach.rating))}{coach.rating % 1 > 0 ? '☆' : ''}</span>
@@ -219,39 +293,65 @@ export default function BookAppointment() {
     );
   };
 
+  // Rendu de la confirmation du rendez-vous
+  const renderSuccess = () => {
+    return (
+      <div className="appointment-success">
+        <div className="success-icon">
+          <FaCheck />
+        </div>        <h2>Đặt lịch thành công!</h2>
+        <p>Bạn đã đặt lịch hẹn với <strong>{selectedCoach.name}</strong></p>
+        <p>Vào ngày <strong>{selectedDate.toLocaleDateString('vi-VN')}</strong> lúc <strong>{selectedTime}</strong></p>
+        <p>Mã cuộc hẹn: <strong>#{appointmentId}</strong></p>
+        <p className="redirect-message">Bạn sẽ được chuyển đến trang hồ sơ cá nhân để xem lịch hẹn của bạn...</p>
+      </div>
+    );
+  };
+
   return (
     <section className="appointment-section">
-      <div className="container">
-        <div className="appointment-header">
+      <div className="container">        <div className="appointment-header">
           <h1>
-            <FaCalendarAlt className="appointment-icon" /> 
-            Đặt lịch hẹn với Coach
+            <FaCalendarAlt className="appointment-icon" />
+            <span>Đặt lịch hẹn với Coach</span>
           </h1>
-          <p>Nhận hỗ trợ trực tiếp từ các chuyên gia cai thuốc chuyên nghiệp</p>
         </div>
+        
+        {showSuccess ? renderSuccess() : (
+          <>
+            <div className="appointment-stepper">
+              <div 
+                className={`stepper-step ${step >= 1 ? 'active' : ''} ${selectedCoach ? 'clickable' : ''}`} 
+                onClick={() => selectedCoach && setStep(1)}
+              >
+                <div className="step-number">1</div>
+                <div className="step-label">Chọn Coach</div>
+              </div>
+              <div className="stepper-line"></div>
+              <div 
+                className={`stepper-step ${step >= 2 ? 'active' : ''} ${selectedDate ? 'clickable' : ''}`}
+                onClick={() => selectedDate && setStep(2)}
+              >
+                <div className="step-number">2</div>
+                <div className="step-label">Chọn ngày</div>
+              </div>
+              <div className="stepper-line"></div>
+              <div 
+                className={`stepper-step ${step >= 3 ? 'active' : ''} ${selectedTime ? 'clickable' : ''}`}
+                onClick={() => selectedTime && setStep(3)}
+              >
+                <div className="step-number">3</div>
+                <div className="step-label">Chọn giờ</div>
+              </div>
+            </div>
 
-        <div className="appointment-stepper">
-          <div className={`stepper-step ${step >= 1 ? 'active' : ''}`}>
-            <div className="step-number">1</div>
-            <div className="step-label">Chọn Coach</div>
-          </div>
-          <div className="stepper-line"></div>
-          <div className={`stepper-step ${step >= 2 ? 'active' : ''}`}>
-            <div className="step-number">2</div>
-            <div className="step-label">Chọn ngày</div>
-          </div>
-          <div className="stepper-line"></div>
-          <div className={`stepper-step ${step >= 3 ? 'active' : ''}`}>
-            <div className="step-number">3</div>
-            <div className="step-label">Chọn giờ</div>
-          </div>
-        </div>
-
-        <div className="appointment-content">
-          {step === 1 && renderCoachSelection()}
-          {step === 2 && renderDateSelection()}
-          {step === 3 && renderTimeSelection()}
-        </div>
+            <div className="appointment-content">
+              {step === 1 && renderCoachSelection()}
+              {step === 2 && renderDateSelection()}
+              {step === 3 && renderTimeSelection()}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
