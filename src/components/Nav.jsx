@@ -1,5 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FaHome, FaToolbox, FaChartLine, FaBlog } from 'react-icons/fa';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWebAwesome } from '@fortawesome/free-brands-svg-icons';
+
 
 export default function Nav() {
   const location = useLocation();
@@ -24,7 +27,10 @@ export default function Nav() {
             </Link>
           </li>
           <li className={pathname.includes('/membership') ? 'active' : ''}>
-            <Link to="/membership">Gói thành viên</Link>
+            <Link to="/membership">
+             <FontAwesomeIcon icon={faWebAwesome} style={{ marginRight: 8 }} />
+             Gói thành viên
+             </Link>
           </li>
           <li className={pathname.includes('/blog') ? 'active' : ''}>
             <Link to="/blog">
