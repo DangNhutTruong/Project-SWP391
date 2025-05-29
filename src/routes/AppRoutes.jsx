@@ -31,12 +31,14 @@ const router = createBrowserRouter([
   },  {
     path: "/tools",
     element: <Layout><Tools /></Layout>,
+  }, {
+   path: "/settings",
+    element: <Layout><SettingsPage /></Layout>,
   },
   {
     path: "/membership",
     element: <Layout><MembershipPackage /></Layout>,
-    path: "/settings",
-    element: <Layout><SettingsPage /></Layout>,
+  
   },
   {
     path: "*",

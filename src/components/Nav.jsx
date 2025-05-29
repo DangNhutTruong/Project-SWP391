@@ -14,10 +14,14 @@ export default function Nav() {
             </Link>
           </li>
           <li className={pathname.includes('/journey') ? 'active' : ''}>
-            <Link to="/journey">Công Cụ</Link>
+            <Link to="/journey">
+              <FaToolbox className="nav-icon" /> Kế hoạch cai thuốc
+            </Link>
           </li>
-          <li className={pathname.includes('/profile') ? 'active' : ''}>
-            <Link to="/profile">Hồ sơ cá nhân</Link>
+        <li className={pathname.includes('/progress') ? 'active' : ''}>
+            <Link to="/progress">
+              <FaChartLine className="nav-icon" /> Tiến trình
+            </Link>
           </li>
           <li className={pathname.includes('/membership') ? 'active' : ''}>
             <Link to="/membership">Gói thành viên</Link>

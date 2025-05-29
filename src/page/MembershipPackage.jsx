@@ -10,7 +10,7 @@ export default function MembershipPackage() {
             <img src="/image/hero/winners-two-color.png" alt="Cai thuốc thành công" className="membership-hero-image" />
             <h1 className="hero-title">Cam kết bỏ thuốc - Bước tới cuộc sống khỏe mạnh</h1>
           </div>
-          <h2>So sánh gói dịch vụ</h2>
+          <h2> Gói dịch vụ</h2>
           <p className="pricing-subtitle">Chọn gói phù hợp với nhu cầu của bạn</p>
   
           <div className="pricing-grid">
@@ -32,8 +32,8 @@ export default function MembershipPackage() {
                   <i className="fas fa-check feature-check"></i>
                   <span>Lập kế hoạch cá nhân</span>
                 </div>
-                <div className="feature-item">
-                  <i className="fas fa-check feature-check"></i>
+                <div className="feature-item disabled">
+                  <i className="fas fa-times feature-times"></i>
                   <span>Huy hiệu & cộng đồng</span>
                 </div>
                 <div className="feature-item disabled">
@@ -52,7 +52,7 @@ export default function MembershipPackage() {
               <div className="best-value">Phổ biến nhất</div>
               <div className="pricing-header">
                 <h3>Premium</h3>
-                <p className="pricing-desc">Hỗ trợ cá nhân</p>
+                <p className="pricing-desc">Hỗ trợ toàn diện</p>
                 <div className="pricing-price">
                   <span className="price">99.000đ</span>
                   <span className="period">/tháng</span>
@@ -75,21 +75,20 @@ export default function MembershipPackage() {
                   <i className="fas fa-check feature-check"></i>
                   <span>Chat huấn luyện viên</span>
                 </div>
-                <div className="feature-item disabled">
-                  <i className="fas fa-times feature-times"></i>
+                <div className="feature-item">
+                  <i className="fas fa-check feature-check"></i>
                   <span>Video call tư vấn</span>
                 </div>
               </div>
               <Link to="/signup/premium" className="pricing-btn">Đăng ký ngay</Link>
             </div>
-  
             <div className="pricing-card pro">
               <div className="pricing-header">
                 <h3>Pro</h3>
                 <p className="pricing-desc">Hỗ trợ toàn diện</p>
                 <div className="pricing-price">
-                  <span className="price">199.000đ</span>
-                  <span className="period">/tháng</span>
+                  <span className="price">999.000đ</span>
+                  <span className="period">/năm</span>
                 </div>
               </div>
               <div className="pricing-features">
