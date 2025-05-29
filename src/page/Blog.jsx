@@ -382,13 +382,11 @@ export default function Blog() {
 
         {/* Tham gia cộng đồng */}
         <div className="join-community-section">
-          <div className="join-content">
-            <h2>Tham gia cộng đồng NoSmoke</h2>
+          <div className="join-content">            <h2>Tham gia cộng đồng NoSmoke</h2>
             <p>
-              Chia sẻ hành trình cai thuốc, nhận hỗ trợ và động viên từ hàng
-              ngàn thành viên
+              Chia sẻ hành trình cai thuốc, nhận hỗ trợ và động viên từ đội ngũ huấn luyện viên chuyên nghiệp
             </p>
-            <button className="join-btn">Đăng ký miễn phí</button>
+            <Link to="/membership" className="join-btn">Trở thành thành viên</Link>
           </div>
           <div className="join-image">
             <img src="/image/hero/quit-smoking-2.png" alt="Cộng đồng NoSmoke" />

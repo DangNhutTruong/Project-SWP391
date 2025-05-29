@@ -10,7 +10,7 @@ export default function MembershipPackage() {
             <img src="/image/hero/winners-two-color.png" alt="Cai thuốc thành công" className="membership-hero-image" />
             <h1 className="hero-title">Cam kết bỏ thuốc - Bước tới cuộc sống khỏe mạnh</h1>
           </div>
-          <h2> Gói dịch vụ</h2>
+          <h2>Gói thành viên</h2>
           <p className="pricing-subtitle">Chọn gói phù hợp với nhu cầu của bạn</p>
   
           <div className="pricing-grid">
