@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaToolbox, FaChartLine, FaBlog } from 'react-icons/fa';
+import { FaHome, FaToolbox, FaChartLine, FaBlog, FaCalendarAlt } from 'react-icons/fa';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWebAwesome } from '@fortawesome/free-brands-svg-icons';
 
@@ -24,6 +24,11 @@ export default function Nav() {
         <li className={pathname.includes('/progress') ? 'active' : ''}>
             <Link to="/progress">
               <FaChartLine className="nav-icon" /> Tiến trình
+            </Link>
+          </li>
+          <li className={pathname.includes('/appointment') ? 'active' : ''}>
+            <Link to="/appointment">
+              <FaCalendarAlt className="nav-icon" /> Đặt lịch Coach
             </Link>
           </li>
           <li className={pathname.includes('/membership') ? 'active' : ''}>

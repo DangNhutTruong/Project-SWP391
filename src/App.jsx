@@ -13,6 +13,7 @@ import Blog from './page/Blog.jsx'; // Import component Blog
 import Login from './page/Login.jsx'; // Import component Login
 import Register from './page/Register.jsx'; // Import component Register
 import MembershipPackage from './page/MembershipPackage.jsx'; // Import component MembershipPackage
+import BookAppointment from './page/BookAppointment.jsx'; // Import component BookAppointment
 import ProtectedRoute from './components/ProtectedRoute.jsx'; // Import ProtectedRoute
 import { AuthProvider } from './context/AuthContext.jsx'; // Import AuthProvider
 import './style.css';
@@ -143,12 +144,14 @@ const router = createBrowserRouter([
     path: "/membership",
     element: <Layout><MembershipPackage /></Layout>, // Đường dẫn đến trang gói thành viên
     
-  },
-  {
+  },  {
     path: "/settings",
     element: <Layout><ProtectedRoute><SettingsPage /></ProtectedRoute></Layout>,
   },
-
+  {
+    path: "/appointment",
+    element: <Layout><ProtectedRoute><BookAppointment /></ProtectedRoute></Layout>,
+  },
   {
     path: "*",
     loader: () => { return window.location.replace('/') },

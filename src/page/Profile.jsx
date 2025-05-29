@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaUserAlt,
   FaChartLine,
@@ -18,6 +18,7 @@ import {
 import "./Profile.css";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import AppointmentList from "../components/AppointmentList";
 
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
@@ -318,6 +319,16 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị
 
+  // Check if redirected from appointment booking
+  useEffect(() => {
+    const savedTab = localStorage.getItem('activeProfileTab');
+    if (savedTab) {
+      setActiveTab(savedTab);
+      // Clear the saved tab after using it
+      localStorage.removeItem('activeProfileTab');
+    }
+  }, []);
+
   // Tính toán các giá trị
   const calculateSavings = () => {
     if (!user) return { days: 0, money: 0, cigarettes: 0 };
@@ -504,13 +515,20 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <nav className="profile-nav">
-          <Link
+        <nav className="profile-nav">          <Link
             to="#"
             className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
             onClick={() => setActiveTab("profile")}
           >
             <FaUserAlt /> Hồ sơ cá nhân
+          </Link>
+          
+          <Link
+            to="#"
+            className={`nav-item ${activeTab === "appointments" ? "active" : ""}`}
+            onClick={() => setActiveTab("appointments")}
+          >
+            <FaCalendarAlt /> Lịch hẹn Coach
           </Link>
           
           <Link
@@ -696,6 +714,13 @@ export default function ProfilePage() {
             </div>
 
             <h2>Xem tất cả huy hiệu</h2>
+          </div>
+        )}
+
+        {activeTab === "appointments" && (
+          <div className="appointments-section">
+            <h1>Lịch hẹn Coach</h1>
+            <AppointmentList />
           </div>
         )}
 
