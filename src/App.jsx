@@ -1,15 +1,24 @@
 import './style.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Route } from 'react-router-dom';
 import Header from './components/Header.jsx';
 import Nav from './components/Nav.jsx';
 import Footer from './components/Footer.jsx';
 import ChatButton from './components/ChatButton.jsx';
 import BackToTop from './components/BackToTop.jsx';
 import Home from './page/Home.jsx';
-import Tools from './page/Tools.jsx';
+import ProfilePage from './page/Profile.jsx'; // Đổi tên từ Tools sang ProfilePage
+import ProgressPage from './page/Progress.jsx'; // Import component Progress
+import TestPage from './page/TestPage.jsx'; // Thêm trang test đơn giản
+import Blog from './page/Blog.jsx'; // Import component Blog
+import Login from './page/Login.jsx'; // Import component Login
+import Register from './page/Register.jsx'; // Import component Register
+import MembershipPackage from './page/MembershipPackage.jsx'; // Import component MembershipPackage
+import ProtectedRoute from './components/ProtectedRoute.jsx'; // Import ProtectedRoute
+import { AuthProvider } from './context/AuthContext.jsx'; // Import AuthProvider
 import './style.css';
-
+import JourneyStepper from './components/JourneyStepper.jsx';
+import Notification from './page/Notification.jsx'; // Import component Notification
+import SettingsPage from './page/Settings.jsx'; // Import component Settings
 /**
  * App - Component chính của ứng dụng
  * 
@@ -31,6 +40,14 @@ const Layout = ({ children }) => (
   </>
 );
 
+// Placeholder component cho các trang đang phát triển
+const ComingSoon = ({ title }) => (
+  <div className="container py-20">
+    <h1 className="text-4xl font-bold text-center">{title}</h1>
+    <p className="text-center mt-4">Trang này đang được phát triển</p>
+  </div>
+);
+
 // Cấu hình router sử dụng React Router v7
 const router = createBrowserRouter([
   {
@@ -40,31 +57,98 @@ const router = createBrowserRouter([
   {
     path: "/home",
     loader: () => { return window.location.replace('/') },
+  },  {
+    path: "/profile",
+    element: <Layout><ProtectedRoute><ProfilePage /></ProtectedRoute></Layout>,
   },
   {
-    path: "/tools",
-    element: <Layout><Tools /></Layout>,
+    path: "/progress",
+    element: <Layout><ProtectedRoute><ProgressPage /></ProtectedRoute></Layout>,
   },
   {
-    path: "/reasons",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Tôi đến đây vì...</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    path: "/test",
+    element: <Layout><TestPage /></Layout>,
+  },
+  {
+    path: "/about",
+    element: <Layout><ComingSoon title="Về chúng tôi" /></Layout>,
+  },
+  {
+    path: "/journey",
+    element: <Layout><JourneyStepper /></Layout>, // Sử dụng JourneyStepper cho trang Công Cụ
+  },
+  {
+    path: "/blog",
+    element: <Layout><Blog /></Layout>,
+  },
+  {
+    path: "/testimonials",
+    element: <Layout><ComingSoon title="Câu chuyện thành công" /></Layout>,
+  },
+  {
+    path: "/contact",
+    element: <Layout><ComingSoon title="Liên hệ" /></Layout>,
   },
   {
     path: "/support",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Hỗ Trợ</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    element: <Layout><ComingSoon title="Hỗ trợ" /></Layout>,
   },
   {
-    path: "/resources",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Tài Nguyên</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    path: "/team",
+    element: <Layout><ComingSoon title="Đội ngũ" /></Layout>,
   },
   {
-    path: "/health-professionals",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Dành Cho Nhân Viên Y Tế</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    path: "/partners",
+    element: <Layout><ComingSoon title="Đối tác" /></Layout>,
   },
   {
-    path: "/communities",
-    element: <Layout><div className="container py-20"><h1 className="text-4xl font-bold text-center">Dành Cho Cộng Đồng</h1><p className="text-center mt-4">Trang này đang được phát triển</p></div></Layout>,
+    path: "/community",
+    element: <Layout><ComingSoon title="Cộng đồng hỗ trợ" /></Layout>,
   },
+  {
+    path: "/feedback",
+    element: <Layout><ComingSoon title="Góp ý" /></Layout>,
+  },
+  {
+    path: "/privacy",
+    element: <Layout><ComingSoon title="Chính sách bảo mật" /></Layout>,
+  },
+  {
+    path: "/terms",
+    element: <Layout><ComingSoon title="Điều khoản sử dụng" /></Layout>,
+  },
+  {
+    path: "/sitemap",
+    element: <Layout><ComingSoon title="Sơ đồ trang" /></Layout>,
+  }, {
+    path: "/login",
+    element: <Layout><Login /></Layout>,
+  },
+  {
+    path: "/signup",
+    element: <Layout><Register /></Layout>,
+  },
+  {
+    path: "/signup/premium",
+    element: <Layout><ComingSoon title="Đăng ký gói Premium" /></Layout>,
+  },  {
+    path: "/signup/pro",
+    element: <Layout><ComingSoon title="Đăng ký gói Pro" /></Layout>,
+  },
+  {
+    path: "/notifications",
+    element: <Layout><Notification /></Layout>, // Đường dẫn đến trang thông báo
+  },
+  {
+    path: "/membership",
+    element: <Layout><MembershipPackage /></Layout>, // Đường dẫn đến trang gói thành viên
+    
+  },
+  {
+    path: "/settings",
+    element: <Layout><ProtectedRoute><SettingsPage /></ProtectedRoute></Layout>,
+  },
+
   {
     path: "*",
     loader: () => { return window.location.replace('/') },
@@ -103,7 +187,8 @@ export default function App() {
   return (
     <AuthProvider>
       <RouterProvider router={router} />
-      <SimpleBackToTop /> {/* Thêm nút back-to-top trực tiếp vào App */}
     </AuthProvider>
   );
 }
+
+

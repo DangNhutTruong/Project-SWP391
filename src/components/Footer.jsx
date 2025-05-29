@@ -1,6 +1,7 @@
 import { FaFacebookF, FaLinkedinIn, FaTwitter, FaYoutube, FaInstagram } from "react-icons/fa";
 import { IoChevronUpOutline } from "react-icons/io5";
 import './footer.css';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
   const scrollToTop = () => {
@@ -11,72 +12,63 @@ export default function Footer() {
   };
 
   return (
-    <footer>
+    <footer className="nosmoke-footer">
       <button className="back-to-top" onClick={scrollToTop}>
-        Back to top of page <IoChevronUpOutline />
+        Về đầu trang <IoChevronUpOutline />
       </button>
       <div className="container">
         <div className="footer-top">
           <div className="footer-col">
-            <h4>Looking for</h4>
+            <h4>Bỏ thuốc lá</h4>
             <ul>
-              <li><a href="#">Quitting resources</a></li>
-              <li><a href="#">In-language resources</a></li>
-              <li><a href="#">Quitline referral</a></li>
+              <li><Link to="/resources">Tài nguyên hỗ trợ</Link></li>
+              <li><Link to="/tips">Mẹo vượt qua cơn nghiện</Link></li>
+              <li><Link to="/health">Lợi ích sức khỏe</Link></li>
+              <li><Link to="/faq">Câu hỏi thường gặp</Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>About Quit</h4>
+            <h4>Về NoSmoke</h4>
             <ul>
-              <li><a href="#">Our story</a></li>
-              <li><a href="#">Newsroom</a></li>
+              <li><Link to="/about">Câu chuyện của chúng tôi</Link></li>
+              <li><Link to="/team">Đội ngũ</Link></li>
+              <li><Link to="/partners">Đối tác</Link></li>
+              <li><Link to="/testimonials">Phản hồi người dùng</Link></li>
             </ul>
           </div>
           <div className="footer-col">
-            <h4>Contact Quit</h4>
+            <h4>Hỗ trợ</h4>
             <ul>
-              <li><a href="#">Contact us</a></li>
-              <li><a href="#">Media</a></li>
+              <li><Link to="/support">Tư vấn trực tiếp</Link></li>
+              <li><Link to="/community">Cộng đồng hỗ trợ</Link></li>
+              <li><Link to="/contact">Liên hệ</Link></li>
+              <li><Link to="/feedback">Góp ý</Link></li>
             </ul>
           </div>
-          <div className="footer-col quitline">
-            <img src="/image/quitline-logo.png" alt="Quitline 13 7848" />
-            <div className="social-icons">
-              <a href="#" aria-label="Facebook"><FaFacebookF /></a>
-              <a href="#" aria-label="LinkedIn"><FaLinkedinIn /></a>
-              <a href="#" aria-label="Twitter"><FaTwitter /></a>
-              <a href="#" aria-label="YouTube"><FaYoutube /></a>
-              <a href="#" aria-label="Instagram"><FaInstagram /></a>
+          <div className="footer-col">
+            <h4>Kết nối</h4>
+            <div className="social-links">
+              <a href="#" className="social-icon"><FaFacebookF /></a>
+              <a href="#" className="social-icon"><FaTwitter /></a>
+              <a href="#" className="social-icon"><FaInstagram /></a>
+              <a href="#" className="social-icon"><FaYoutube /></a>
+              <a href="#" className="social-icon"><FaLinkedinIn /></a>
+            </div>
+            <div className="newsletter">
+              <h4>Nhận thông tin mới nhất</h4>
+              <form>
+                <input type="email" placeholder="Email của bạn" required />
+                <button type="submit">Đăng ký</button>
+              </form>
             </div>
           </div>
         </div>
-
-        <div className="footer-middle">
-          <p>Quit acknowledges the traditional custodians of the lands on which we live and work. We pay our respects to Elders past, present, and emerging and extend that respect to all Aboriginal and Torres Strait Islander peoples.</p>
-          <div className="aboriginal-flags">
-            <img src="/image/aboriginal-flag.png" alt="Aboriginal Flag" />
-            <img src="/image/torres-strait-island-flag.png" alt="Torres Strait Island Flag" />
-            <img src="/image/aboriginal-torres-strait-island-flag.png" alt="Aboriginal and Torres Strait Island Flag" />
-          </div>
-        </div>
-
-        <div className="footer-sponsors">
-          <p>Proud Supporters</p>
-          <div className="sponsor-logos">
-            <img src="https://www.quit.org.au/images/default-source/default-album/australian-government.png" alt="Australian Government" />
-            <img src="https://www.quit.org.au/images/default-source/default-album/cancer-council-victoria-logo-retina.png" alt="Cancer Council Victoria" />
-            <img src="https://www.quit.org.au/images/default-source/default-album/vic-health-logo-retina.png" alt="VicHealth" />
-            <img src="https://www.quit.org.au/images/default-source/default-album/heart-foundation-logo-retina.png" alt="Heart Foundation" />
-          </div>
-        </div>
-
         <div className="footer-bottom">
-          <p>Quit © 2023</p>
-          <div className="footer-bottom-links">
-            <a href="#">Copyright</a>
-            <a href="#">Privacy</a>
-            <a href="#">Accessibility</a>
-            <a href="#">Disclaimer</a>
+          <p>&copy; {new Date().getFullYear()} NoSmoke. Tất cả quyền được bảo lưu.</p>
+          <div className="footer-links">
+            <Link to="/privacy">Chính sách bảo mật</Link>
+            <Link to="/terms">Điều khoản sử dụng</Link>
+            <Link to="/sitemap">Sơ đồ trang</Link>
           </div>
         </div>
       </div>

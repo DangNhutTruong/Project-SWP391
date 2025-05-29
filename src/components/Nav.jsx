@@ -1,17 +1,36 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { FaHome, FaToolbox, FaChartLine, FaBlog } from 'react-icons/fa';
 
 export default function Nav() {
-  return (
-    <nav>
+  const location = useLocation();
+  const { pathname } = location;
+
+  return (    <nav className="nosmoke-nav">
       <div className="container">
         <ul className="main-menu">
-          <li className="active"><Link to="/">Home</Link></li>
-          <li><Link to="/reasons">I'm here because...</Link></li>
-          <li><Link to="/support">Get Support</Link></li>
-          <li><Link to="/tools">Tools</Link></li>
-          <li><Link to="/resources">Resources</Link></li>
-          <li><Link to="/health-professionals">For Health Professionals</Link></li>
-          <li><Link to="/communities">For Communities & Places</Link></li>
+          <li className={pathname === '/' ? 'active' : ''}>
+            <Link to="/">
+              <FaHome className="nav-icon" /> Trang chủ
+            </Link>
+          </li>
+          <li className={pathname.includes('/journey') ? 'active' : ''}>
+            <Link to="/journey">
+              <FaToolbox className="nav-icon" /> Kế hoạch cai thuốc
+            </Link>
+          </li>
+        <li className={pathname.includes('/progress') ? 'active' : ''}>
+            <Link to="/progress">
+              <FaChartLine className="nav-icon" /> Tiến trình
+            </Link>
+          </li>
+          <li className={pathname.includes('/membership') ? 'active' : ''}>
+            <Link to="/membership">Gói thành viên</Link>
+          </li>
+          <li className={pathname.includes('/blog') ? 'active' : ''}>
+            <Link to="/blog">
+              <FaBlog className="nav-icon" /> Cộng Đồng
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
