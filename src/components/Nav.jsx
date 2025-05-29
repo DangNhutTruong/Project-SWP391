@@ -3,7 +3,6 @@ import { FaHome, FaToolbox, FaChartLine, FaBlog, FaCalendarAlt } from 'react-ico
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWebAwesome } from '@fortawesome/free-brands-svg-icons';
 
-//hehe
 export default function Nav() {
   const location = useLocation();
   const { pathname } = location;
