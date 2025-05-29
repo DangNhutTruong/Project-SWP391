@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/AutoChatSupport.css';
 import { FaRobot, FaTimes, FaPaperPlane, FaUser, FaAngleDown } from 'react-icons/fa';
-
 const AutoChatSupport = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState([
     {

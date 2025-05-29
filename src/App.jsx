@@ -153,6 +153,50 @@ const router = createBrowserRouter([
     element: <Layout><ProtectedRoute><BookAppointment /></ProtectedRoute></Layout>,
   },
   {
+    path: "/feedback",
+    element: <Layout><ComingSoon title="Góp ý" /></Layout>,
+  },
+  {
+    path: "/privacy",
+    element: <Layout><ComingSoon title="Chính sách bảo mật" /></Layout>,
+  },
+  {
+    path: "/terms",
+    element: <Layout><ComingSoon title="Điều khoản sử dụng" /></Layout>,
+  },
+  {
+    path: "/sitemap",
+    element: <Layout><ComingSoon title="Sơ đồ trang" /></Layout>,
+  }, {
+    path: "/login",
+    element: <Layout><Login /></Layout>,
+  },
+  {
+    path: "/signup",
+    element: <Layout><Register /></Layout>,
+  },
+  {
+    path: "/signup/premium",
+    element: <Layout><ComingSoon title="Đăng ký gói Premium" /></Layout>,
+  },  {
+    path: "/signup/pro",
+    element: <Layout><ComingSoon title="Đăng ký gói Pro" /></Layout>,
+  },
+  {
+    path: "/notifications",
+    element: <Layout><Notification /></Layout>, // Đường dẫn đến trang thông báo
+  },
+  {
+    path: "/membership",
+    element: <Layout><MembershipPackage /></Layout>, // Đường dẫn đến trang gói thành viên
+    
+  },
+  {
+    path: "/settings",
+    element: <Layout><ProtectedRoute><SettingsPage /></ProtectedRoute></Layout>,
+  },
+
+  {
     path: "*",
     loader: () => { return window.location.replace('/') },
   }

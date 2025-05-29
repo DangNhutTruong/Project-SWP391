@@ -61,7 +61,7 @@ export default function Header() {
                       <i className="fas fa-sign-out-alt"></i> Đăng xuất
                     </button>
                   </div>
-                )}
+                )}x
               </div>
             </>
           ) : (
