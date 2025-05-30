@@ -20,6 +20,8 @@ import './style.css';
 import JourneyStepper from './components/JourneyStepper.jsx';
 import Notification from './page/Notification.jsx'; // Import component Notification
 import SettingsPage from './page/Settings.jsx'; // Import component Settings
+import Pay from './page/Pay.jsx';
+import PaymentSuccess from './page/PaymentSuccess.jsx';
 /**
  * App - Component chính của ứng dụng
  * 
@@ -130,11 +132,12 @@ const router = createBrowserRouter([
     element: <Layout><Register /></Layout>,
   },
   {
-    path: "/signup/premium",
-    element: <Layout><ComingSoon title="Đăng ký gói Premium" /></Layout>,
-  },  {
-    path: "/signup/pro",
-    element: <Layout><ComingSoon title="Đăng ký gói Pro" /></Layout>,
+    path: "/payment",
+    element: <Layout><Pay /></Layout>,
+  },
+  {
+    path: "/payment/success",
+    element: <Layout><PaymentSuccess /></Layout>,
   },
   {
     path: "/notifications",
@@ -174,13 +177,6 @@ const router = createBrowserRouter([
   {
     path: "/signup",
     element: <Layout><Register /></Layout>,
-  },
-  {
-    path: "/signup/premium",
-    element: <Layout><ComingSoon title="Đăng ký gói Premium" /></Layout>,
-  },  {
-    path: "/signup/pro",
-    element: <Layout><ComingSoon title="Đăng ký gói Pro" /></Layout>,
   },
   {
     path: "/notifications",
