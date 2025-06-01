@@ -1,13 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import './AppointmentList.css';
+import CoachChat from './CoachChat';
+
+// Component hiển thị cho thẻ lịch hẹn đã hủy
+const CancelledAppointmentCard = ({ appointment, onRebook }) => {
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' });
+  };
+  
+  // Gọi hàm mở modal đặt lại lịch hẹn
+  const handleRebookClick = () => {
+    onRebook(appointment);
+  };
+
+  return (
+    <div className="cancelled-appointment-card">
+      <div className="cancelled-header">
+        <FaTimes className="cancelled-icon" />
+        <div className="cancelled-status">
+          <span className="cancelled-label">Đã hủy</span>
+          <span className="cancelled-id">#{appointment.id}</span>
+        </div>
+      </div>
+      
+      <div className="cancelled-body">
+        <img src={appointment.coachAvatar} alt={appointment.coachName} className="coach-avatar" />
+        <div className="cancelled-info">
+          <h3 className="coach-name">{appointment.coachName}</h3>
+          <p className="coach-role">{appointment.coachRole}</p>
+          <div className="cancelled-date">
+            <FaCalendarAlt /> 
+            {formatDate(appointment.date)}, {appointment.time}
+            <span className="online-badge">Tư vấn trực tuyến</span>
+          </div>
+        </div>
+      </div>
+        <div className="cancelled-footer">
+        <button className="rebook-button" onClick={handleRebookClick}>
+          Đặt lại lịch hẹn
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default function AppointmentList() {
   const [appointments, setAppointments] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'upcoming', 'past'
   const [loading, setLoading] = useState(true);
   const [newAppointmentId, setNewAppointmentId] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [appointmentToCancel, setAppointmentToCancel] = useState(null);
+  const [showRebookModal, setShowRebookModal] = useState(false);
+  const [appointmentToRebook, setAppointmentToRebook] = useState(null);
   const navigate = useNavigate();
   useEffect(() => {
     // Fetch appointments from localStorage
@@ -98,12 +149,23 @@ export default function AppointmentList() {
     
     return 'Chờ xác nhận';
   };
+  // Open cancel confirmation modal
+  const openCancelModal = (id) => {
+    setAppointmentToCancel(id);
+    setShowCancelModal(true);
+  };
+
+  // Close cancel confirmation modal
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+    setAppointmentToCancel(null);
+  };
 
   // Handle cancel appointment
-  const handleCancelAppointment = (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn hủy cuộc hẹn này không?')) {
+  const handleCancelAppointment = () => {
+    if (appointmentToCancel) {
       const updatedAppointments = appointments.map(appointment => {
-        if (appointment.id === id) {
+        if (appointment.id === appointmentToCancel) {
           return { ...appointment, status: 'cancelled' };
         }
         return appointment;
@@ -111,16 +173,73 @@ export default function AppointmentList() {
       
       setAppointments(updatedAppointments);
       localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+      closeCancelModal();
     }
-  };
-
-  // Handle reschedule appointment
+  };  // Handle reschedule or rebook appointment
   const handleRescheduleAppointment = (appointment) => {
     // Store the appointment to reschedule in localStorage
     localStorage.setItem('appointmentToReschedule', JSON.stringify(appointment));
     
     // Navigate to the appointment booking page with query param
     navigate('/appointment?reschedule=true');
+  };
+  // Open rebook confirmation modal
+  const openRebookModal = (appointment) => {
+    setAppointmentToRebook(appointment);
+    setShowRebookModal(true);
+  };
+
+  // Close rebook confirmation modal
+  const closeRebookModal = () => {
+    setShowRebookModal(false);
+    setAppointmentToRebook(null);
+  };
+  // Handle booking new appointment after completion or cancellation
+  const handleRebookAppointment = () => {
+    if (appointmentToRebook) {
+      // For cancelled or completed appointments, we'll create a new booking
+      // but pre-fill the coach information
+      const rebookData = {
+        coachId: appointmentToRebook.coachId,
+        coachName: appointmentToRebook.coachName,
+        coachAvatar: appointmentToRebook.coachAvatar,
+        coachRole: appointmentToRebook.coachRole
+      };
+      
+      localStorage.setItem('rebookCoach', JSON.stringify(rebookData));
+      
+      // Đóng modal và chuyển trang
+      closeRebookModal();
+      navigate('/appointment?rebook=true');
+    }
+  };
+  // Handle opening chat with coach
+  const handleOpenChat = (appointment) => {
+    const coach = {
+      name: appointment.coachName,
+      avatar: appointment.coachAvatar,
+      role: appointment.coachRole
+    };
+    
+    setSelectedCoach(coach);
+    setSelectedAppointment(appointment);
+    setShowChat(true);
+    
+    // Clear any unread messages when opening the chat
+    const unreadKey = `unread_messages_${appointment.id}`;
+    localStorage.setItem(unreadKey, '0');
+  };
+
+  // Handle closing chat
+  const handleCloseChat = () => {
+    setShowChat(false);
+  };
+  
+  // Check if there are unread messages for an appointment
+  const hasUnreadMessages = (appointmentId) => {
+    const unreadKey = `unread_messages_${appointmentId}`;
+    const unreadCount = localStorage.getItem(unreadKey);
+    return unreadCount && parseInt(unreadCount) > 0;
   };
 
   return (
@@ -161,13 +280,17 @@ export default function AppointmentList() {
             <a href="/appointment" className="book-button">Đặt lịch hẹn ngay</a>
           )}
         </div>
-      ) : (
-        <div className="appointments-list">          {filteredAppointments.map(appointment => (
+      ) : (        <div className="appointments-list">          {filteredAppointments.map(appointment => (
+            appointment.status === 'cancelled' ? (              <CancelledAppointmentCard 
+                key={appointment.id}
+                appointment={appointment}
+                onRebook={openRebookModal}
+              />
+            ) : (
             <div 
               key={appointment.id} 
               className={`appointment-card ${getStatusClass(appointment)} ${newAppointmentId === appointment.id ? 'new-appointment' : ''}`}
-            >
-              <div className="appointment-header">
+            ><div className="appointment-header">
                 <div className={`appointment-status ${getStatusClass(appointment)}`}>
                   {getStatusClass(appointment) === 'confirmed' && <FaCheck />}
                   {getStatusClass(appointment) === 'cancelled' && <FaTimes />}
@@ -204,33 +327,128 @@ export default function AppointmentList() {
                   </div>
                 </div>
               </div>
-              
-              <div className="appointment-footer">
+                <div className="appointment-footer">
                 {getStatusClass(appointment) === 'confirmed' && (
                   <>
+                    <button 
+                      className="chat-button"
+                      onClick={() => handleOpenChat(appointment)}
+                    >
+                      <FaComments className="chat-button-icon" /> 
+                      Chat với Coach
+                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
+                    </button>
                     <button 
                       className="reschedule-button"
                       onClick={() => handleRescheduleAppointment(appointment)}
                     >
                       Thay đổi lịch
-                    </button>
-                    <button 
+                    </button>                    <button 
                       className="cancel-button"
-                      onClick={() => handleCancelAppointment(appointment.id)}
+                      onClick={() => openCancelModal(appointment.id)}
                     >
                       Hủy lịch hẹn
                     </button>
                   </>
-                )}
-                {getStatusClass(appointment) === 'completed' && (
-                  <button className="feedback-button">Đánh giá Coach</button>
-                )}
-                {getStatusClass(appointment) === 'cancelled' && (
-                  <button className="rebook-button">Đặt lại lịch hẹn</button>
-                )}
-              </div>
+                )}                {getStatusClass(appointment) === 'completed' && (
+                  <>
+                    <button 
+                      className="chat-button"
+                      onClick={() => handleOpenChat(appointment)}
+                    >
+                      <FaComments className="chat-button-icon" /> 
+                      Chat với Coach
+                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
+                    </button>
+                    <button className="feedback-button">Đánh giá Coach</button>
+                    <button 
+                      className="rebook-button"
+                      onClick={() => openRebookModal(appointment)}
+                    >
+                      Đặt lại lịch hẹn
+                    </button>
+                  </>
+                )}{getStatusClass(appointment) === 'cancelled' && (
+                  <button 
+                    className="rebook-button"
+                    onClick={() => openRebookModal(appointment)}
+                  >
+                    Đặt lại lịch hẹn
+                  </button>
+                )}</div>
             </div>
+            )
           ))}
+        </div>      )}
+        {/* Coach Chat Modal */}
+      {showChat && selectedCoach && selectedAppointment && (
+        <CoachChat
+          coach={selectedCoach}
+          appointment={selectedAppointment}
+          isOpen={showChat}
+          onClose={handleCloseChat}
+        />
+      )}      {/* Cancel Confirmation Modal */}
+      {showCancelModal && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <div className="warning-icon">
+              <FaExclamationTriangle />
+            </div>
+            <h3>Xác nhận hủy lịch hẹn</h3>
+            {appointmentToCancel && (
+              <p>
+                Bạn có chắc chắn muốn hủy lịch hẹn vào
+                {' '}
+                <strong>
+                  {appointments.find(a => a.id === appointmentToCancel)?.time} - {formatDate(appointments.find(a => a.id === appointmentToCancel)?.date)}
+                </strong>
+                ?
+                <br />
+                <span>Hành động này không thể hoàn tác.</span>
+              </p>
+            )}
+            <div className="confirmation-actions">
+              <button className="cancel-action" onClick={closeCancelModal}>
+                Giữ lại
+              </button>
+              <button className="confirm-action" onClick={handleCancelAppointment}>
+                Hủy lịch
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Rebook Confirmation Modal */}
+      {showRebookModal && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <div className="success-icon">
+              <FaCalendarAlt />
+            </div>
+            <h3>Đặt lại lịch hẹn</h3>
+            {appointmentToRebook && (
+              <p>
+                Bạn muốn đặt lại lịch hẹn với coach
+                {' '}
+                <strong>
+                  {appointmentToRebook.coachName}
+                </strong>
+                ?
+                <br />
+                <span>Bạn sẽ được chuyển đến trang đặt lịch.</span>
+              </p>
+            )}
+            <div className="confirmation-actions">
+              <button className="cancel-action" onClick={closeRebookModal}>
+                Hủy bỏ
+              </button>
+              <button className="confirm-action rebook" onClick={handleRebookAppointment}>
+                Đặt lịch
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
