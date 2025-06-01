@@ -1,9 +1,60 @@
 import React from 'react';
 import './MembershipPackage.css';
 import { FaCheck } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function MembershipPackage() {
+  const navigate = useNavigate();
+  
+  // Xử lý chuyển hướng khi người dùng chọn gói
+  const handlePackageSelection = (packageType) => {
+    // Định nghĩa thông tin cho từng gói
+    const packageDetails = {
+      free: {
+        name: "Free",
+        price: 0,
+        period: "tháng",
+        features: [
+          "Theo dõi cai thuốc",
+          "Lập kế hoạch cá nhân"
+        ]
+      },
+      premium: {
+        name: "Premium",
+        price: 99000,
+        period: "tháng",
+        features: [
+          "Theo dõi cai thuốc",
+          "Lập kế hoạch cá nhân",
+          "Huy hiệu & cộng đồng",
+          "Chat huấn luyện viên",
+          "Video call tư vấn"
+        ]
+      },
+      pro: {
+        name: "Pro",
+        price: 999000,
+        period: "năm",
+        features: [
+          "Theo dõi cai thuốc",
+          "Lập kế hoạch cá nhân",
+          "Huy hiệu & cộng đồng",
+          "Chat huấn luyện viên",
+          "Video call tư vấn"
+        ]
+      }
+    };
+
+    // Nếu gói free, chuyển đến trang đăng ký
+    if (packageType === 'free') {
+      navigate('/signup');
+      return;
+    }
+
+    // Chuyển hướng đến trang thanh toán với thông tin gói đã chọn
+    navigate('/payment', { state: { package: packageDetails[packageType] } });
+  };
+
   return (
       <section className="pricing-section">
         <div className="container">          <div className="hero-image-container">
@@ -44,8 +95,7 @@ export default function MembershipPackage() {
                   <i className="fas fa-times feature-times"></i>
                   <span>Video call tư vấn</span>
                 </div>
-              </div>
-              <Link to="/signup" className="pricing-btn">Bắt đầu miễn phí</Link>
+              </div>              <button onClick={() => handlePackageSelection('free')} className="pricing-btn">Bắt đầu miễn phí</button>
             </div>
   
             <div className="pricing-card premium highlight">
@@ -80,7 +130,7 @@ export default function MembershipPackage() {
                   <span>Video call tư vấn</span>
                 </div>
               </div>
-              <Link to="/signup/premium" className="pricing-btn">Đăng ký ngay</Link>
+              <button onClick={() => handlePackageSelection('premium')} className="pricing-btn">Đăng ký ngay</button>
             </div>
             <div className="pricing-card pro">
               <div className="pricing-header">
@@ -113,7 +163,7 @@ export default function MembershipPackage() {
                   <span>Video call tư vấn</span>
                 </div>
               </div>
-              <Link to="/signup/pro" className="pricing-btn">Đăng ký Pro</Link>
+              <button onClick={() => handlePackageSelection('pro')} className="pricing-btn">Đăng ký Pro</button>
             </div>
           </div>
         </div>

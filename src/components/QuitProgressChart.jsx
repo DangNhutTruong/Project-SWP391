@@ -1,28 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-} from 'chart.js';
+import { Chart as ChartJS } from 'chart.js/auto';
 import { Line } from 'react-chartjs-2';
-
-// Đăng ký các component cần thiết
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-);
 
 const QuitProgressChart = ({
     userPlan = null,
