@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid } from 'react-icons/fa';
+import { FaRegStar as FaStarRegular } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import './AppointmentList.css';
 import CoachChat from './CoachChat';
@@ -65,16 +66,23 @@ export default function AppointmentList() {
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
   const [showRebookModal, setShowRebookModal] = useState(false);
   const [appointmentToRebook, setAppointmentToRebook] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);  const [appointmentToDelete, setAppointmentToDelete] = useState(null);
-  const [showToast, setShowToast] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);  const [appointmentToDelete, setAppointmentToDelete] = useState(null);  const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const navigate = useNavigate();
-  useEffect(() => {
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [appointmentToRate, setAppointmentToRate] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [ratingHover, setRatingHover] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const navigate = useNavigate();  useEffect(() => {
     // Fetch appointments from localStorage
     const fetchAppointments = () => {
       setLoading(true);
       const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
+      
+      // Log ngày hiện tại để debug
+      console.log('Ngày hiện tại:', new Date().toLocaleDateString('vi-VN'));
       
       // Sort appointments by date (newest first)
       const sortedAppointments = storedAppointments.sort((a, b) => {
@@ -101,22 +109,37 @@ export default function AppointmentList() {
     };
 
     fetchAppointments();
-  }, []);
-
-  // Filter appointments based on the selected filter
+  }, []);  // Filter appointments based on the selected filter
   const filteredAppointments = appointments.filter(appointment => {
-    const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
-    const now = new Date();
+    // Lấy ngày hiện tại và reset giờ về 00:00:00
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
+    // Lấy ngày lịch hẹn và reset giờ về 00:00:00 để so sánh theo ngày
+    const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
+    const appointmentDay = new Date(appointmentDate);
+    appointmentDay.setHours(0, 0, 0, 0);
+    
+    // Đã hủy chỉ hiển thị trong "Tất cả" và "Đã qua", không hiển thị trong "Sắp tới"
+    if (appointment.status === 'cancelled') {
+      if (filter === 'upcoming') {
+        return false; // Lịch đã hủy không hiển thị trong "Sắp tới"
+      } else {
+        return true; // Hiển thị trong "Tất cả" và "Đã qua"
+      }
+    }
+
+    // Logic lọc dựa trên ngày và trạng thái
     if (filter === 'upcoming') {
-      return appointmentDate > now;
+      // Filter "Sắp tới": Hiển thị tất cả lịch hẹn có ngày >= ngày hiện tại và chưa hoàn thành hoặc chưa hủy
+      return appointmentDay >= today;
     } else if (filter === 'past') {
-      return appointmentDate < now;
+      // Filter "Đã qua": Hiển thị lịch hẹn có ngày < ngày hiện tại hoặc đã hủy
+      return appointmentDay < today || appointment.status === 'cancelled';
     }
     
-    return true; // 'all' filter
+    return true; // 'all' filter: hiển thị tất cả
   });
-
   // Format date for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -127,34 +150,64 @@ export default function AppointmentList() {
       year: 'numeric' 
     });
   };
-
-  // Get status class based on appointment status
-  const getStatusClass = (appointment) => {
-    const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
-    const now = new Date();
+    // Hàm so sánh ngày (chỉ so sánh ngày, tháng, năm, không tính giờ phút giây)
+  const isSameOrBeforeDate = (date1, date2) => {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
     
-    if (appointmentDate < now) {
-      return 'completed';
-    } else if (appointment.status === 'confirmed') {
-      return 'confirmed';
-    } else if (appointment.status === 'cancelled') {
+    // Reset time to 00:00:00
+    d1.setHours(0, 0, 0, 0);
+    d2.setHours(0, 0, 0, 0);
+    
+    // So sánh ngày tháng năm
+    return (
+      d1.getFullYear() < d2.getFullYear() ||
+      (d1.getFullYear() === d2.getFullYear() && d1.getMonth() < d2.getMonth()) ||
+      (d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() <= d2.getDate())
+    );
+  };  // Get status class based on appointment status
+  const getStatusClass = (appointment) => {
+    if (appointment.status === 'cancelled') {
       return 'cancelled';
+    } else if (appointment.status === 'confirmed') {
+      // Lấy ngày hiện tại (chỉ lấy ngày, không lấy giờ)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Lấy ngày lịch hẹn (chỉ lấy ngày, không lấy giờ)
+      const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
+      const appointmentDay = new Date(appointmentDate);
+      appointmentDay.setHours(0, 0, 0, 0);
+      
+      // Lịch hẹn chỉ được đánh dấu hoàn thành nếu ngày hẹn < ngày hiện tại
+      if (appointmentDay < today) {
+        return 'completed';
+      } else {
+        return 'confirmed';
+      }
     }
     
     return '';
-  };
-
-  // Get status text based on appointment status
+  };  // Get status text based on appointment status
   const getStatusText = (appointment) => {
-    const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
-    const now = new Date();
-    
-    if (appointmentDate < now) {
-      return 'Đã hoàn thành';
-    } else if (appointment.status === 'confirmed') {
-      return 'Đã xác nhận';
-    } else if (appointment.status === 'cancelled') {
+    if (appointment.status === 'cancelled') {
       return 'Đã hủy';
+    } else if (appointment.status === 'confirmed') {
+      // Lấy ngày hiện tại
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Lấy ngày lịch hẹn
+      const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
+      const appointmentDay = new Date(appointmentDate);
+      appointmentDay.setHours(0, 0, 0, 0);
+      
+      // Lịch hẹn chỉ được đánh dấu hoàn thành nếu ngày hẹn < ngày hiện tại
+      if (appointmentDay < today) {
+        return 'Đã hoàn thành';
+      } else {
+        return 'Đã xác nhận';
+      }
     }
     
     return 'Chờ xác nhận';
@@ -281,7 +334,6 @@ export default function AppointmentList() {
     const unreadKey = `unread_messages_${appointment.id}`;
     localStorage.setItem(unreadKey, '0');
   };
-
   // Handle closing chat
   const handleCloseChat = () => {
     setShowChat(false);
@@ -292,6 +344,69 @@ export default function AppointmentList() {
     const unreadKey = `unread_messages_${appointmentId}`;
     const unreadCount = localStorage.getItem(unreadKey);
     return unreadCount && parseInt(unreadCount) > 0;
+  };
+
+  // Open rating modal
+  const openRatingModal = (appointment) => {
+    setAppointmentToRate(appointment);
+    setShowRatingModal(true);
+    
+    // Check if the appointment already has a rating
+    const existingRating = appointment.rating;
+    if (existingRating) {
+      setRating(existingRating.stars);
+      setRatingComment(existingRating.comment || '');
+    } else {
+      // Reset rating state if it's a new rating
+      setRating(0);
+      setRatingComment('');
+    }
+  };
+
+  // Close rating modal
+  const closeRatingModal = () => {
+    setShowRatingModal(false);
+    setAppointmentToRate(null);
+    setRating(0);
+    setRatingHover(0);
+    setRatingComment('');
+  };
+
+  // Handle rating submission
+  const handleRatingSubmit = () => {
+    if (appointmentToRate && rating > 0) {
+      setIsSubmittingRating(true);
+      
+      // Create rating object
+      const ratingObj = {
+        stars: rating,
+        comment: ratingComment,
+        date: new Date().toISOString()
+      };
+      
+      // Update the appointment with the rating
+      const updatedAppointments = appointments.map(appointment => {
+        if (appointment.id === appointmentToRate.id) {
+          return { ...appointment, rating: ratingObj };
+        }
+        return appointment;
+      });
+      
+      // Update localStorage and state
+      setAppointments(updatedAppointments);
+      localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+      
+      // Show success toast
+      setToastMessage('Đánh giá của bạn đã được gửi thành công!');
+      setShowToast(true);
+      
+      // Reset states
+      setTimeout(() => {
+        setIsSubmittingRating(false);
+        setShowToast(false);
+        closeRatingModal();
+      }, 1000);
+    }
   };
 
   return (
@@ -378,6 +493,20 @@ export default function AppointmentList() {
                     <FaMapMarkerAlt />
                     <span>Tư vấn trực tuyến</span>
                   </div>
+                  {appointment.rating && (
+                    <div className="detail-item rating-display">
+                      <div className="stars-display">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i}>
+                            {i < appointment.rating.stars ? 
+                              <FaStarSolid className="star-small filled" /> : 
+                              <FaStarRegular className="star-small" />}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="rating-date">Đã đánh giá</span>
+                    </div>
+                  )}
                 </div>
               </div>
                 <div className="appointment-footer">
@@ -412,8 +541,12 @@ export default function AppointmentList() {
                       <FaComments className="chat-button-icon" /> 
                       Chat với Coach
                       {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
+                    </button>                    <button 
+                      className="feedback-button"
+                      onClick={() => openRatingModal(appointment)}
+                    >
+                      {appointment.rating ? 'Cập nhật đánh giá' : 'Đánh giá Coach'}
                     </button>
-                    <button className="feedback-button">Đánh giá Coach</button>
                     <button 
                       className="rebook-button"
                       onClick={() => openRebookModal(appointment)}
@@ -543,8 +676,7 @@ export default function AppointmentList() {
           </div>
         </div>
       )}
-      
-      {/* Success Toast Notification */}
+        {/* Success Toast Notification */}
       {showToast && (
         <div className="toast-notification success">
           <div className="toast-icon">
@@ -552,6 +684,80 @@ export default function AppointmentList() {
           </div>
           <div className="toast-message">
             {toastMessage}
+          </div>
+        </div>
+      )}
+
+      {/* Rating Modal */}
+      {showRatingModal && appointmentToRate && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal rating-modal">
+            <h3>Đánh giá Coach</h3>
+            <div className="coach-rating-info">
+              <img 
+                src={appointmentToRate.coachAvatar} 
+                alt={appointmentToRate.coachName} 
+                className="coach-avatar-rating" 
+              />
+              <div>
+                <h4>{appointmentToRate.coachName}</h4>
+                <p>{formatDate(appointmentToRate.date)}, {appointmentToRate.time}</p>
+              </div>
+            </div>
+            
+            <div className="star-rating">
+              {[...Array(5)].map((_, i) => {
+                const ratingValue = i + 1;
+                return (
+                  <span 
+                    key={i}
+                    className="star-wrapper"
+                    onClick={() => setRating(ratingValue)}
+                    onMouseEnter={() => setRatingHover(ratingValue)}
+                    onMouseLeave={() => setRatingHover(0)}
+                  >
+                    {ratingValue <= (ratingHover || rating) ? (
+                      <FaStarSolid className="star filled" />
+                    ) : (
+                      <FaStarRegular className="star" />
+                    )}
+                  </span>
+                );
+              })}
+              {rating > 0 && (
+                <span className="rating-label">
+                  {rating === 1 && 'Không hài lòng'}
+                  {rating === 2 && 'Tạm được'}
+                  {rating === 3 && 'Hài lòng'}
+                  {rating === 4 && 'Rất hài lòng'}
+                  {rating === 5 && 'Tuyệt vời'}
+                </span>
+              )}
+            </div>
+            
+            <div className="rating-comment">
+              <label htmlFor="comment">Ghi chú (tùy chọn):</label>
+              <textarea 
+                id="comment"
+                rows="4" 
+                placeholder="Chia sẻ trải nghiệm của bạn về buổi tư vấn này..."
+                value={ratingComment}
+                onChange={(e) => setRatingComment(e.target.value)}
+              />
+            </div>
+            
+            <div className="confirmation-actions">
+              <button className="cancel-action" onClick={closeRatingModal} disabled={isSubmittingRating}>
+                Hủy bỏ
+              </button>
+              <button 
+                className="confirm-action rating-submit" 
+                onClick={handleRatingSubmit} 
+                disabled={rating === 0 || isSubmittingRating}
+              >
+                {isSubmittingRating ? 'Đang gửi...' : 'Gửi đánh giá'}
+              </button>
+            </div>
           </div>
         </div>
       )}

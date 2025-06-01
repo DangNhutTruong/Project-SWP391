@@ -252,6 +252,34 @@
   color: #666;
 }
 
+.stars-display {
+  display: flex;
+  gap: 2px;
+}
+
+.star-small {
+  font-size: 14px;
+  color: #ddd;
+}
+
+.star-small.filled {
+  color: #FFD700;
+}
+
+.rating-display {
+  margin-top: 5px;
+  border-top: 1px dashed #eee;
+  padding-top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rating-date {
+  font-size: 12px;
+  color: #666;
+}
+
 .appointment-footer {
   display: flex;
   justify-content: flex-end;
@@ -737,4 +765,115 @@
 @keyframes fadeOut {
   from { opacity: 1; }
   to { opacity: 0; }
+}
+
+/* Rating Modal Styles */
+.rating-modal {
+  max-width: 500px;
+}
+
+.coach-rating-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.coach-avatar-rating {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-right: 15px;
+  object-fit: cover;
+  border: 1px solid #eee;
+}
+
+.coach-rating-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+}
+
+.coach-rating-info p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.star-rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.star-wrapper {
+  cursor: pointer;
+  padding: 5px;
+  transition: all 0.2s;
+}
+
+.star-wrapper:hover {
+  transform: scale(1.2);
+}
+
+.star {
+  font-size: 28px;
+  color: #ddd;
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #FFD700;
+}
+
+.rating-label {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+  font-weight: 500;
+  color: #333;
+}
+
+.rating-comment {
+  margin: 15px 0;
+  text-align: left;
+}
+
+.rating-comment label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+  font-size: 16px;
+}
+
+.rating-comment textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: none;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.rating-comment textarea:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.confirm-action.rating-submit {
+  background-color: #4caf50;
+}
+
+.confirm-action.rating-submit:hover {
+  background-color: #3d9140;
+}
+
+.confirm-action.rating-submit:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
 }
