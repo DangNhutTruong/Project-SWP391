@@ -1382,7 +1382,9 @@ input:checked + .slider:before {
   box-shadow: 0 4px 15px rgba(37, 112, 232, 0.3);
 }
 
-/* Appointments Section */
+/* Appointments Section 
+aaaaaaaaaa*/
+
 .appointments-section {
   padding: 20px 0;
 }
