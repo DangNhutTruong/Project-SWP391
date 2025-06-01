@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import './AppointmentList.css';
 import CoachChat from './CoachChat';
 
 // Component hiển thị cho thẻ lịch hẹn đã hủy
-const CancelledAppointmentCard = ({ appointment, onRebook }) => {
+const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' });
@@ -14,6 +14,11 @@ const CancelledAppointmentCard = ({ appointment, onRebook }) => {
   // Gọi hàm mở modal đặt lại lịch hẹn
   const handleRebookClick = () => {
     onRebook(appointment);
+  };
+  
+  // Gọi hàm mở modal xóa lịch hẹn
+  const handleDeleteClick = () => {
+    onDelete(appointment);
   };
 
   return (
@@ -36,11 +41,12 @@ const CancelledAppointmentCard = ({ appointment, onRebook }) => {
             {formatDate(appointment.date)}, {appointment.time}
             <span className="online-badge">Tư vấn trực tuyến</span>
           </div>
-        </div>
-      </div>
-        <div className="cancelled-footer">
+        </div>      </div>      <div className="cancelled-footer">
+        <button className="delete-button" onClick={handleDeleteClick}>
+          <FaTrashAlt /> Xóa lịch hẹn
+        </button>
         <button className="rebook-button" onClick={handleRebookClick}>
-          Đặt lại lịch hẹn
+          <FaCalendarAlt /> Đặt lại lịch hẹn
         </button>
       </div>
     </div>
@@ -59,6 +65,10 @@ export default function AppointmentList() {
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
   const [showRebookModal, setShowRebookModal] = useState(false);
   const [appointmentToRebook, setAppointmentToRebook] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);  const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     // Fetch appointments from localStorage
@@ -213,6 +223,48 @@ export default function AppointmentList() {
       navigate('/appointment?rebook=true');
     }
   };
+  // Open delete confirmation modal
+  const openDeleteModal = (appointment) => {
+    setAppointmentToDelete(appointment);
+    setShowDeleteModal(true);
+  };
+
+  // Close delete confirmation modal
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setAppointmentToDelete(null);
+  };  // Handle delete cancelled appointment
+  const handleDeleteAppointment = () => {
+    if (appointmentToDelete) {
+      // Set deleting state to true
+      setIsDeleting(true);
+      
+      // Simulate a short delay for better UX
+      setTimeout(() => {
+        // Filter out the appointment to delete
+        const updatedAppointments = appointments.filter(
+          appointment => appointment.id !== appointmentToDelete.id
+        );
+        
+        setAppointments(updatedAppointments);
+        localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+        closeDeleteModal();
+        
+        // Reset deleting state
+        setIsDeleting(false);
+        
+        // Show success toast
+        setToastMessage('Lịch hẹn đã được xóa thành công!');
+        setShowToast(true);
+        
+        // Hide toast after 3 seconds
+        setTimeout(() => {
+          setShowToast(false);
+        }, 3000);
+      }, 500); // Small delay for better user experience
+    }
+  };
+
   // Handle opening chat with coach
   const handleOpenChat = (appointment) => {
     const coach = {
@@ -285,6 +337,7 @@ export default function AppointmentList() {
                 key={appointment.id}
                 appointment={appointment}
                 onRebook={openRebookModal}
+                onDelete={openDeleteModal}
               />
             ) : (
             <div 
@@ -448,6 +501,57 @@ export default function AppointmentList() {
                 Đặt lịch
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <div className="warning-icon">
+              <FaExclamationTriangle />
+            </div>
+            <h3>Xác nhận xóa lịch hẹn</h3>
+            {appointmentToDelete && (
+              <p>
+                Bạn có chắc chắn muốn xóa lịch hẹn với coach 
+                <strong> {appointmentToDelete.coachName} </strong>
+                vào ngày
+                {' '}
+                <strong>
+                  {appointmentToDelete.time} - {formatDate(appointmentToDelete.date)}
+                </strong>
+                ?
+                <br />
+                <span>Hành động này sẽ xóa vĩnh viễn lịch hẹn và không thể khôi phục.</span>
+              </p>
+            )}
+            <div className="confirmation-actions">              <button className="cancel-action" onClick={closeDeleteModal} disabled={isDeleting}>
+                Quay lại
+              </button>
+              <button className="confirm-action delete" onClick={handleDeleteAppointment} disabled={isDeleting}>
+                {isDeleting ? (
+                  <span className="deleting-text">Đang xóa...</span>
+                ) : (
+                  <>
+                    <FaTrashAlt /> Xóa lịch hẹn
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Success Toast Notification */}
+      {showToast && (
+        <div className="toast-notification success">
+          <div className="toast-icon">
+            <FaCheck />
+          </div>
+          <div className="toast-message">
+            {toastMessage}
           </div>
         </div>
       )}
