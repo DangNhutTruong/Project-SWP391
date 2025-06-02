@@ -11,14 +11,17 @@ import {
   FaExclamationCircle,
   FaCog,
   FaBell,
+  FaCrown,
   FaTimes,
 } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+
 import "./Profile.css";
 import "./membership.css";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import AppointmentList from "../components/AppointmentList";
+import QuitPlanDisplay from "../components/QuitPlanDisplay";
+import ProgressDashboard from "../components/ProgressDashboard";
 
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
@@ -111,134 +114,6 @@ function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
             </button>
           </div>
         </form>
-      </div>
-    </div>
-  );
-}
-
-// Component theo dõi tiến trình với biểu đồ giả
-function ProgressTracker() {
-  return (
-    <div className="progress-tracker">
-      <div className="chart-container">
-        <h2>Tiến trình cai thuốc</h2>
-
-        {/* Mô phỏng biểu đồ bằng thanh tiến trình */}
-        <div className="chart-placeholder">
-          <div className="chart-bars">
-            <div className="chart-bar" style={{ height: "10%" }}>
-              <span>1</span>
-            </div>
-            <div className="chart-bar" style={{ height: "25%" }}>
-              <span>7</span>
-            </div>
-            <div className="chart-bar" style={{ height: "50%" }}>
-              <span>14</span>
-            </div>
-            <div className="chart-bar" style={{ height: "100%" }}>
-              <span>28</span>
-            </div>
-          </div>
-          <div className="chart-labels">
-            <span>1/5</span>
-            <span>8/5</span>
-            <span>15/5</span>
-            <span>22/5</span>
-          </div>
-        </div>
-
-        <div className="statistics-container">
-          <div className="statistic-card">
-            <h3>Thành tích tốt nhất</h3>
-            <p className="statistic-value">28 ngày</p>
-          </div>
-
-          <div className="statistic-card">
-            <h3>Số lần cai trước đây</h3>
-            <p className="statistic-value">1 lần</p>
-          </div>
-
-          <div className="statistic-card">
-            <h3>Thời gian cai hiện tại</h3>
-            <p className="statistic-value">28 ngày</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="health-recovery-timeline">
-        <h2>Lộ trình phục hồi sức khỏe</h2>
-
-        <div className="timeline">
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>20 phút</h3>
-              <p>Huyết áp và nhịp tim trở về bình thường</p>
-            </div>
-          </div>
-
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>8 giờ</h3>
-              <p>Nồng độ nicotin và carbon monoxid giảm một nửa</p>
-            </div>
-          </div>
-
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>24 giờ</h3>
-              <p>Carbon monoxid bị loại bỏ khỏi cơ thể</p>
-            </div>
-          </div>
-
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>48 giờ</h3>
-              <p>
-                Nicotine được thải ra hoàn toàn, các giác quan vị giác và khứu
-                giác bắt đầu cải thiện
-              </p>
-            </div>
-          </div>
-
-          <div className="timeline-item completed">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>72 giờ</h3>
-              <p>Hô hấp trở nên dễ dàng hơn, mức năng lượng tăng lên</p>
-            </div>
-          </div>
-
-          <div className="timeline-item active">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>1-3 tháng</h3>
-              <p>
-                Tuần hoàn máu cải thiện, đi bộ dễ dàng hơn, chức năng phổi tăng
-                lên 30%
-              </p>
-            </div>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>1-9 tháng</h3>
-              <p>Ho, nghẹt mũi và khó thở giảm, phổi tự làm sạch</p>
-            </div>
-          </div>
-
-          <div className="timeline-item">
-            <div className="timeline-marker"></div>
-            <div className="timeline-content">
-              <h3>1 năm</h3>
-              <p>Nguy cơ bệnh tim giảm một nửa so với người hút thuốc</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -444,10 +319,13 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị
   
-  // Add notification count state
-  const [notificationCount] = useState(3);
-
+  // State để lưu trữ kế hoạch cai thuốc từ localStorage
+  const [quitPlanData, setQuitPlanData] = useState(null);
+  const [completionDate, setCompletionDate] = useState(null);
+  
   // Check if redirected from appointment booking
   useEffect(() => {
     const savedTab = localStorage.getItem('activeProfileTab');
@@ -456,6 +334,32 @@ export default function ProfilePage() {
       // Clear the saved tab after using it
       localStorage.removeItem('activeProfileTab');
     }
+    
+    // Đọc dữ liệu kế hoạch cai thuốc từ localStorage
+    const loadQuitPlanData = () => {
+      try {
+        // Kiểm tra kế hoạch hoàn thành
+        const completionData = localStorage.getItem('quitPlanCompletion');
+        if (completionData) {
+          const parsedData = JSON.parse(completionData);
+          setQuitPlanData(parsedData.userPlan);
+          setCompletionDate(parsedData.completionDate);
+          return;
+        }
+
+        // Nếu không có kế hoạch hoàn thành, kiểm tra kế hoạch đang thực hiện
+        const activePlan = localStorage.getItem('activePlan');
+        if (activePlan) {
+          const parsedPlan = JSON.parse(activePlan);
+          setQuitPlanData(parsedPlan);
+          return;
+        }
+      } catch (error) {
+        console.error('Lỗi khi đọc kế hoạch cai thuốc:', error);
+      }
+    };
+    
+    loadQuitPlanData();
   }, []);
 
   // Tính toán các giá trị
@@ -770,10 +674,22 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-              </div>
-
-              <div className="plan-section">
+              </div>              <div className="plan-section">
                 <h2>Kế hoạch cai thuốc</h2>
+
+                {/* Hiển thị kế hoạch cai thuốc từ localStorage */}
+                <QuitPlanDisplay />
+                
+                {/* Hiển thị dashboard tiến trình nếu đã hoàn thành kế hoạch */}
+                {completionDate && quitPlanData && (
+                  <div className="dashboard-section">
+                    <h3>Tiến trình cai thuốc</h3>
+                    <ProgressDashboard 
+                      userPlan={quitPlanData} 
+                      completionDate={completionDate} 
+                    />
+                  </div>
+                )}
 
                 <div className="current-plan">
                   <h3>Kế hoạch hiện tại</h3>

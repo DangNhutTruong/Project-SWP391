@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaTrophy, FaCalendarCheck, FaChartLine, FaLeaf, FaCoins, FaHeart } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import QuitProgressChart from './QuitProgressChart';
 
 const ProgressDashboard = ({ userPlan, completionDate }) => {
@@ -47,10 +48,10 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
     
     // Milestone theo thời gian WHO
     const healthMilestones = [
-      { days: 1, title: '24 giờ đầu tiên', description: 'Carbon monoxide được loại bỏ khỏi cơ thể', achieved: true },
-      { days: 2, title: '48 giờ', description: 'Nicotine được loại bỏ, vị giác cải thiện', achieved: true },
-      { days: 3, title: '72 giờ', description: 'Đường hô hấp thư giãn, năng lượng tăng', achieved: true },
-      { days: 14, title: '2 tuần', description: 'Tuần hoàn máu cải thiện', achieved: true },
+      { days: 1, title: '24 giờ đầu tiên', description: 'Carbon monoxide được loại bỏ khỏi cơ thể', achieved: false },
+      { days: 2, title: '48 giờ', description: 'Nicotine được loại bỏ, vị giác cải thiện', achieved: false },
+      { days: 3, title: '72 giờ', description: 'Đường hô hấp thư giãn, năng lượng tăng', achieved: false },
+      { days: 14, title: '2 tuần', description: 'Tuần hoàn máu cải thiện', achieved: false },
       { days: 30, title: '1 tháng', description: 'Chức năng phổi tăng 30%', achieved: false },
       { days: 90, title: '3 tháng', description: 'Ho và khó thở giảm đáng kể', achieved: false },
       { days: 365, title: '1 năm', description: 'Nguy cơ bệnh tim giảm 50%', achieved: false }
@@ -78,15 +79,25 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
   }, [dashboardStats, loadMilestones]);
 
   const getNextMilestone = () => {
-    return milestones.find(m => !m.achieved);
+    if (!milestones || milestones.length === 0) return null;
+    return milestones.find(m => !m.achieved) || milestones[milestones.length - 1]; // Return last milestone if all achieved
   };
 
   const getAchievementProgress = () => {
+    if (!milestones || milestones.length === 0) return 0;
     const achieved = milestones.filter(m => m.achieved).length;
     return (achieved / milestones.length) * 100;
   };
 
+  // Add some debugging information
+  useEffect(() => {
+    console.log("Current dashboard stats:", dashboardStats);
+    console.log("Current milestones:", milestones);
+  }, [dashboardStats, milestones]);
+  
+  // Show loading state while dashboardStats is not set
   if (!dashboardStats) {
+    console.log("Dashboard stats not set yet, showing loading screen");
     return (
       <div className="dashboard-loading">
         <p>Đang tải dashboard...</p>
@@ -155,9 +166,7 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             <p>Milestone sức khỏe</p>
           </div>
         </div>
-      </div>
-
-      {/* Progress Maintenance Chart */}
+      </div>      {/* Progress Maintenance Chart */}
       <div className="maintenance-section">
         <h2>
           <FaChartLine className="section-icon" />
@@ -165,7 +174,7 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
         </h2>
         <div className="maintenance-chart">
           <QuitProgressChart
-            userPlan={userPlan}
+            userPlan={userPlan || { weeks: [], name: 'Kế hoạch cá nhân' }}
             actualProgress={[]} // Không cần actual data nữa vì đã hoàn thành
             timeFilter="Tất cả"
             height={250}
@@ -232,30 +241,24 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             <li>Tìm kiếm hỗ trợ từ gia đình và bạn bè</li>
             <li>Nhắc nhở bản thân về lợi ích đã đạt được</li>
           </ul>
-        </div>
-
-        <div className="support-options">
+        </div>        <div className="support-options">
           <h3>🤝 Hỗ trợ thêm</h3>
           <div className="support-buttons">
-            <button className="support-btn primary">
+            <Link to="/blog" className="support-btn primary">
               Tham gia cộng đồng
-            </button>
-            <button className="support-btn secondary">
-              Chia sẻ thành tích
-            </button>
-            <button className="support-btn tertiary">
+            </Link>
+            <Link to="/appointment" className="support-btn tertiary">
               Tư vấn chuyên gia
-            </button>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Success Story */}
       <div className="success-story">
-        <h2>🎉 Câu chuyện thành công của bạn</h2>
-        <div className="story-content">
+        <h2>🎉 Câu chuyện thành công của bạn</h2>        <div className="story-content">
           <p>
-            Bạn đã hoàn thành <strong>{userPlan.name}</strong> và duy trì được{' '}
+            Bạn đã hoàn thành <strong>{userPlan?.name || 'Kế hoạch cá nhân'}</strong> và duy trì được{' '}
             <strong>{dashboardStats.daysSinceCompletion} ngày</strong> không hút thuốc.
           </p>
           <p>

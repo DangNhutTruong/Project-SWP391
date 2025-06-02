@@ -37,6 +37,7 @@ const QuitProgressChart = ({
         return { plan: samplePlan, actual: sampleActual };
     };    // Tạo dữ liệu kế hoạch theo ngày dựa trên tuần
     const generateDailyPlanData = (plan) => {
+        if (!plan || !plan.weeks || !Array.isArray(plan.weeks) || plan.weeks.length === 0) return [];
         const dailyPlan = [];
         
         // Check if plan exists
