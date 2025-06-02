@@ -49,6 +49,28 @@
   animation: fadeIn 1s ease-in-out 0.9s both;
 }
 
+.payment-method {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.payment-method.creditCard {
+  color: #2f4f4f;
+}
+
+.payment-method.momo {
+  color: #ff0066;
+}
+
+.payment-method.zalopay {
+  color: #0068ff;
+}
+
+.payment-method.paypal {
+  color: #003087;
+}
+
 .membership-status-notification {
   display: flex;
   align-items: center;

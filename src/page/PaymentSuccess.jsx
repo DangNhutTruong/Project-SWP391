@@ -67,14 +67,13 @@ const PaymentSuccess = () => {
             <div className="summary-item">
               <span>Giá:</span>
               <span>{packageInfo.price.toLocaleString()}đ/{packageInfo.period}</span>
-            </div>
-            <div className="summary-item">
+            </div>            <div className="summary-item">
               <span>Phương thức thanh toán:</span>
-              <span>
-                {paymentMethod === 'creditCard' && 'Thẻ tín dụng/ghi nợ'}
-                {paymentMethod === 'momo' && 'Ví Momo'}
-                {paymentMethod === 'zalopay' && 'ZaloPay'}
-                {paymentMethod === 'paypal' && 'PayPal'}
+              <span className={`payment-method ${paymentMethod}`}>
+                {paymentMethod === 'creditCard' && '💳 Thẻ tín dụng/ghi nợ'}
+                {paymentMethod === 'momo' && '📱 Ví Momo'}
+                {paymentMethod === 'zalopay' && '📲 ZaloPay'}
+                {paymentMethod === 'paypal' && '🌐 PayPal'}
               </span>
             </div>
           </div>
