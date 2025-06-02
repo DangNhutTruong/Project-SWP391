@@ -16,6 +16,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import "./Profile.css";
 import { useAuth } from "../context/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import AppointmentList from "../components/AppointmentList";
 
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
@@ -444,6 +446,16 @@ export default function ProfilePage() {
   
   // Add notification count state
   const [notificationCount] = useState(3);
+
+  // Check if redirected from appointment booking
+  useEffect(() => {
+    const savedTab = localStorage.getItem('activeProfileTab');
+    if (savedTab) {
+      setActiveTab(savedTab);
+      // Clear the saved tab after using it
+      localStorage.removeItem('activeProfileTab');
+    }
+  }, []);
 
   // Tính toán các giá trị
   const calculateSavings = () => {

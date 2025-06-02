@@ -4,6 +4,8 @@ import Home from '../page/Home';
 import Tools from '../page/Tools';
 import MembershipPackage from '../page/MembershipPackage';
 import SettingsPage from '../page/Settings';
+import Pay from '../page/Pay';
+import PaymentSuccess from '../page/PaymentSuccess';
 
 /**
  * AppRoutes - Cung cấp cấu hình định tuyến (routing) cho toàn bộ ứng dụng
@@ -34,11 +36,16 @@ const router = createBrowserRouter([
   }, {
    path: "/settings",
     element: <Layout><SettingsPage /></Layout>,
-  },
-  {
+  },  {
     path: "/membership",
     element: <Layout><MembershipPackage /></Layout>,
-  
+  },  {
+    path: "/payment",
+    element: <Layout><Pay /></Layout>,
+  },
+  {
+    path: "/payment/success",
+    element: <Layout><PaymentSuccess /></Layout>,
   },
   {
     path: "*",
