@@ -22,11 +22,23 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
     const startDate = new Date(completionDate);
     const today = new Date();
     const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+<<<<<<< Updated upstream
       // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
     const initialCigarettesPerDay = userPlan.weeks && userPlan.weeks.length > 0 ? 
       userPlan.weeks[0]?.amount || 20 : 20;
+=======
+    // Tính toán số điếu đã tiết kiệm được - đảm bảo an toàn khi truy cập userPlan.weeks
+    let initialCigarettesPerDay = 20; // Default value
+
+    if (userPlan.weeks && Array.isArray(userPlan.weeks) && userPlan.weeks.length > 0) {
+      initialCigarettesPerDay = userPlan.weeks[0]?.amount || 20;
+    } else if (userPlan.initialCigarettes) {
+      initialCigarettesPerDay = userPlan.initialCigarettes;
+    }
+
+>>>>>>> Stashed changes
     const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
-    
+
     // Tính tiền tiết kiệm (giả sử 1 gói = 25,000đ, 1 gói = 20 điếu)
     const pricePerCigarette = 25000 / 20;
     const moneySaved = estimatedSaved * pricePerCigarette;
@@ -187,8 +199,8 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
         <h2>Milestone sức khỏe</h2>
         <div className="milestones-grid">
           {milestones.map((milestone, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className={`milestone-card ${milestone.achieved ? 'achieved' : 'pending'}`}
             >
               <div className="milestone-indicator">
@@ -211,17 +223,17 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
       {/* Next Steps */}
       <div className="next-steps-section">
         <h2>Bước tiếp theo</h2>
-        
+
         {nextMilestone && (
           <div className="next-milestone">
             <h3>🎯 Milestone tiếp theo: {nextMilestone.title}</h3>
             <p>{nextMilestone.description}</p>
             <div className="milestone-progress">
               <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ 
-                    width: `${(dashboardStats.daysSinceCompletion / nextMilestone.days) * 100}%` 
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${(dashboardStats.daysSinceCompletion / nextMilestone.days) * 100}%`
                   }}
                 ></div>
               </div>
