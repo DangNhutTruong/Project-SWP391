@@ -21,7 +21,6 @@ import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import AppointmentList from "../components/AppointmentList";
 import QuitPlanDisplay from "../components/QuitPlanDisplay";
-import ProgressDashboard from "../components/ProgressDashboard";
 
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
@@ -120,213 +119,13 @@ function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
 }
 
 // Component cập nhật hàng ngày
-function DailyUpdate({ onSubmit }) {
-  const [mood, setMood] = useState("");
-  const [hasSmoked, setHasSmoked] = useState(null);
-  const [symptoms, setSymptoms] = useState([]);
-  const [notes, setNotes] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (hasSmoked === null) {
-      alert("Vui lòng cho biết bạn có hút thuốc hôm nay không");
-      return;
-    }
-
-    if (!mood) {
-      alert("Vui lòng chọn tâm trạng của bạn hôm nay");
-      return;
-    }
-
-    onSubmit({
-      hasSmoked,
-      mood,
-      symptoms,
-      notes,
-    });
-
-    // Reset form
-    setHasSmoked(null);
-    setMood("");
-    setSymptoms([]);
-    setNotes("");
-  };
-
-  const toggleSymptom = (symptom) => {
-    if (symptoms.includes(symptom)) {
-      setSymptoms(symptoms.filter((s) => s !== symptom));
-    } else {
-      setSymptoms([...symptoms, symptom]);
-    }
-  };
-
-  return (
-    <div className="daily-update-form">
-      <h2>Cập nhật hôm nay</h2>
-
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <h3>Bạn có hút thuốc hôm nay không?</h3>
-          <div className="radio-options">
-            <label
-              className={`radio-option ${
-                hasSmoked === false ? "selected" : ""
-              }`}
-            >
-              <input
-                type="radio"
-                name="hasSmoked"
-                checked={hasSmoked === false}
-                onChange={() => setHasSmoked(false)}
-              />
-              <span>Không</span>
-            </label>
-
-            <label
-              className={`radio-option ${hasSmoked === true ? "selected" : ""}`}
-            >
-              <input
-                type="radio"
-                name="hasSmoked"
-                checked={hasSmoked === true}
-                onChange={() => setHasSmoked(true)}
-              />
-              <span>Có</span>
-            </label>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <h3>Tâm trạng của bạn hôm nay?</h3>
-          <div className="mood-options">
-            <button
-              type="button"
-              className={`mood-option ${mood === "Tốt" ? "selected" : ""}`}
-              onClick={() => setMood("Tốt")}
-              
-            >
-              <span className="mood-emoji">😃</span>
-              <span>Tốt</span>
-            </button>
-
-            <button
-              type="button"
-              className={`mood-option ${mood === "Bình thường" ? "selected" : ""}`}
-              onClick={() => setMood("Bình thường")}
-            >
-              <span className="mood-emoji">😐</span>
-              <span>Bình thường</span>
-            </button>
-
-            <button
-              type="button"
-              className={`mood-option ${mood === "Không tốt" ? "selected" : ""}`}
-              onClick={() => setMood("Không tốt")}
-            >
-              <span className="mood-emoji">😔</span>
-              <span>Không tốt</span>
-            </button>
-
-            <button
-              type="button"
-              className={`mood-option ${mood === "Tệ" ? "selected" : ""}`}
-              onClick={() => setMood("Tệ")}
-            >
-              <span className="mood-emoji">😩</span>
-              <span>Tệ</span>
-            </button>
-
-            <button
-              type="button"
-              className={`mood-option ${mood === "Thèm thuốc" ? "selected" : ""}`}
-              onClick={() => setMood("Thèm thuốc")}
-            >
-              <span className="mood-emoji">🚬</span>
-              <span>Thèm thuốc</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <h3>Triệu chứng hôm nay</h3>
-          <div className="symptoms-options">
-            <label
-              className={`symptom-option ${symptoms.includes("Ho") ? "selected" : ""}`}
-            >
-              <input
-                type="checkbox"
-                checked={symptoms.includes("Ho")}
-                onChange={() => toggleSymptom("Ho")}
-              />
-              <span>Ho</span>
-            </label>
-
-            <label
-              className={`symptom-option ${symptoms.includes("Khó thở") ? "selected" : ""}`}
-            >
-              <input
-                type="checkbox"
-                checked={symptoms.includes("Khó thở")}
-                onChange={() => toggleSymptom("Khó thở")}
-              />
-              <span>Khó thở</span>
-            </label>
-
-            <label
-              className={`symptom-option ${symptoms.includes("Mệt mỏi") ? "selected" : ""}`}
-            >
-              <input
-                type="checkbox"
-                checked={symptoms.includes("Mệt mỏi")}
-                onChange={() => toggleSymptom("Mệt mỏi")}
-              />
-              <span>Mệt mỏi</span>
-            </label>
-
-            <label
-              className={`symptom-option ${symptoms.includes("Căng thẳng") ? "selected" : ""}`}
-            >
-              <input
-                type="checkbox"
-                checked={symptoms.includes("Căng thẳng")}
-                onChange={() => toggleSymptom("Căng thẳng")}
-              />
-              <span>Căng thẳng</span>
-            </label>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <h3>Ghi chú nhật ký</h3>
-          <textarea
-            placeholder="Chia sẻ cảm nghĩ của bạn hôm nay..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows="4"
-          ></textarea>
-        </div>
-
-        <button type="submit" className="submit-button">
-          Lưu cập nhật
-        </button>
-      </form>
-    </div>
-  );
-}
-
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị
-  
-  // State để lưu trữ kế hoạch cai thuốc từ localStorage
-  const [quitPlanData, setQuitPlanData] = useState(null);
-  const [completionDate, setCompletionDate] = useState(null);
-  
-  // Check if redirected from appointment booking
+    // Check if redirected from appointment booking
   useEffect(() => {
     const savedTab = localStorage.getItem('activeProfileTab');
     if (savedTab) {
@@ -334,32 +133,6 @@ export default function ProfilePage() {
       // Clear the saved tab after using it
       localStorage.removeItem('activeProfileTab');
     }
-    
-    // Đọc dữ liệu kế hoạch cai thuốc từ localStorage
-    const loadQuitPlanData = () => {
-      try {
-        // Kiểm tra kế hoạch hoàn thành
-        const completionData = localStorage.getItem('quitPlanCompletion');
-        if (completionData) {
-          const parsedData = JSON.parse(completionData);
-          setQuitPlanData(parsedData.userPlan);
-          setCompletionDate(parsedData.completionDate);
-          return;
-        }
-
-        // Nếu không có kế hoạch hoàn thành, kiểm tra kế hoạch đang thực hiện
-        const activePlan = localStorage.getItem('activePlan');
-        if (activePlan) {
-          const parsedPlan = JSON.parse(activePlan);
-          setQuitPlanData(parsedPlan);
-          return;
-        }
-      } catch (error) {
-        console.error('Lỗi khi đọc kế hoạch cai thuốc:', error);
-      }
-    };
-    
-    loadQuitPlanData();
   }, []);
 
   // Tính toán các giá trị
@@ -601,26 +374,6 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            <div className="overview-stats">
-              <div className="stat-card">
-                <h3>Không hút thuốc</h3>
-                <div className="stat-value">{userData.daysWithoutSmoking} ngày</div>
-                <p className="stat-detail">672 giờ không hút thuốc</p>
-              </div>
-
-              <div className="stat-card">
-                <h3>Tiền tiết kiệm</h3>
-                <div className="stat-value">{userData.moneySaved.toLocaleString()} đ</div>
-                <p className="stat-detail">30.000 đ mỗi ngày</p>
-              </div>
-
-              <div className="stat-card">
-                <h3>Điểm thuốc tránh được</h3>
-                <div className="stat-value">{userData.pointsEarned} điếu</div>
-                <p className="stat-detail">20 điếu mỗi ngày</p>
-              </div>
-            </div>
-
             <div className="profile-sections">
               <div className="health-section">
                 <h2>Hồ sơ sức khỏe</h2>
@@ -675,21 +428,8 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>              <div className="plan-section">
-                <h2>Kế hoạch cai thuốc</h2>
-
-                {/* Hiển thị kế hoạch cai thuốc từ localStorage */}
+                <h2>Kế hoạch cai thuốc</h2>                {/* Hiển thị kế hoạch cai thuốc từ localStorage */}
                 <QuitPlanDisplay />
-                
-                {/* Hiển thị dashboard tiến trình nếu đã hoàn thành kế hoạch */}
-                {completionDate && quitPlanData && (
-                  <div className="dashboard-section">
-                    <h3>Tiến trình cai thuốc</h3>
-                    <ProgressDashboard 
-                      userPlan={quitPlanData} 
-                      completionDate={completionDate} 
-                    />
-                  </div>
-                )}
 
                 <div className="current-plan">
                   <h3>Kế hoạch hiện tại</h3>
