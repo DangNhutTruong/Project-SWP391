@@ -1,103 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaTrophy, FaCalendarCheck, FaChartLine, FaLeaf, FaCoins, FaHeart } from 'react-icons/fa';
 import QuitProgressChart from './QuitProgressChart';
 
 const ProgressDashboard = ({ userPlan, completionDate }) => {
   const [dashboardStats, setDashboardStats] = useState(null);
-  const [milestones, setMilestones] = useState([]);  useEffect(() => {
-    console.log("User plan or completion date changed, recalculating dashboard stats");
-    console.log("userPlan:", userPlan);
-    console.log("completionDate:", completionDate);
-    calculateDashboardStats();
-  }, [userPlan, completionDate]);
+  const [milestones, setMilestones] = useState([]);  // Tính toán thống kê
+  
+  // Early return if required props are missing
+  if (!userPlan || !completionDate) {
+    return (
+      <div className="dashboard-error">
+        <p>Không thể hiển thị dashboard - thiếu dữ liệu cần thiết</p>
+      </div>
+    );
+  }
+  
+  const calculateDashboardStats = useCallback(() => {
+    if (!userPlan || !completionDate) return;
 
-  // Separate useEffect for loadMilestones to ensure it runs after dashboardStats is set
-  useEffect(() => {
-    if (dashboardStats) {
-      console.log("Dashboard stats updated, loading milestones");
-      loadMilestones();
-    }
-  }, [dashboardStats]);const calculateDashboardStats = () => {
-    // Even if we don't have a full plan, we can still show some basic stats
-    if (!completionDate) {
-      console.log("No completion date provided, cannot calculate dashboard stats");
-      return;
-    }
-    
-    // Handle cases where userPlan is incomplete or missing
-    if (!userPlan) {
-      const startDate = new Date(completionDate);
-      const today = new Date();
-      const daysSinceStart = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
-      
-      // Use default values
-      const defaultCigarettesPerDay = 20;
-      const estimatedSaved = defaultCigarettesPerDay * daysSinceStart;
-      const pricePerCigarette = 25000 / 20;
-      
-      setDashboardStats({
-        daysSinceCompletion: daysSinceStart,
-        cigarettesSaved: estimatedSaved,
-        moneySaved: estimatedSaved * pricePerCigarette,
-        planDuration: 4, // Default to 4 weeks
-        planName: 'Kế hoạch cá nhân'
-      });
-      return;
-    }
-    
-    // Handle cases where weeks array is missing or empty
-    if (!userPlan.weeks || !Array.isArray(userPlan.weeks) || userPlan.weeks.length === 0) {
-      const startDate = new Date(completionDate);
-      const today = new Date();
-      const daysSinceStart = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
-      
-      // Use default value for cigarettes per day
-      const initialCigarettesPerDay = 20; 
-      const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
-      const pricePerCigarette = 25000 / 20;
-      
-      setDashboardStats({
-        daysSinceCompletion: daysSinceStart,
-        cigarettesSaved: estimatedSaved,
-        moneySaved: estimatedSaved * pricePerCigarette,
-        planDuration: 0,
-        planName: userPlan.name || 'Kế hoạch cá nhân'
-      });
-      return;
-    }    const startDate = new Date(completionDate);
+    const startDate = new Date(completionDate);
     const today = new Date();
-    const daysSinceStart = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
-    
-    // Tính toán số điếu đã tiết kiệm được - safely access week data
-    let initialCigarettesPerDay = 20; // Default value
-    try {
-      initialCigarettesPerDay = userPlan.weeks[0]?.amount || 20;
-    } catch (error) {
-      console.error("Error accessing userPlan.weeks[0].amount:", error);
-    }
-    
+    const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+      // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
+    const initialCigarettesPerDay = userPlan.weeks && userPlan.weeks.length > 0 ? 
+      userPlan.weeks[0]?.amount || 20 : 20;
     const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
     
     // Tính tiền tiết kiệm (giả sử 1 gói = 25,000đ, 1 gói = 20 điếu)
     const pricePerCigarette = 25000 / 20;
     const moneySaved = estimatedSaved * pricePerCigarette;
-
-    // Log values to help with debugging
-    console.log("Setting dashboard stats:", {
-      daysSinceStart,
-      initialCigarettesPerDay,
-      estimatedSaved,
-      moneySaved
-    });
-
-    setDashboardStats({
+      setDashboardStats({
       daysSinceCompletion: daysSinceStart,
       cigarettesSaved: estimatedSaved,
       moneySaved: moneySaved,
-      planDuration: userPlan.weeks.length,
+      planDuration: userPlan.weeks ? userPlan.weeks.length : 0,
       planName: userPlan.name || 'Kế hoạch cá nhân'
     });
-  };  const loadMilestones = () => {
+  }, [userPlan, completionDate]);
+  
+  const loadMilestones = useCallback(() => {
+    // Nếu không có dữ liệu đầy đủ, không thực hiện
+    if (!userPlan || !completionDate || !dashboardStats) {
+      return;
+    }
+    
+    
     // Milestone theo thời gian WHO
     const healthMilestones = [
       { days: 1, title: '24 giờ đầu tiên', description: 'Carbon monoxide được loại bỏ khỏi cơ thể', achieved: false },
@@ -109,27 +56,27 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
       { days: 365, title: '1 năm', description: 'Nguy cơ bệnh tim giảm 50%', achieved: false }
     ];
 
-    try {
-      if (dashboardStats && typeof dashboardStats.daysSinceCompletion === 'number') {
-        const updatedMilestones = healthMilestones.map(milestone => ({
-          ...milestone,
-          achieved: dashboardStats.daysSinceCompletion >= milestone.days
-        }));
-        setMilestones(updatedMilestones);
-      } else {
-        // If dashboardStats isn't ready, set default milestones with first few achieved
-        // This ensures that even if there's a problem with the dashboardStats,
-        // users will still see some visual progress
-        setMilestones(healthMilestones.map((milestone, index) => ({
-          ...milestone,
-          achieved: index < 3  // Mark first 3 as achieved by default
-        })));
-      }
-    } catch (error) {
-      console.error("Error in loadMilestones:", error);
-      setMilestones(healthMilestones); // Fallback to default milestones
+    const updatedMilestones = healthMilestones.map(milestone => ({
+      ...milestone,
+      achieved: dashboardStats.daysSinceCompletion >= milestone.days
+    }));
+    setMilestones(updatedMilestones);
+  }, [userPlan, completionDate, dashboardStats]);
+
+  // Add useEffect hooks after function declarations
+  useEffect(() => {
+    if (userPlan && completionDate) {
+      calculateDashboardStats();
     }
-  };
+  }, [userPlan, completionDate, calculateDashboardStats]);
+  
+  // Tải milestone sau khi đã có thống kê
+  useEffect(() => {
+    if (dashboardStats) {
+      loadMilestones();
+    }
+  }, [dashboardStats, loadMilestones]);
+
   const getNextMilestone = () => {
     if (!milestones || milestones.length === 0) return null;
     return milestones.find(m => !m.achieved) || milestones[milestones.length - 1]; // Return last milestone if all achieved

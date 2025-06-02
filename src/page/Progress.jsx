@@ -18,7 +18,6 @@ export default function Progress() {
   const [userProgress, setUserProgress] = useState([]);
   const [actualProgress, setActualProgress] = useState([]);
   const [moodData, setMoodData] = useState([]);
-
   // Load user plan and progress from localStorage
   useEffect(() => {
     loadUserPlanAndProgress();
@@ -28,10 +27,23 @@ export default function Progress() {
     // Load completion data từ JourneyStepper
     const savedCompletion = localStorage.getItem('quitPlanCompletion');
     if (savedCompletion) {
-      const completion = JSON.parse(savedCompletion);
-      setCompletionData(completion);
-      setUserPlan(completion.userPlan);
-      setShowCompletionDashboard(true);
+      try {
+        const completion = JSON.parse(savedCompletion);
+        if (completion && completion.userPlan) {
+          setCompletionData(completion);
+          setUserPlan(completion.userPlan);
+          setShowCompletionDashboard(true);
+        } else {
+          console.warn('Found saved completion data but it was incomplete');
+          const activePlan = getActivePlan();
+          setUserPlan(activePlan);
+        }
+      } catch (error) {
+        console.error('Error parsing completion data:', error);
+        // Fallback to active plan if there's an error
+        const activePlan = getActivePlan();
+        setUserPlan(activePlan);
+      }
     } else {
       // Nếu chưa hoàn thành, tìm plan đang thực hiện
       const activePlan = getActivePlan();
@@ -41,16 +53,23 @@ export default function Progress() {
     // Load actual progress từ daily check-ins
     loadActualProgressFromCheckins();
   };
-
   const getActivePlan = () => {
     // Kiểm tra nếu có kế hoạch đang thực hiện trong localStorage
-    const savedPlan = localStorage.getItem('activePlan');
-    if (savedPlan) {
-      return JSON.parse(savedPlan);
+    try {
+      const savedPlan = localStorage.getItem('activePlan');
+      if (savedPlan) {
+        const parsedPlan = JSON.parse(savedPlan);
+        if (parsedPlan && Array.isArray(parsedPlan.weeks) && parsedPlan.weeks.length > 0) {
+          return parsedPlan;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved plan:', error);
     }
-    
-    // Trả về kế hoạch mặc định nếu không có
+      // Trả về kế hoạch mặc định nếu không có hoặc có lỗi
     return {
+      name: "Kế hoạch 6 tuần",
+      startDate: new Date().toISOString().split('T')[0],
       weeks: [
         { week: 1, amount: 20, phase: "Thích nghi" },
         { week: 2, amount: 16, phase: "Thích nghi" },
@@ -60,33 +79,33 @@ export default function Progress() {
         { week: 6, amount: 2, phase: "Hoàn thiện" },
         { week: 7, amount: 0, phase: "Hoàn thành" }
       ],
-      name: "Kế hoạch 6 tuần",
-      startDate: new Date().toISOString().split('T')[0],
       initialCigarettes: 20
     };
-  };
-
-  const loadActualProgressFromCheckins = () => {
+  };  const loadActualProgressFromCheckins = () => {
     const actualData = [];
     const today = new Date();
     
     // Duyệt qua 30 ngày gần nhất để tìm dữ liệu check-in
     for (let i = 29; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      const checkinData = localStorage.getItem(`checkin_${dateStr}`);
-      if (checkinData) {
-        const data = JSON.parse(checkinData);
-        actualData.push({
-          date: dateStr,
-          actualCigarettes: data.actualCigarettes,
-          targetCigarettes: data.targetCigarettes,
-          mood: data.mood,
-          achievements: data.achievements || [],
-          challenges: data.challenges || []
-        });
+      try {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const checkinData = localStorage.getItem(`checkin_${dateStr}`);
+        if (checkinData) {
+          const data = JSON.parse(checkinData);
+          actualData.push({
+            date: dateStr,
+            actualCigarettes: data.actualCigarettes,
+            targetCigarettes: data.targetCigarettes,
+            mood: data.mood,
+            achievements: data.achievements || [],
+            challenges: data.challenges || []
+          });
+        }
+      } catch (error) {
+        console.error(`Error loading check-in data for day -${i}:`, error);
       }
     }
     

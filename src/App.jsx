@@ -130,12 +130,10 @@ const router = createBrowserRouter([
   {
     path: "/signup",
     element: <Layout><Register /></Layout>,
-  },
-  {
+  },  {
     path: "/payment",
     element: <Layout><Pay /></Layout>,
-  },
-  {
+  },  {
     path: "/payment/success",
     element: <Layout><PaymentSuccess /></Layout>,
   },
@@ -173,19 +171,9 @@ const router = createBrowserRouter([
   }, {
     path: "/login",
     element: <Layout><Login /></Layout>,
-  },
-  {
+  },  {
     path: "/signup",
     element: <Layout><Register /></Layout>,
-  },
-  {
-    path: "/notifications",
-    element: <Layout><Notification /></Layout>, // Đường dẫn đến trang thông báo
-  },
-  {
-    path: "/membership",
-    element: <Layout><MembershipPackage /></Layout>, // Đường dẫn đến trang gói thành viên
-    
   },
   {
     path: "/settings",

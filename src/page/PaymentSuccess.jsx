@@ -1,29 +1,108 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './PaymentSuccess.css';
-import { FaCheckCircle, FaCheck } from 'react-icons/fa';
+import { FaCheckCircle, FaCheck, FaCrown, FaClock } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 const PaymentSuccess = () => {
+  // Hooks and state
   const location = useLocation();
   const navigate = useNavigate();
-  const packageInfo = location.state?.package;
-  const paymentMethod = location.state?.paymentMethod;
-
+  const [packageInfo, setPackageInfo] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const { user, updateUser } = useAuth();
+  const [countdown, setCountdown] = useState(5);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+    // Redirect function using React Router Navigate for SPA navigation
+  const forceRedirect = useCallback(() => {
+    console.log("Redirecting to home...");
+    setIsRedirecting(true);
+    // Clear any payment data from session storage
+    sessionStorage.removeItem('paymentData');
+    // Use React Router for single page navigation
+    navigate('/', { replace: true });
+  }, [navigate]);
+  
+  // Initialize component with payment data
   useEffect(() => {
-    // Nếu không có thông tin gói, chuyển về trang chính
-    if (!packageInfo) {
-      navigate('/');
+    // Try to get data from location state first
+    if (location.state?.package) {
+      setPackageInfo(location.state.package);
+      setPaymentMethod(location.state.paymentMethod);
+      
+      // Store in session storage as backup
+      sessionStorage.setItem('paymentData', JSON.stringify({
+        package: location.state.package,
+        paymentMethod: location.state.paymentMethod,
+        timestamp: new Date().getTime()
+      }));
+    } else {
+      // If no location state, try to get from session storage
+      const storedData = sessionStorage.getItem('paymentData');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setPackageInfo(parsedData.package);
+        setPaymentMethod(parsedData.paymentMethod);
+      } else {
+        // No data available, redirect to home
+        navigate('/', { replace: true });
+      }
     }
-  }, [navigate, packageInfo]);
-
-  // Hàm xử lý khi người dùng muốn trở về trang chủ
-  const handleGoHome = () => {
-    navigate('/');
-  };
-
-  // Render trang thành công
+  }, [location, navigate]);
+  
+  // Update user membership if package info is available
+  useEffect(() => {
+    if (user && packageInfo) {
+      const membershipType = packageInfo.name.toLowerCase();
+      updateUser({ membershipType });
+    }
+  }, [packageInfo, user, updateUser]);
+    // Countdown timer effect
+  useEffect(() => {
+    if (!packageInfo || isRedirecting) return;
+    
+    let isMounted = true;
+    
+    console.log(`Starting countdown from ${countdown}`);
+    
+    const timer = setInterval(() => {
+      if (isMounted) {
+        setCountdown(prevCount => {
+          const newCount = prevCount - 1;
+          console.log(`Countdown: ${newCount}`);
+          
+          if (newCount <= 0) {
+            clearInterval(timer);
+            forceRedirect();
+          }
+          
+          return newCount;
+        });
+      }
+    }, 1000);
+    
+    // Cleanup function to prevent memory leaks and double redirects
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+      console.log("Countdown cleared");
+    };
+  }, [packageInfo, forceRedirect, isRedirecting]);
+  
+  // If no package info, show loading or return null
+  if (!packageInfo) {
+    return (
+      <div className="payment-loading">
+        <div className="loading-spinner"></div>
+        <p>Đang tải thông tin thanh toán...</p>
+      </div>
+    );
+  }
+  
+  // Render successful payment view
   return (
-    <div className="payment-success-container">      <div className="success-card">
+    <div className="payment-success-container">
+      <div className="success-card">
         <div className="success-icon">
           <FaCheckCircle />
         </div>
@@ -31,42 +110,50 @@ const PaymentSuccess = () => {
         <h1>Thanh toán thành công!</h1>
         <p>Cảm ơn bạn đã đăng ký sử dụng dịch vụ của chúng tôi.</p>
         
-        {packageInfo && (
-          <div className="package-summary">
-            <h2>Thông tin gói</h2>
-            <div className="summary-item">
-              <span>Tên gói:</span>
-              <span>{packageInfo.name}</span>
-            </div>
-            <div className="summary-item">
-              <span>Giá:</span>
-              <span>{packageInfo.price.toLocaleString()}đ/{packageInfo.period}</span>
-            </div>
-            <div className="summary-item">
-              <span>Phương thức thanh toán:</span>
-              <span>
-                {paymentMethod === 'creditCard' && 'Thẻ tín dụng/ghi nợ'}
-                {paymentMethod === 'momo' && 'Ví Momo'}
-                {paymentMethod === 'zalopay' && 'ZaloPay'}
-                {paymentMethod === 'paypal' && 'PayPal'}
-              </span>
-            </div>
+        <div className="package-summary">
+          <h2>Thông tin gói</h2>
+          <div className="summary-item">
+            <span>Tên gói:</span>
+            <span>{packageInfo.name}</span>
           </div>
-        )}
+          <div className="summary-item">
+            <span>Giá:</span>
+            <span>{packageInfo.price.toLocaleString()}đ/{packageInfo.period}</span>
+          </div>
+          <div className="summary-item">
+            <span>Phương thức thanh toán:</span>
+            <span className={`payment-method ${paymentMethod}`}>
+              {paymentMethod === 'creditCard' && '💳 Thẻ tín dụng/ghi nợ'}
+              {paymentMethod === 'momo' && '📱 Ví Momo'}
+              {paymentMethod === 'zalopay' && '📲 ZaloPay'}
+              {paymentMethod === 'paypal' && '🌐 PayPal'}
+            </span>
+          </div>
+        </div>
         
         <div className="features-list">
           <h3>Tính năng bạn có thể sử dụng</h3>
-          <ul>          {packageInfo && packageInfo.features.map((feature, index) => (
-              <li key={index}><FaCheck style={{color: '#34c759', marginRight: '8px'}} /> {feature}</li>
+          <ul>
+            {packageInfo.features.map((feature, index) => (
+              <li key={index}>
+                <FaCheck style={{color: '#34c759', marginRight: '8px'}} /> 
+                {feature}
+              </li>
             ))}
           </ul>
         </div>
         
+        <div className="membership-status-notification">
+          <FaCrown style={{color: packageInfo.name === 'Premium' ? '#34a853' : '#6f42c1', marginRight: '10px'}} />
+          <span>Tài khoản của bạn đã được nâng cấp lên gói <strong>{packageInfo.name}</strong></span>
+        </div>
+        
         <div className="next-steps">
           <p>Tài khoản của bạn đã được nâng cấp. Bạn có thể bắt đầu sử dụng ngay các tính năng mới!</p>
-          <button className="home-button" onClick={handleGoHome}>
-            Trở về trang chủ
-          </button>
+          <div className="auto-redirect">
+            <FaClock style={{marginRight: '8px'}} /> 
+            Tự động chuyển về trang chủ sau <span className="countdown">{countdown}</span> giây
+          </div>
         </div>
       </div>
     </div>
