@@ -24,22 +24,29 @@ export default function Progress() {
   }, []);
   const loadUserPlanAndProgress = () => {
     console.log('🔍 Loading user plan and progress...');
-    
+
     // Debug localStorage
     console.log('localStorage contents:');
     console.log('quitPlanCompletion:', localStorage.getItem('quitPlanCompletion'));
     console.log('activePlan:', localStorage.getItem('activePlan'));
     console.log('journeyStepperData:', localStorage.getItem('journeyStepperData'));
-    
+
     // Load completion data từ JourneyStepper
     const savedCompletion = localStorage.getItem('quitPlanCompletion');
     if (savedCompletion) {
       try {
         const completion = JSON.parse(savedCompletion);
-        console.log('📋 Completion data:', completion);
-        if (completion && completion.userPlan) {
+
+        // Validate completion data before using
+        if (completion && completion.userPlan && completion.completionDate) {
+          // Ensure userPlan has the required structure
+          const userPlan = completion.userPlan;
+          if (!userPlan.weeks) {
+            userPlan.weeks = [];
+          }
+
           setCompletionData(completion);
-          setUserPlan(completion.userPlan);
+          setUserPlan(userPlan);
           setShowCompletionDashboard(true);
         } else {
           console.warn('Found saved completion data but it was incomplete');
@@ -63,14 +70,14 @@ export default function Progress() {
 
     // Load actual progress từ daily check-ins
     loadActualProgressFromCheckins();
-  };  const getActivePlan = () => {
+  }; const getActivePlan = () => {
     try {
       // Kiểm tra JourneyStepper data trước
       const journeyData = localStorage.getItem('journeyStepperData');
       if (journeyData) {
         const parsed = JSON.parse(journeyData);
         console.log('Journey data found:', parsed);
-        
+
         if (parsed && parsed.selectedPlan && typeof parsed.selectedPlan === 'object') {
           // Nếu selectedPlan là object với cấu trúc plan
           const plan = parsed.selectedPlan;
@@ -82,13 +89,13 @@ export default function Progress() {
           };
         }
       }
-      
+
       // Kiểm tra active plan
       const savedPlan = localStorage.getItem('activePlan');
       if (savedPlan) {
         const parsedPlan = JSON.parse(savedPlan);
         console.log('Active plan found:', parsedPlan);
-        
+
         if (parsedPlan && typeof parsedPlan === 'object') {
           return {
             name: typeof parsedPlan.name === 'string' ? parsedPlan.name : 'Kế hoạch cá nhân',
@@ -101,7 +108,6 @@ export default function Progress() {
     } catch (error) {
       console.error('Error loading saved plan:', error);
     }
-
     // Trả về kế hoạch mặc định nếu không có hoặc có lỗi
     return {
       name: "Kế hoạch 6 tuần",
@@ -117,51 +123,16 @@ export default function Progress() {
       ],
       initialCigarettes: 20
     };
-  };const loadActualProgressFromCheckins = () => {
+  }; const loadActualProgressFromCheckins = () => {
     const actualData = [];
     const today = new Date();
-    
-    // Duyệt qua 30 ngày gần nhất để tìm dữ liệu check-in
-    for (let i = 29; i >= 0; i--) {
-      try {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        
-        const checkinData = localStorage.getItem(`checkin_${dateStr}`);
-        if (checkinData) {
-          const data = JSON.parse(checkinData);
-          actualData.push({
-            date: dateStr,
-            actualCigarettes: data.actualCigarettes,
-            targetCigarettes: data.targetCigarettes,
-            mood: data.mood,
-            achievements: data.achievements || [],
-            challenges: data.challenges || []
-          });
-        }
-      } catch (error) {
-        console.error(`Error loading check-in data for day -${i}:`, error);
-      }
-    }
-    
-    setActualProgress(actualData);
-  };
 
-  // Xử lý cập nhật tiến trình từ Daily Checkin
-  const handleProgressUpdate = async (newProgress) => {
-    console.log('Progress updated:', newProgress);
-    
-    // Load lại actual progress từ localStorage để lấy dữ liệu mới nhất
-    const actualData = [];
-    const today = new Date();
-    
     // Duyệt qua 30 ngày gần nhất để tìm dữ liệu check-in
     for (let i = 29; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-      
+
       const checkinData = localStorage.getItem(`checkin_${dateStr}`);
       if (checkinData) {
         const data = JSON.parse(checkinData);
@@ -175,18 +146,49 @@ export default function Progress() {
         });
       }
     }
-    
+
+    setActualProgress(actualData);
+  };
+
+  // Xử lý cập nhật tiến trình từ Daily Checkin
+  const handleProgressUpdate = async (newProgress) => {
+    console.log('Progress updated:', newProgress);
+
+    // Load lại actual progress từ localStorage để lấy dữ liệu mới nhất
+    const actualData = [];
+    const today = new Date();
+
+    // Duyệt qua 30 ngày gần nhất để tìm dữ liệu check-in
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+
+      const checkinData = localStorage.getItem(`checkin_${dateStr}`);
+      if (checkinData) {
+        const data = JSON.parse(checkinData);
+        actualData.push({
+          date: dateStr,
+          actualCigarettes: data.actualCigarettes,
+          targetCigarettes: data.targetCigarettes,
+          mood: data.mood,
+          achievements: data.achievements || [],
+          challenges: data.challenges || []
+        });
+      }
+    }
+
     // Cập nhật state để trigger re-render của biểu đồ
     setActualProgress(actualData);
   };
-  
+
   // Xử lý cập nhật tâm trạng từ Mood Tracking
   const handleMoodUpdate = (newMoodData) => {
     console.log('Mood updated:', newMoodData);
     // Có thể thêm logic cập nhật mood data ở đây nếu cần
     setMoodData(prev => [...prev, newMoodData]);
   };
-  
+
   // Check for plan completion data on component mount
   useEffect(() => {
     const savedCompletion = localStorage.getItem('quitPlanCompletion');
@@ -196,7 +198,8 @@ export default function Progress() {
       setShowCompletionDashboard(true);
     }
   }, []);
-    if (!userPlan || typeof userPlan !== 'object') {
+
+  if (!userPlan) {
     return (
       <div className="progress-container">
         <div style={{ textAlign: 'center', padding: '2rem' }}>
@@ -217,8 +220,9 @@ export default function Progress() {
       <h1 className="page-title">
         {showCompletionDashboard ? 'Chúc mừng! Bạn đã hoàn thành kế hoạch' : 'Tiến trình cai thuốc hiện tại'}
       </h1>
-        {/* Show completion dashboard if plan is completed */}
-      {showCompletionDashboard && completionData && completionData.userPlan ? (
+
+      {/* Show completion dashboard if plan is completed */}
+      {showCompletionDashboard && completionData ? (
         <ProgressDashboard
           userPlan={completionData.userPlan}
           completionDate={completionData.completionDate}
@@ -226,40 +230,40 @@ export default function Progress() {
       ) : (
         <>
           {/* Daily Checkin Section - Moved to top */}
-          <DailyCheckin 
+          <DailyCheckin
             onProgressUpdate={handleProgressUpdate}
             currentPlan={userPlan}
           />
 
           {/* Enhanced Progress Chart with Chart.js */}
-          <QuitProgressChart 
+          <QuitProgressChart
             userPlan={userPlan}
             actualProgress={actualProgress}
             timeFilter={activeTimeFilter}
             height={350}
           />
-          
+
           {/* Time Filter Controls */}
           <div className="time-filters">
-            <button 
+            <button
               className={`time-filter ${activeTimeFilter === '7 ngày' ? 'active' : ''}`}
               onClick={() => setActiveTimeFilter('7 ngày')}
             >
               7 ngày
             </button>
-            <button 
+            <button
               className={`time-filter ${activeTimeFilter === '14 ngày' ? 'active' : ''}`}
               onClick={() => setActiveTimeFilter('14 ngày')}
             >
               14 ngày
             </button>
-            <button 
+            <button
               className={`time-filter ${activeTimeFilter === '30 ngày' ? 'active' : ''}`}
               onClick={() => setActiveTimeFilter('30 ngày')}
             >
               30 ngày
             </button>
-            <button 
+            <button
               className={`time-filter ${activeTimeFilter === 'Tất cả' ? 'active' : ''}`}
               onClick={() => setActiveTimeFilter('Tất cả')}
             >
@@ -268,7 +272,7 @@ export default function Progress() {
           </div>
 
           {/* Mood Tracking Section - Phần tâm trạng */}
-          <MoodTracking 
+          <MoodTracking
             onMoodUpdate={handleMoodUpdate}
           />          {/* Plan Information */}
           <div className="plan-info-section">
@@ -306,9 +310,9 @@ export default function Progress() {
                 </div>
                 <div className="stat-card">
                   <div className="stat-value">
-                    {actualProgress.length > 0 ? 
-                      Math.round(actualProgress.reduce((sum, p) => sum + p.actualCigarettes, 0) / actualProgress.length) 
-                      : 0}
+                    {actualProgress.length > 0 ?
+                      Math.round(actualProgress.reduce((sum, p) => sum + p.actualCigarettes, 0) / actualProgress.length)
+                      : (userPlan.initialCigarettes || (userPlan.weeks && userPlan.weeks[0]?.amount) || 20)}
                   </div>
                   <div className="stat-label">Trung bình điếu/ngày</div>
                 </div>
