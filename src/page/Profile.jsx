@@ -19,6 +19,8 @@ import "./Profile.css";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import AppointmentList from "../components/AppointmentList";
+import QuitPlanDisplay from "../components/QuitPlanDisplay";
+import ProgressDashboard from "../components/ProgressDashboard";
 
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
@@ -318,7 +320,11 @@ export default function ProfilePage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị
-
+  
+  // State để lưu trữ kế hoạch cai thuốc từ localStorage
+  const [quitPlanData, setQuitPlanData] = useState(null);
+  const [completionDate, setCompletionDate] = useState(null);
+  
   // Check if redirected from appointment booking
   useEffect(() => {
     const savedTab = localStorage.getItem('activeProfileTab');
@@ -327,6 +333,32 @@ export default function ProfilePage() {
       // Clear the saved tab after using it
       localStorage.removeItem('activeProfileTab');
     }
+    
+    // Đọc dữ liệu kế hoạch cai thuốc từ localStorage
+    const loadQuitPlanData = () => {
+      try {
+        // Kiểm tra kế hoạch hoàn thành
+        const completionData = localStorage.getItem('quitPlanCompletion');
+        if (completionData) {
+          const parsedData = JSON.parse(completionData);
+          setQuitPlanData(parsedData.userPlan);
+          setCompletionDate(parsedData.completionDate);
+          return;
+        }
+
+        // Nếu không có kế hoạch hoàn thành, kiểm tra kế hoạch đang thực hiện
+        const activePlan = localStorage.getItem('activePlan');
+        if (activePlan) {
+          const parsedPlan = JSON.parse(activePlan);
+          setQuitPlanData(parsedPlan);
+          return;
+        }
+      } catch (error) {
+        console.error('Lỗi khi đọc kế hoạch cai thuốc:', error);
+      }
+    };
+    
+    loadQuitPlanData();
   }, []);
 
   // Tính toán các giá trị
@@ -637,10 +669,22 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-              </div>
-
-              <div className="plan-section">
+              </div>              <div className="plan-section">
                 <h2>Kế hoạch cai thuốc</h2>
+
+                {/* Hiển thị kế hoạch cai thuốc từ localStorage */}
+                <QuitPlanDisplay />
+                
+                {/* Hiển thị dashboard tiến trình nếu đã hoàn thành kế hoạch */}
+                {completionDate && quitPlanData && (
+                  <div className="dashboard-section">
+                    <h3>Tiến trình cai thuốc</h3>
+                    <ProgressDashboard 
+                      userPlan={quitPlanData} 
+                      completionDate={completionDate} 
+                    />
+                  </div>
+                )}
 
                 <div className="current-plan">
                   <h3>Kế hoạch hiện tại</h3>
