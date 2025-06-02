@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './PaymentSuccess.css';
-import { FaCheckCircle, FaCheck, FaCrown } from 'react-icons/fa';
+import { FaCheckCircle, FaCheck, FaCrown, FaClock } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Nav from '../components/Nav';
@@ -12,8 +12,8 @@ const PaymentSuccess = () => {
   const packageInfo = location.state?.package;
   const paymentMethod = location.state?.paymentMethod;
   const { user, updateUser } = useAuth();
-  
-  useEffect(() => {
+  const [countdown, setCountdown] = useState(5);
+    useEffect(() => {
     // Nếu không có thông tin gói, chuyển về trang chính
     if (!packageInfo) {
       navigate('/');
@@ -28,20 +28,24 @@ const PaymentSuccess = () => {
       // Sử dụng hàm updateUser từ AuthContext để cập nhật người dùng
       updateUser({ membershipType: membershipType });
     }
-  }, [navigate, packageInfo, user, updateUser]);
-
-  // Hàm xử lý khi người dùng muốn trở về trang chủ
-  const handleGoHome = () => {
-    // Điều hướng với replace để thay thế lịch sử hiện tại
-    navigate('/', { replace: true });
     
-    // Đảm bảo trang được tải lại nếu Single Page App không hoạt động đúng
-    setTimeout(() => {
-      if (window.location.pathname !== '/') {
-        window.location.href = '/';
-      }
-    }, 100);
-  };
+    // Thiết lập bộ đếm thời gian để tự động quay về trang chủ
+    const timer = setInterval(() => {
+      setCountdown(prevTime => {
+        if (prevTime <= 1) {
+          clearInterval(timer);
+          // Điều hướng về trang chủ khi hết thời gian
+          navigate('/', { replace: true });
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+    
+    // Xóa interval khi component unmount
+    return () => clearInterval(timer);
+  }, [navigate, packageInfo, user, updateUser]);
+  // Đã loại bỏ hàm handleGoHome vì đã thay thế bằng chuyển trang tự động
 
   // Render trang thành công
   return (
@@ -90,11 +94,11 @@ const PaymentSuccess = () => {
           <FaCrown style={{color: packageInfo?.name === 'Premium' ? '#34a853' : '#6f42c1', marginRight: '10px'}} />
           <span>Tài khoản của bạn đã được nâng cấp lên gói <strong>{packageInfo?.name}</strong></span>
         </div>
-        
-        <div className="next-steps">
-          <p>Tài khoản của bạn đã được nâng cấp. Bạn có thể bắt đầu sử dụng ngay các tính năng mới!</p>          <button className="home-button" onClick={handleGoHome}>
-            Trở về trang chủ
-          </button>
+          <div className="next-steps">
+          <p>Tài khoản của bạn đã được nâng cấp. Bạn có thể bắt đầu sử dụng ngay các tính năng mới!</p>
+          <div className="auto-redirect">
+            <FaClock style={{marginRight: '8px'}} /> Tự động chuyển về trang chủ sau <span className="countdown">{countdown}</span> giây
+          </div>
         </div>
       </div>
     </div>
