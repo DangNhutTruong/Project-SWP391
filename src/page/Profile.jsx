@@ -320,7 +320,8 @@ export default function ProfilePage() {
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị
+  // Notification count would be used when implementing notification features
+  // const notificationCount = 0;
   
   // State để lưu trữ kế hoạch cai thuốc từ localStorage
   const [quitPlanData, setQuitPlanData] = useState(null);
@@ -522,12 +523,11 @@ export default function ProfilePage() {
       },
     ],
   };
-
-  // Xử lý cập nhật hôm nay
-  const handleUpdateToday = (updateData) => {
-    console.log("Cập nhật mới:", updateData);
-    alert("Đã lưu cập nhật của bạn!");
-  };
+  // Function would be used when implementing daily update feature
+  // const handleUpdateToday = (updateData) => {
+  //   console.log("Cập nhật mới:", updateData);
+  //   alert("Đã lưu cập nhật của bạn!");
+  // };
   // Xử lý lưu kế hoạch
   const handleSavePlan = (planData) => {
     console.log("Dữ liệu kế hoạch mới:", planData);

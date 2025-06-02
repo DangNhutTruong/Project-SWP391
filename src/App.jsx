@@ -22,6 +22,7 @@ import Notification from './page/Notification.jsx'; // Import component Notifica
 import SettingsPage from './page/Settings.jsx'; // Import component Settings
 import Pay from './page/Pay.jsx';
 import PaymentSuccess from './page/PaymentSuccess.jsx';
+import Support from './page/Support.jsx'; // Import Support component
 /**
  * App - Component chính của ứng dụng
  * 
@@ -91,10 +92,9 @@ const router = createBrowserRouter([
   {
     path: "/contact",
     element: <Layout><ComingSoon title="Liên hệ" /></Layout>,
-  },
-  {
+  },  {
     path: "/support",
-    element: <Layout><ComingSoon title="Hỗ trợ" /></Layout>,
+    element: <Layout><Support /></Layout>,
   },
   {
     path: "/team",
