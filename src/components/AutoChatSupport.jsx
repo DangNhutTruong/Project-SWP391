@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/AutoChatSupport.css';
 import { FaRobot, FaTimes, FaPaperPlane, FaUser, FaAngleDown } from 'react-icons/fa';
-// helo
 const AutoChatSupport = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState([
     {
@@ -88,11 +87,11 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
   const generateResponse = (message) => {
     const lowercaseMessage = message.toLowerCase();
     let response = [];
-
+    
     // Kiểm tra xem tin nhắn có chứa từ khóa nào trong FAQ không
     if (lowercaseMessage.includes('cơn thèm') || lowercaseMessage.includes('thèm thuốc')) {
       response = faqResponses['cơn thèm thuốc'];
-    }
+    } 
     else if (lowercaseMessage.includes('căng thẳng') || lowercaseMessage.includes('stress')) {
       response = faqResponses['căng thẳng'];
     }
@@ -128,33 +127,33 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
         'Hoặc bạn có thể liên hệ với chuyên gia tư vấn thông qua gói Premium của chúng tôi.'
       ];
     }
-
+    
     return response;
   };
 
   const handleSendMessage = () => {
     if (input.trim() === '') return;
-
+    
     const userMessage = {
       id: messages.length + 1,
       text: input,
       sender: 'user',
       timestamp: new Date()
     };
-
+    
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setShowSuggestions(false);
     setIsTyping(true);
-
+    
     // Giả lập thời gian phản hồi
     setTimeout(() => {
       const botResponse = generateResponse(input);
-
+      
       botResponse.forEach((text, index) => {
         setTimeout(() => {
           setMessages(prev => [
-            ...prev,
+            ...prev, 
             {
               id: messages.length + 2 + index,
               text: text,
@@ -164,7 +163,7 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
           ]);
         }, index * 500); // Hiển thị từng dòng phản hồi sau mỗi 500ms
       });
-
+      
       setIsTyping(false);
     }, 1000);
   };
@@ -172,25 +171,25 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
   const handleSuggestionClick = (suggestion) => {
     setInput(suggestion);
     setShowSuggestions(false);
-
+    
     const userMessage = {
       id: messages.length + 1,
       text: suggestion,
       sender: 'user',
       timestamp: new Date()
     };
-
+    
     setMessages(prev => [...prev, userMessage]);
     setIsTyping(true);
-
+    
     // Giả lập thời gian phản hồi
     setTimeout(() => {
       const botResponse = generateResponse(suggestion);
-
+      
       botResponse.forEach((text, index) => {
         setTimeout(() => {
           setMessages(prev => [
-            ...prev,
+            ...prev, 
             {
               id: messages.length + 2 + index,
               text: text,
@@ -200,7 +199,7 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
           ]);
         }, index * 500); // Hiển thị từng dòng phản hồi sau mỗi 500ms
       });
-
+      
       setIsTyping(false);
     }, 1000);
   };
@@ -233,11 +232,11 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
             <FaTimes />
           </button>
         </div>
-
+        
         <div className="auto-chat-messages">
           {messages.map(message => (
-            <div
-              key={message.id}
+            <div 
+              key={message.id} 
               className={`message ${message.sender === 'bot' ? 'bot-message' : 'user-message'}`}
             >
               <div className="message-avatar">
@@ -246,12 +245,12 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
               <div className="message-content">
                 <p>{message.text}</p>
                 <span className="message-time">
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                 </span>
               </div>
             </div>
           ))}
-
+          
           {isTyping && (
             <div className="message bot-message">
               <div className="message-avatar">
@@ -264,17 +263,17 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
               </div>
             </div>
           )}
-
+          
           <div ref={messagesEndRef} />
         </div>
-
+        
         {showSuggestions && (
           <div className="auto-chat-suggestions">
             <h4>Câu hỏi phổ biến <FaAngleDown /></h4>
             <div className="suggestions-list">
               {suggestions.map((suggestion, index) => (
-                <button
-                  key={index}
+                <button 
+                  key={index} 
                   className="suggestion-btn"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
@@ -284,7 +283,7 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
             </div>
           </div>
         )}
-
+        
         <div className="auto-chat-input">
           <input
             type="text"
@@ -297,7 +296,7 @@ const AutoChatSupport = ({ isOpen, onClose }) => {
             <FaPaperPlane />
           </button>
         </div>
-
+        
         <div className="auto-chat-footer">
           <p>Cần tư vấn chuyên sâu? <Link to="/membership">Nâng cấp lên gói Premium</Link></p>
         </div>

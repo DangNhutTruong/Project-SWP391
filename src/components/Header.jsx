@@ -24,7 +24,6 @@ export default function Header() {
   const toggleUserMenu = () => {
     setIsUserMenuOpen(!isUserMenuOpen);
   };
-
   return (
     <header className="nosmoke-header">
       <div className="container">
@@ -33,12 +32,11 @@ export default function Header() {
             <span className="logo-text">No<span className="smoke">Smoke</span></span>
           </Link>
         </div>
-        <div className="nav-actions">          <Link to="/support" className="phone-link">
+        <div className="nav-actions">
+          <Link to="/support" className="phone-link">
             <i className="fas fa-headset"></i>
             <span className="phone-text">Tư Vấn: 1800-1098</span>
           </Link>
-          
-
           {user ? (
             <>
               <Link to="/notifications" className="nav-item notification-nav-item">
