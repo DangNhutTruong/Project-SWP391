@@ -270,7 +270,7 @@ export default function Progress() {
                   <div className="stat-value">
                     {actualProgress.length > 0 ? 
                       Math.round(actualProgress.reduce((sum, p) => sum + p.actualCigarettes, 0) / actualProgress.length) 
-                      : 0}
+                      : (userPlan.initialCigarettes || (userPlan.weeks && userPlan.weeks[0]?.amount) || 20)}
                   </div>
                   <div className="stat-label">Trung bình điếu/ngày</div>
                 </div>
