@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { getHeroImagePath } from '../utils/imageUtils';
 
 export default function Hero() {
   return (
@@ -13,7 +14,7 @@ export default function Hero() {
           </div>
         </div>
         <div className="hero-image">
-          <img src="/image/hero/quit-smoking-2.png" alt="Quit smoking success" />
+          <img src={getHeroImagePath('quit-smoking-2.png')} alt="Quit smoking success" />
         </div>
       </div>
     </section>
