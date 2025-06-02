@@ -130,7 +130,7 @@ export default function MembershipPackage() {
                   <span>Chat huấn luyện viên</span>
                 </div>
                 <div className="feature-item">
-                  <i className="fas fa-times feature-times"></i>
+                  <i className="fas fa-check feature-check"></i>
                   <span>Video call tư vấn</span>
                 </div>
               </div>
