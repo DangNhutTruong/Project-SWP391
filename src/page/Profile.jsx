@@ -15,6 +15,7 @@ import {
 } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import "./Profile.css";
+import "./membership.css";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import AppointmentList from "../components/AppointmentList";
@@ -636,14 +637,19 @@ export default function ProfilePage() {
         <div className="user-info">
           <div className="user-avatar">
             <span className="user-initial">NT</span>
-          </div>
-          <div className="user-details">
-            <h3>{userData.name}</h3>
+          </div>          <div className="user-details">
+            <h3>
+              {userData.name}
+              {userData.membershipType && userData.membershipType !== 'free' && (
+                <span className={`membership-label ${userData.membershipType}`}>
+                  {userData.membershipType === 'premium' ? 'Premium' : 'Pro'}
+                </span>
+              )}
+            </h3>
             <p>Đang cai thuốc: {userData.daysWithoutSmoking} ngày</p>
           </div>
-        </div>
-
-        <nav className="profile-nav">          <Link
+        </div>        <nav className="profile-nav">
+          <Link
             to="#"
             className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
             onClick={() => setActiveTab("profile")}
@@ -668,26 +674,7 @@ export default function ProfilePage() {
           >
             <FaTrophy /> Huy hiệu
           </Link>
-          <Link
-            to="#"
-            className={`nav-item ${activeTab === "journal" ? "active" : ""}`}
-            onClick={() => setActiveTab("journal")}
-          >
-            <FaComment /> Tư vấn
-          </Link>
-          <Link
-            to="#"
-            className={`nav-item ${activeTab === "settings" ? "active" : ""}`}
-            onClick={() => setActiveTab("settings")}
-          >
-            <FaCog /> Cài đặt
-          </Link>
-          <Link to="/notifications" className="nav-item notification-nav-item">
-            <FaBell /> Thông báo
-            {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
-          </Link>
-         
-         
+          
           
           
           <button onClick={logout} className="nav-item logout-btn">
@@ -836,6 +823,119 @@ export default function ProfilePage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}        {activeTab === "membership" && (
+          <div className="membership-section">
+            <h1>Thông tin Thành viên</h1>
+
+            <div className="membership-status">
+              <div className="card membership-status-card">
+                <h2>Trạng thái thành viên</h2>
+                <div className="membership-status-info">
+                  {userData.membershipType && userData.membershipType !== 'free' ? (
+                    <div className="current-membership">
+                      <div className="membership-badge-large">
+                        <FaCrown className={userData.membershipType === "premium" ? "premium-icon" : "pro-icon"} />
+                        <span className={`membership-type ${userData.membershipType}`}>
+                          {userData.membershipType === "premium" ? "Premium" : "Pro"}
+                        </span>
+                      </div>
+                      <p className="membership-description">
+                        {userData.membershipType === "premium" 
+                          ? "Bạn đang sử dụng gói Premium với đầy đủ tính năng hỗ trợ." 
+                          : "Bạn đang sử dụng gói Pro với đầy đủ tính năng hàng năm."}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="free-membership">
+                      <p>Bạn đang sử dụng gói Miễn phí</p>
+                      <button className="upgrade-btn" onClick={() => navigate('/membership')}>
+                        Nâng cấp ngay
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="membership-features">
+              <h2>Tính năng của bạn</h2>
+              <div className="feature-list">
+                <div className="feature-item">
+                  <FaCheck className="feature-check" />
+                  <div className="feature-text">
+                    <h3>Theo dõi cai thuốc</h3>
+                    <p>Theo dõi tiến trình cai thuốc của bạn hàng ngày</p>
+                  </div>
+                </div>
+                <div className="feature-item">
+                  <FaCheck className="feature-check" />
+                  <div className="feature-text">
+                    <h3>Lập kế hoạch cá nhân</h3>
+                    <p>Tạo kế hoạch cai thuốc phù hợp với bạn</p>
+                  </div>
+                </div>
+                
+                {userData.membershipType && userData.membershipType !== 'free' ? (
+                  <>
+                    <div className="feature-item">
+                      <FaCheck className="feature-check" />
+                      <div className="feature-text">
+                        <h3>Huy hiệu & cộng đồng</h3>
+                        <p>Tham gia cộng đồng và nhận huy hiệu</p>
+                      </div>
+                    </div>
+                    <div className="feature-item">
+                      <FaCheck className="feature-check" />
+                      <div className="feature-text">
+                        <h3>Chat huấn luyện viên</h3>
+                        <p>Nhận tư vấn từ huấn luyện viên chuyên nghiệp</p>
+                      </div>
+                    </div>
+                    <div className="feature-item">
+                      <FaCheck className="feature-check" />
+                      <div className="feature-text">
+                        <h3>Video call tư vấn</h3>
+                        <p>Tham gia các buổi tư vấn qua video</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="feature-item disabled">
+                      <FaTimes className="feature-times" />
+                      <div className="feature-text">
+                        <h3>Huy hiệu & cộng đồng</h3>
+                        <p>Nâng cấp để mở khóa tính năng này</p>
+                      </div>
+                    </div>
+                    <div className="feature-item disabled">
+                      <FaTimes className="feature-times" />
+                      <div className="feature-text">
+                        <h3>Chat huấn luyện viên</h3>
+                        <p>Nâng cấp để mở khóa tính năng này</p>
+                      </div>
+                    </div>
+                    <div className="feature-item disabled">
+                      <FaTimes className="feature-times" />
+                      <div className="feature-text">
+                        <h3>Video call tư vấn</h3>
+                        <p>Nâng cấp để mở khóa tính năng này</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {!userData.membershipType || userData.membershipType === 'free' ? (
+                <div className="membership-upgrade">
+                  <h3>Nâng cấp để sử dụng đầy đủ tính năng</h3>
+                  <button className="upgrade-btn-large" onClick={() => navigate('/membership')}>
+                    Khám phá gói thành viên
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
         )}

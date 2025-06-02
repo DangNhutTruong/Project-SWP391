@@ -43,10 +43,16 @@ export default function Header() {
                 <FaBell /> Thông báo
                 {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
               </Link>
-              <div className="user-menu-container">
-                <button className="user-menu-button" onClick={toggleUserMenu}>
+              <div className="user-menu-container">                <button className="user-menu-button" onClick={toggleUserMenu}>
                   <span className="user-initial">{user.name.charAt(0)}</span>
-                  <span className="user-name">{user.name}</span>
+                  <span className="user-name">
+                    {user.name}
+                    {user.membershipType && user.membershipType !== 'free' && (
+                      <span className={`membership-label ${user.membershipType}`}>
+                        {user.membershipType === 'premium' ? 'Premium' : 'Pro'}
+                      </span>
+                    )}
+                  </span>
                 </button>
 
                 {isUserMenuOpen && (
