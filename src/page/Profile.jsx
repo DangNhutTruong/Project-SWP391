@@ -118,218 +118,13 @@ function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
 }
 
 // Component cập nhật hàng ngày
-<<<<<<< Updated upstream
-=======
-function DailyUpdate({ onSubmit }) {
-  const [mood, setMood] = useState("");
-  const [hasSmoked, setHasSmoked] = useState(null);
-  const [symptoms, setSymptoms] = useState([]);
-  const [notes, setNotes] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (hasSmoked === null) {
-      alert("Vui lòng cho biết bạn có hút thuốc hôm nay không");
-      return;
-    }
-
-    if (!mood) {
-      alert("Vui lòng chọn tâm trạng của bạn hôm nay");
-      return;
-    }
-
-    onSubmit({
-      hasSmoked,
-      mood,
-      symptoms,
-      notes,
-    });
-
-    // Reset form
-    setHasSmoked(null);
-    setMood("");
-    setSymptoms([]);
-    setNotes("");
-  };
-
-  const toggleSymptom = (symptom) => {
-    if (symptoms.includes(symptom)) {
-      setSymptoms(symptoms.filter((s) => s !== symptom));
-    } else {
-      setSymptoms([...symptoms, symptom]);
-    }
-  };
-
-  return (
-    <div className="daily-update-form">
-      <h2>Cập nhật hôm nay</h2>
-
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <h3>Bạn có hút thuốc hôm nay không?</h3>
-          <div className="radio-options">
-            <label
-              className={`radio-option ${hasSmoked === false ? "selected" : ""
-                }`}
-            >
-              <input
-                type="radio"
-                name="hasSmoked"
-                checked={hasSmoked === false}
-                onChange={() => setHasSmoked(false)}
-              />
-              <span>Không</span>
-            </label>
-
-            <label
-              className={`radio-option ${hasSmoked === true ? "selected" : ""}`}
-            >
-              <input
-                type="radio"
-                name="hasSmoked"
-                checked={hasSmoked === true}
-                onChange={() => setHasSmoked(true)}
-              />
-              <span>Có</span>
-            </label>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <h3>Tâm trạng của bạn hôm nay?</h3>
-          <div className="mood-options">
-            <button
-              type="button"
-              className={`mood-option ${mood === "Tốt" ? "selected" : ""}`}
-              onClick={() => setMood("Tốt")}
-
-            >
-              <span className="mood-emoji">😃</span>
-              <span>Tốt</span>
-            </button>
-
-            <button
-              type="button"
-              className={`mood-option ${mood === "Bình thường" ? "selected" : ""}`}
-              onClick={() => setMood("Bình thường")}
-            >
-              <span className="mood-emoji">😐</span>
-              <span>Bình thường</span>
-            </button>
-
-            <button
-              type="button"
-              className={`mood-option ${mood === "Không tốt" ? "selected" : ""}`}
-              onClick={() => setMood("Không tốt")}
-            >
-              <span className="mood-emoji">😔</span>
-              <span>Không tốt</span>
-            </button>
-
-            <button
-              type="button"
-              className={`mood-option ${mood === "Tệ" ? "selected" : ""}`}
-              onClick={() => setMood("Tệ")}
-            >
-              <span className="mood-emoji">😩</span>
-              <span>Tệ</span>
-            </button>
-
-            <button
-              type="button"
-              className={`mood-option ${mood === "Thèm thuốc" ? "selected" : ""}`}
-              onClick={() => setMood("Thèm thuốc")}
-            >
-              <span className="mood-emoji">🚬</span>
-              <span>Thèm thuốc</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <h3>Triệu chứng hôm nay</h3>
-          <div className="symptoms-options">
-            <label
-              className={`symptom-option ${symptoms.includes("Ho") ? "selected" : ""}`}
-            >
-              <input
-                type="checkbox"
-                checked={symptoms.includes("Ho")}
-                onChange={() => toggleSymptom("Ho")}
-              />
-              <span>Ho</span>
-            </label>
-
-            <label
-              className={`symptom-option ${symptoms.includes("Khó thở") ? "selected" : ""}`}
-            >
-              <input
-                type="checkbox"
-                checked={symptoms.includes("Khó thở")}
-                onChange={() => toggleSymptom("Khó thở")}
-              />
-              <span>Khó thở</span>
-            </label>
-
-            <label
-              className={`symptom-option ${symptoms.includes("Mệt mỏi") ? "selected" : ""}`}
-            >
-              <input
-                type="checkbox"
-                checked={symptoms.includes("Mệt mỏi")}
-                onChange={() => toggleSymptom("Mệt mỏi")}
-              />
-              <span>Mệt mỏi</span>
-            </label>
-
-            <label
-              className={`symptom-option ${symptoms.includes("Căng thẳng") ? "selected" : ""}`}
-            >
-              <input
-                type="checkbox"
-                checked={symptoms.includes("Căng thẳng")}
-                onChange={() => toggleSymptom("Căng thẳng")}
-              />
-              <span>Căng thẳng</span>
-            </label>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <h3>Ghi chú nhật ký</h3>
-          <textarea
-            placeholder="Chia sẻ cảm nghĩ của bạn hôm nay..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows="4"
-          ></textarea>
-        </div>
-
-        <button type="submit" className="submit-button">
-          Lưu cập nhật
-        </button>
-      </form>
-    </div>
-  );
-}
-
->>>>>>> Stashed changes
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const { user, logout } = useAuth();
-<<<<<<< Updated upstream
   const navigate = useNavigate();
   const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị
     // Check if redirected from appointment booking
-=======
-
-  // Add notification count state
-  const [notificationCount] = useState(3);
-
-  // Check if redirected from appointment booking
->>>>>>> Stashed changes
   useEffect(() => {
     const savedTab = localStorage.getItem('activeProfileTab');
     if (savedTab) {
@@ -529,7 +324,6 @@ export default function ProfilePage() {
             </h3>
             <p>Đang cai thuốc: {userData.daysWithoutSmoking} ngày</p>
           </div>
-<<<<<<< Updated upstream
         </div>        <nav className="profile-nav">
           <Link
             to="#"
@@ -539,18 +333,6 @@ export default function ProfilePage() {
             <FaUserAlt /> Hồ sơ cá nhân
           </Link>
           
-=======
-        </div>
-
-        <nav className="profile-nav">          <Link
-          to="#"
-          className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
-          onClick={() => setActiveTab("profile")}
-        >
-          <FaUserAlt /> Hồ sơ cá nhân
-        </Link>
-
->>>>>>> Stashed changes
           <Link
             to="#"
             className={`nav-item ${activeTab === "appointments" ? "active" : ""}`}
@@ -567,34 +349,9 @@ export default function ProfilePage() {
           >
             <FaTrophy /> Huy hiệu
           </Link>
-<<<<<<< Updated upstream
           
           
           
-=======
-          <Link
-            to="#"
-            className={`nav-item ${activeTab === "journal" ? "active" : ""}`}
-            onClick={() => setActiveTab("journal")}
-          >
-            <FaComment /> Tư vấn
-          </Link>
-          <Link
-            to="#"
-            className={`nav-item ${activeTab === "settings" ? "active" : ""}`}
-            onClick={() => setActiveTab("settings")}
-          >
-            <FaCog /> Cài đặt
-          </Link>
-          <Link to="/notifications" className="nav-item notification-nav-item">
-            <FaBell /> Thông báo
-            {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
-          </Link>
-
-
-
-
->>>>>>> Stashed changes
           <button onClick={logout} className="nav-item logout-btn">
             <i className="fas fa-sign-out-alt"></i> Đăng xuất
           </button>

@@ -28,11 +28,6 @@ export default function Progress() {
     if (savedCompletion) {
       try {
         const completion = JSON.parse(savedCompletion);
-<<<<<<< Updated upstream
-        if (completion && completion.userPlan) {
-          setCompletionData(completion);
-          setUserPlan(completion.userPlan);
-=======
 
         // Validate completion data before using
         if (completion && completion.userPlan && completion.completionDate) {
@@ -44,7 +39,6 @@ export default function Progress() {
 
           setCompletionData(completion);
           setUserPlan(userPlan);
->>>>>>> Stashed changes
           setShowCompletionDashboard(true);
         } else {
           console.warn('Found saved completion data but it was incomplete');
@@ -72,10 +66,6 @@ export default function Progress() {
       const savedPlan = localStorage.getItem('activePlan');
       if (savedPlan) {
         const parsedPlan = JSON.parse(savedPlan);
-<<<<<<< Updated upstream
-=======
-        // Validate parsed plan structure
->>>>>>> Stashed changes
         if (parsedPlan && Array.isArray(parsedPlan.weeks) && parsedPlan.weeks.length > 0) {
           return parsedPlan;
         }
@@ -83,12 +73,7 @@ export default function Progress() {
     } catch (error) {
       console.error('Error loading saved plan:', error);
     }
-<<<<<<< Updated upstream
-      // Trả về kế hoạch mặc định nếu không có hoặc có lỗi
-=======
-
-    // Trả về kế hoạch mặc định nếu không có
->>>>>>> Stashed changes
+    // Trả về kế hoạch mặc định nếu không có hoặc có lỗi
     return {
       name: "Kế hoạch 6 tuần",
       startDate: new Date().toISOString().split('T')[0],
@@ -103,33 +88,12 @@ export default function Progress() {
       ],
       initialCigarettes: 20
     };
-  };  const loadActualProgressFromCheckins = () => {
+  }; const loadActualProgressFromCheckins = () => {
     const actualData = [];
     const today = new Date();
 
     // Duyệt qua 30 ngày gần nhất để tìm dữ liệu check-in
     for (let i = 29; i >= 0; i--) {
-<<<<<<< Updated upstream
-      try {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        
-        const checkinData = localStorage.getItem(`checkin_${dateStr}`);
-        if (checkinData) {
-          const data = JSON.parse(checkinData);
-          actualData.push({
-            date: dateStr,
-            actualCigarettes: data.actualCigarettes,
-            targetCigarettes: data.targetCigarettes,
-            mood: data.mood,
-            achievements: data.achievements || [],
-            challenges: data.challenges || []
-          });
-        }
-      } catch (error) {
-        console.error(`Error loading check-in data for day -${i}:`, error);
-=======
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
@@ -145,7 +109,6 @@ export default function Progress() {
           achievements: data.achievements || [],
           challenges: data.challenges || []
         });
->>>>>>> Stashed changes
       }
     }
 
@@ -308,15 +271,9 @@ export default function Progress() {
                 </div>
                 <div className="stat-card">
                   <div className="stat-value">
-<<<<<<< Updated upstream
-                    {actualProgress.length > 0 ? 
-                      Math.round(actualProgress.reduce((sum, p) => sum + p.actualCigarettes, 0) / actualProgress.length) 
-                      : (userPlan.initialCigarettes || (userPlan.weeks && userPlan.weeks[0]?.amount) || 20)}
-=======
                     {actualProgress.length > 0 ?
                       Math.round(actualProgress.reduce((sum, p) => sum + p.actualCigarettes, 0) / actualProgress.length)
-                      : 0}
->>>>>>> Stashed changes
+                      : (userPlan.initialCigarettes || (userPlan.weeks && userPlan.weeks[0]?.amount) || 20)}
                   </div>
                   <div className="stat-label">Trung bình điếu/ngày</div>
                 </div>

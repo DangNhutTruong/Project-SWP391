@@ -6,7 +6,7 @@ import QuitProgressChart from './QuitProgressChart';
 const ProgressDashboard = ({ userPlan, completionDate }) => {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [milestones, setMilestones] = useState([]);  // Tính toán thống kê
-  
+
   // Early return if required props are missing
   if (!userPlan || !completionDate) {
     return (
@@ -15,34 +15,22 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
       </div>
     );
   }
-  
+
   const calculateDashboardStats = useCallback(() => {
     if (!userPlan || !completionDate) return;
 
     const startDate = new Date(completionDate);
     const today = new Date();
     const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-<<<<<<< Updated upstream
-      // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
-    const initialCigarettesPerDay = userPlan.weeks && userPlan.weeks.length > 0 ? 
+    // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
+    const initialCigarettesPerDay = userPlan.weeks && userPlan.weeks.length > 0 ?
       userPlan.weeks[0]?.amount || 20 : 20;
-=======
-    // Tính toán số điếu đã tiết kiệm được - đảm bảo an toàn khi truy cập userPlan.weeks
-    let initialCigarettesPerDay = 20; // Default value
-
-    if (userPlan.weeks && Array.isArray(userPlan.weeks) && userPlan.weeks.length > 0) {
-      initialCigarettesPerDay = userPlan.weeks[0]?.amount || 20;
-    } else if (userPlan.initialCigarettes) {
-      initialCigarettesPerDay = userPlan.initialCigarettes;
-    }
-
->>>>>>> Stashed changes
     const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
 
     // Tính tiền tiết kiệm (giả sử 1 gói = 25,000đ, 1 gói = 20 điếu)
     const pricePerCigarette = 25000 / 20;
     const moneySaved = estimatedSaved * pricePerCigarette;
-      setDashboardStats({
+    setDashboardStats({
       daysSinceCompletion: daysSinceStart,
       cigarettesSaved: estimatedSaved,
       moneySaved: moneySaved,
@@ -50,14 +38,14 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
       planName: userPlan.name || 'Kế hoạch cá nhân'
     });
   }, [userPlan, completionDate]);
-  
+
   const loadMilestones = useCallback(() => {
     // Nếu không có dữ liệu đầy đủ, không thực hiện
     if (!userPlan || !completionDate || !dashboardStats) {
       return;
     }
-    
-    
+
+
     // Milestone theo thời gian WHO
     const healthMilestones = [
       { days: 1, title: '24 giờ đầu tiên', description: 'Carbon monoxide được loại bỏ khỏi cơ thể', achieved: false },
@@ -82,7 +70,7 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
       calculateDashboardStats();
     }
   }, [userPlan, completionDate, calculateDashboardStats]);
-  
+
   // Tải milestone sau khi đã có thống kê
   useEffect(() => {
     if (dashboardStats) {
@@ -106,7 +94,7 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
     console.log("Current dashboard stats:", dashboardStats);
     console.log("Current milestones:", milestones);
   }, [dashboardStats, milestones]);
-  
+
   // Show loading state while dashboardStats is not set
   if (!dashboardStats) {
     console.log("Dashboard stats not set yet, showing loading screen");
