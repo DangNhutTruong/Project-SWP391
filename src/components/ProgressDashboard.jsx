@@ -247,9 +247,6 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             <Link to="/blog" className="support-btn primary">
               Tham gia cộng đồng
             </Link>
-            <button className="support-btn secondary">
-              Chia sẻ thành tích
-            </button>
             <Link to="/appointment" className="support-btn tertiary">
               Tư vấn chuyên gia
             </Link>
