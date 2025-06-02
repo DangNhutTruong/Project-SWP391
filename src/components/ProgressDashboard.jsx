@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FaTrophy, FaCalendarCheck, FaChartLine, FaLeaf, FaCoins, FaHeart } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import QuitProgressChart from './QuitProgressChart';
 
 const ProgressDashboard = ({ userPlan, completionDate }) => {
@@ -240,20 +241,18 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             <li>Tìm kiếm hỗ trợ từ gia đình và bạn bè</li>
             <li>Nhắc nhở bản thân về lợi ích đã đạt được</li>
           </ul>
-        </div>
-
-        <div className="support-options">
+        </div>        <div className="support-options">
           <h3>🤝 Hỗ trợ thêm</h3>
           <div className="support-buttons">
-            <button className="support-btn primary">
+            <Link to="/blog" className="support-btn primary">
               Tham gia cộng đồng
-            </button>
+            </Link>
             <button className="support-btn secondary">
               Chia sẻ thành tích
             </button>
-            <button className="support-btn tertiary">
+            <Link to="/appointment" className="support-btn tertiary">
               Tư vấn chuyên gia
-            </button>
+            </Link>
           </div>
         </div>
       </div>
