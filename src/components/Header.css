@@ -1,3 +1,4 @@
+/* filepath: d:\SWP-DEMO01\CodeGitHub\Project-SWP391\src\components\Header.css */
 .appointment-btn {
   display: flex;
   align-items: center;
@@ -86,6 +87,30 @@
   color: #333;
   font-size: 14px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+/* Membership Label Styles */
+.membership-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 8px;
+}
+
+.membership-label.premium {
+  background-color: #34a853;
+}
+
+.membership-label.pro {
+  background-color: #6f42c1;
 }
 
 .user-dropdown-menu {
@@ -165,4 +190,25 @@
 .signup-btn:hover {
   background-color: #1a5cbf;
   color: white;
+}
+
+/* Notification styles */
+.notification-nav-item {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff3b30;
+  color: white;
+  font-size: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
 }

@@ -44,10 +44,6 @@ const router = createBrowserRouter([
     element: <Layout><Pay /></Layout>,
   },
   {
-    path: "/payment/success",
-    element: <Layout><PaymentSuccess /></Layout>,
-  },
-  {
     path: "*",
     loader: () => { return window.location.replace('/') },
   }

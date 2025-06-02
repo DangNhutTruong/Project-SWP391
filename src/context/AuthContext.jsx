@@ -114,6 +114,34 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     return { success: true };
   };
+  // Hàm cập nhật thông tin người dùng
+  const updateUser = (updatedData) => {
+    if (!user) return { success: false, error: 'Không có người dùng để cập nhật' };
+    
+    try {
+      // Lấy danh sách người dùng từ localStorage
+      const users = JSON.parse(localStorage.getItem('nosmoke_users') || '[]');
+      
+      // Tìm và cập nhật người dùng
+      const updatedUsers = users.map(u => {
+        if (u.id === user.id) {
+          return { ...u, ...updatedData };
+        }
+        return u;
+      });
+      
+      // Lưu danh sách cập nhật vào localStorage
+      localStorage.setItem('nosmoke_users', JSON.stringify(updatedUsers));
+      
+      // Cập nhật user trong state
+      setUser({ ...user, ...updatedData });
+      
+      return { success: true, user: { ...user, ...updatedData } };
+    } catch (err) {
+      setError(err.message);
+      return { success: false, error: err.message };
+    }
+  };
 
   // Giá trị context
   const value = {
@@ -123,6 +151,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
+    updateUser,
+    setUser,
     isAuthenticated: !!user
   };
 

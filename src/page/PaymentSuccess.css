@@ -6,6 +6,8 @@
   min-height: 80vh;
   background-color: #f9f9f9;
   padding: 2rem;
+  padding-top: 80px; /* Added for Header/Nav spacing */
+  margin-top: 60px; /* Added for Header/Nav spacing */
   font-family: 'Roboto', sans-serif;
 }
 
@@ -45,6 +47,27 @@
 
 .next-steps {
   animation: fadeIn 1s ease-in-out 0.9s both;
+}
+
+.membership-status-notification {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2rem auto;
+  padding: 1rem;
+  background-color: #f0f9ff;
+  border-radius: 8px;
+  border-left: 4px solid #2570e8;
+  max-width: 90%;
+  animation: fadeIn 1s ease-in-out 0.7s both;
+}
+
+.membership-status-notification svg {
+  font-size: 1.5rem;
+}
+
+.membership-status-notification span {
+  font-size: 1rem;
 }
 
 @keyframes fadeIn {

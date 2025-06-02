@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Pay.css';
 import { FaCreditCard, FaWallet, FaMoneyBillWave, FaPaypal } from 'react-icons/fa';
 
 const Pay = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { updateUser } = useAuth();
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('zalopay'); // Default payment method
   const [cardInfo, setCardInfo] = useState({
@@ -38,9 +40,7 @@ const Pay = () => {
       ...cardInfo,
       [name]: value
     });
-  };
-
-  // Xử lý khi nhấn nút thanh toán
+  };  // Xử lý khi nhấn nút thanh toán
   const handlePayment = (e) => {
     e.preventDefault();
     
@@ -49,11 +49,14 @@ const Pay = () => {
       return;
     }
 
-    // Mô phỏng quá trình thanh toán
-    alert(`Đã thanh toán thành công gói ${selectedPackage.name} với giá ${selectedPackage.price.toLocaleString()}đ`);
+    // Mô phỏng quá trình thanh toán - Không hiển thị alert để không làm gián đoạn trải nghiệm    console.log(`Đã thanh toán thành công gói ${selectedPackage.name} với giá ${selectedPackage.price.toLocaleString()}đ`);
     
-    // Chuyển hướng người dùng sau khi thanh toán
+    // Cập nhật gói thành viên của người dùng
+    updateUser({ membershipType: selectedPackage.name.toLowerCase() });
+    
+    // Chuyển hướng người dùng sau khi thanh toán - sử dụng replace để không thể quay lại
     navigate('/payment/success', { 
+      replace: true,
       state: { 
         package: selectedPackage,
         paymentMethod: paymentMethod
