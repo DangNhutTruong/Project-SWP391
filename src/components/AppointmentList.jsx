@@ -510,18 +510,14 @@ export default function AppointmentList() {
                     </div>
                   )}
                 </div>
-              </div>
-                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
+              </div>                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
                   <>
                     <button 
-                      className={`chat-button ${(!user?.membership || user?.membership === 'free') ? 'premium-feature' : ''}`}
+                      className="chat-button"
                       onClick={() => handleOpenChat(appointment)}
                     >
                       <FaComments className="chat-button-icon" /> 
                       Chat với Coach
-                      {(!user?.membership || user?.membership === 'free') && (
-                        <span className="premium-badge">Premium</span>
-                      )}
                       {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
                     </button>
                     <button 
@@ -536,7 +532,7 @@ export default function AppointmentList() {
                       Hủy lịch hẹn
                     </button>
                   </>
-                )}                {getStatusClass(appointment) === 'completed' && (
+                )}{getStatusClass(appointment) === 'completed' && (
                   <>
                     <button 
                       className="chat-button"
