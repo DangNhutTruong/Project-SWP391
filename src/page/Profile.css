@@ -143,52 +143,6 @@
   font-size: 14px;
 }
 
-/* Overview Stats */
-.overview-stats {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.stat-card {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.stat-card:nth-child(1) {
-  border-top: 3px solid #2570e8;
-}
-
-.stat-card:nth-child(2) {
-  border-top: 3px solid #28a745;
-}
-
-.stat-card:nth-child(3) {
-  border-top: 3px solid #ff9800;
-}
-
-.stat-card h3 {
-  font-size: 16px;
-  color: #555;
-  margin: 0 0 10px;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 5px;
-}
-
-.stat-detail {
-  font-size: 14px;
-  color: #777;
-  margin: 0;
-}
-
 /* Profile Sections */
 .profile-sections {
   display: grid;
