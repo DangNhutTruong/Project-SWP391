@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useMembership } from '../context/MembershipContext';
 import '../styles/RequireMembership.css';
-import { FaLock } from 'react-icons/fa';
+import { FaLock, FaCrown } from 'react-icons/fa';
+import { hasAccessToFeature, getMinimumRequiredMembership, formatMembershipName } from '../utils/membershipUtils';
 
 /**
  * Higher-Order Component (HOC) để giới hạn truy cập các tính năng dựa trên gói thành viên
@@ -40,16 +41,9 @@ const RequireMembership = ({ allowedMemberships = [], showModal = false, childre
   const hasAccess = userLevel >= requiredLevel;  // Component modal hiển thị khi không có quyền truy cập
   const AccessDeniedModal = () => {
     const { membershipTiers } = useMembership();
-    
-    // Đảm bảo dữ liệu membershipTiers đã được tải
-    const membershipNames = {
-      'free': 'Miễn phí',
-      'premium': 'Premium', 
-      'pro': 'Professional'
-    };
-    
-    const requiredMembershipName = membershipTiers?.[minRequiredMembership]?.name || membershipNames[minRequiredMembership];
-    const currentMembershipName = membershipTiers?.[userMembership]?.name || membershipNames[userMembership];
+      // Sử dụng utility function để lấy tên hiển thị của gói thành viên
+    const requiredMembershipName = formatMembershipName(minRequiredMembership);
+    const currentMembershipName = formatMembershipName(userMembership);
     
     return (
       <div className="membership-modal-overlay">
@@ -57,22 +51,45 @@ const RequireMembership = ({ allowedMemberships = [], showModal = false, childre
           <div className="membership-modal-header">
             <FaLock className="membership-lock-icon" />
             <h3>Tính năng bị giới hạn</h3>
-          </div>
-          <div className="membership-modal-body">
+          </div>          <div className="membership-modal-body">
             <p>
-              Chức năng chat với Coach yêu cầu gói thành viên <strong>{requiredMembershipName}</strong> trở lên.
-              Gói hiện tại của bạn là <strong>{currentMembershipName}</strong>.
-              {userMembership === 'free' && "Vui lòng nâng cấp để sử dụng."}
-              {userMembership !== 'free' && "Nếu bạn đã nâng cấp, vui lòng đăng xuất và đăng nhập lại."}
+              {userMembership === 'free' ? (
+                <>
+                  Chức năng chat với Coach yêu cầu gói thành viên <strong>{requiredMembershipName}</strong> trở lên.
+                  Vui lòng nâng cấp để sử dụng tính năng này.
+                </>
+              ) : (
+                <>
+                  Đã có lỗi xảy ra khi kiểm tra quyền truy cập của bạn.
+                  Gói <strong>{currentMembershipName}</strong> của bạn đáng lẽ phải có quyền truy cập tính năng này.
+                  Vui lòng đăng xuất và đăng nhập lại, hoặc liên hệ hỗ trợ nếu vấn đề vẫn tiếp tục.
+                </>
+              )}
             </p>
+            
+            <div className="membership-info">
+              <div className="membership-item">
+                <h4>Gói hiện tại</h4>
+                <span className={`membership-badge current-badge ${userMembership}`}>
+                  {userMembership === 'free' ? '○' : userMembership === 'premium' ? '✓' : '★'} {currentMembershipName}
+                </span>
+              </div>
+                <div className="membership-item">
+                <h4>Yêu cầu tối thiểu</h4>
+                <span className="membership-badge required-badge">
+                  {minRequiredMembership === 'premium' ? '✓' : '★'} {requiredMembershipName}
+                </span>
+              </div>
+            </div>
           </div>
           <div className="membership-modal-footer">
             <button className="membership-cancel-button" onClick={() => navigate(-1)}>
-              Hủy
-            </button>
-            <button className="membership-upgrade-button" onClick={() => navigate('/membership')}>
-              Nâng cấp ngay
-            </button>
+              Quay lại
+            </button>            {userMembership === 'free' && (
+              <button className="membership-upgrade-button" onClick={() => navigate('/membership')}>
+                <FaCrown /> Nâng cấp ngay
+              </button>
+            )}
           </div>
         </div>
       </div>

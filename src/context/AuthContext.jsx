@@ -94,9 +94,8 @@ export const AuthProvider = ({ children }) => {
         if (foundUser) {
         // Không lưu mật khẩu vào user session
         const { password, ...userWithoutPassword } = foundUser;
-        
-        // Đảm bảo user có trường membership
-        if (!userWithoutPassword.membership) {
+          // Đảm bảo user có trường membership và đó là một giá trị hợp lệ
+        if (!userWithoutPassword.membership || !['free', 'premium', 'pro'].includes(userWithoutPassword.membership)) {
           userWithoutPassword.membership = 'free';
           
           // Cập nhật lại danh sách users
@@ -105,6 +104,9 @@ export const AuthProvider = ({ children }) => {
           );
           localStorage.setItem('nosmoke_users', JSON.stringify(updatedUsers));
         }
+        
+        // Lưu vào localStorage để đảm bảo tính nhất quán
+        localStorage.setItem('nosmoke_user', JSON.stringify(userWithoutPassword));
         
         setUser(userWithoutPassword);
         setLoading(false);
@@ -124,13 +126,87 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     return { success: true };
   };
-  // Hàm cập nhật thông tin người dùng
+    // Đảm bảo rằng membership luôn là một giá trị hợp lệ
+  useEffect(() => {
+    if (user) {
+      let needUpdate = false;
+      let updates = {};
+      
+      // Kiểm tra và đảm bảo membership hợp lệ
+      if (!user.membership || !['free', 'premium', 'pro'].includes(user.membership)) {
+        // Nếu membership không hợp lệ, kiểm tra membershipType
+        if (user.membershipType && ['free', 'premium', 'pro'].includes(user.membershipType)) {
+          updates.membership = user.membershipType;
+        } else {
+          updates.membership = 'free';
+        }
+        needUpdate = true;
+      }
+      
+      // Kiểm tra và đảm bảo membershipType hợp lệ và đồng bộ với membership
+      if (!user.membershipType || user.membershipType !== user.membership) {
+        updates.membershipType = user.membership || 'free';
+        needUpdate = true;
+      }
+      
+      // Cập nhật nếu cần
+      if (needUpdate) {
+        console.log('Đồng bộ dữ liệu membership:', updates);
+        setUser({...user, ...updates});
+      }
+    }
+    
+    // Kiểm tra nếu cần refresh membership
+    if (user && window.sessionStorage && window.sessionStorage.getItem('membership_refresh_needed') === 'true') {
+      refreshMembership();
+      window.sessionStorage.removeItem('membership_refresh_needed');
+    }
+  }, [user]);
+  
+  // Hàm refresh thông tin membership từ localStorage
+  const refreshMembership = () => {
+    if (!user) return { success: false, error: 'Không có người dùng để cập nhật' };
+    
+    try {
+      // Lấy thông tin user từ localStorage
+      const users = JSON.parse(localStorage.getItem('nosmoke_users') || '[]');
+      const storedUser = users.find(u => u.id === user.id);
+      
+      if (storedUser && storedUser.membership !== user.membership) {
+        // Cập nhật thông tin membership nếu có sự khác biệt
+        setUser({ ...user, membership: storedUser.membership });
+        return { success: true, user: { ...user, membership: storedUser.membership } };
+      }
+      
+      return { success: true, user };
+    } catch (err) {
+      console.error('Lỗi khi refresh membership:', err);
+      return { success: false, error: err.message };
+    }
+  };
+    // Hàm cập nhật thông tin người dùng
   const updateUser = (updatedData) => {
     if (!user) return { success: false, error: 'Không có người dùng để cập nhật' };
     
     try {
       // Lấy danh sách người dùng từ localStorage
       const users = JSON.parse(localStorage.getItem('nosmoke_users') || '[]');
+        // Đảm bảo membership hợp lệ nếu đang cập nhật membership
+      if (updatedData.hasOwnProperty('membership') && 
+          !['free', 'premium', 'pro'].includes(updatedData.membership)) {
+        updatedData.membership = 'free';
+      }
+      
+      // Đảm bảo đồng bộ giữa membership và membershipType
+      if (updatedData.hasOwnProperty('membership') && !updatedData.hasOwnProperty('membershipType')) {
+        updatedData.membershipType = updatedData.membership;
+        console.log('Tự động đồng bộ membershipType:', updatedData.membershipType);
+      }
+      
+      if (updatedData.hasOwnProperty('membershipType') && !updatedData.hasOwnProperty('membership')) {
+        updatedData.membership = updatedData.membershipType;
+        console.log('Tự động đồng bộ membership:', updatedData.membership);
+      }
       
       // Tìm và cập nhật người dùng
       const updatedUsers = users.map(u => {
@@ -143,16 +219,19 @@ export const AuthProvider = ({ children }) => {
       // Lưu danh sách cập nhật vào localStorage
       localStorage.setItem('nosmoke_users', JSON.stringify(updatedUsers));
       
-      // Cập nhật user trong state
-      setUser({ ...user, ...updatedData });
+      // Cập nhật user hiện tại trong state
+      const updatedUser = { ...user, ...updatedData };
+      setUser(updatedUser);
       
-      return { success: true, user: { ...user, ...updatedData } };
+      // Cập nhật user trong localStorage cho phiên hiện tại
+      localStorage.setItem('nosmoke_user', JSON.stringify(updatedUser));
+      
+      return { success: true, user: updatedUser };
     } catch (err) {
       setError(err.message);
       return { success: false, error: err.message };
     }
   };
-
   // Giá trị context
   const value = {
     user,
@@ -162,6 +241,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     updateUser,
+    refreshMembership,
     setUser,
     isAuthenticated: !!user
   };
