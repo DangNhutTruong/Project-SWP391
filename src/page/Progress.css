@@ -594,6 +594,49 @@
   font-weight: 500;
 }
 
+/* Loading Animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Chart container */
+.quit-progress-chart {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.chart-notes {
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-left: 4px solid #4285f4;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #495057;
+}
+
+.chart-notes p {
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.chart-notes p:last-child {
+  margin-bottom: 0;
+}
+
 /* Responsive Design */
 @media (max-width: 992px) {
   .stats-cards {
@@ -605,32 +648,32 @@
   .stats-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .metric-item {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .metric-name {
     width: 100%;
     margin-bottom: 10px;
   }
-  
+
   .progress-bar-container {
     width: 100%;
     margin: 5px 0;
   }
-  
+
   .plan-summary {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
-  
+
   .plan-info-section,
   .progress-stats {
     padding: 1.5rem;
@@ -642,11 +685,11 @@
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stat-value {
     font-size: 1.5rem;
   }
-  
+
   .plan-info-section h2,
   .progress-stats h2 {
     font-size: 1.2rem;
