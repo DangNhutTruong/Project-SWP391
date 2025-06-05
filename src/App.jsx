@@ -1,31 +1,33 @@
-import './style.css';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import Header from './components/Header.jsx';
-import Nav from './components/Nav.jsx';
-import Footer from './components/Footer.jsx';
-import ChatButton from './components/ChatButton.jsx';
-import BackToTop from './components/BackToTop.jsx';
-import Home from './page/Home.jsx';
-import ProfilePage from './page/Profile.jsx'; // Đổi tên từ Tools sang ProfilePage
-import ProgressPage from './page/Progress.jsx'; // Import component Progress
-import TestPage from './page/TestPage.jsx'; // Thêm trang test đơn giản
-import Blog from './page/Blog.jsx'; // Import component Blog
-import Login from './page/Login.jsx'; // Import component Login
-import Register from './page/Register.jsx'; // Import component Register
-import MembershipPackage from './page/MembershipPackage.jsx'; // Import component MembershipPackage
-import BookAppointment from './page/BookAppointment.jsx'; // Import component BookAppointment
-import ProtectedRoute from './components/ProtectedRoute.jsx'; // Import ProtectedRoute
-import { AuthProvider } from './context/AuthContext.jsx'; // Import AuthProvider
-import './style.css';
-import JourneyStepper from './components/JourneyStepper.jsx';
-import Notification from './page/Notification.jsx'; // Import component Notification
-import SettingsPage from './page/Settings.jsx'; // Import component Settings
-import Pay from './page/Pay.jsx';
-import PaymentSuccess from './page/PaymentSuccess.jsx';
-import Support from './page/Support.jsx'; // Import Support component
+import "./style.css";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Header from "./components/Header.jsx";
+import Nav from "./components/Nav.jsx";
+import Footer from "./components/Footer.jsx";
+import BackToTop from "./components/BackToTop.jsx";
+import Home from "./page/Home.jsx";
+import ProfilePage from "./page/Profile.jsx"; // Đổi tên từ Tools sang ProfilePage
+import ProgressPage from "./page/Progress.jsx"; // Import component Progress
+import MembershipDebugger from "./components/MembershipDebugger.jsx"; // Import component để debug membership
+import TestPage from "./page/TestPage.jsx"; // Thêm trang test đơn giản
+import Blog from "./page/Blog.jsx"; // Import component Blog
+import Login from "./page/Login.jsx"; // Import component Login
+import Register from "./page/Register.jsx"; // Import component Register
+import MembershipPackage from "./page/MembershipPackage.jsx"; // Import component MembershipPackage
+import BookAppointment from "./page/BookAppointment.jsx"; // Import component BookAppointment
+import ProtectedRoute from "./components/ProtectedRoute.jsx"; // Import ProtectedRoute
+import AccessDenied from "./page/AccessDenied.jsx"; // Import AccessDenied
+import { AuthProvider } from "./context/AuthContext.jsx"; // Import AuthProvider
+import { MembershipProvider } from "./context/MembershipContext.jsx"; // Import MembershipProvider
+import "./style.css";
+import JourneyStepper from "./components/JourneyStepper.jsx";
+import Notification from "./page/Notification.jsx"; // Import component Notification
+import SettingsPage from "./page/Settings.jsx"; // Import component Settings
+import Pay from "./page/Pay.jsx";
+import PaymentSuccess from "./page/PaymentSuccess.jsx";
+import MembershipTest from "./components/MembershipTest.jsx";
 /**
  * App - Component chính của ứng dụng
- * 
+ *
  * Component này sử dụng React Router v7 để định tuyến
  * bao gồm Header, Nav, Footer và các route chính.
  */
@@ -35,11 +37,8 @@ const Layout = ({ children }) => (
   <>
     <Header />
     <Nav />
-    <main className="min-h-[calc(100vh-200px)]">
-      {children}
-    </main>
+    <main className="min-h-[calc(100vh-200px)]">{children}</main>
     <Footer />
-    <ChatButton />
     <BackToTop />
   </>
 );
@@ -56,157 +55,321 @@ const ComingSoon = ({ title }) => (
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout><Home /></Layout>,
+    element: (
+      <Layout>
+        <Home />
+      </Layout>
+    ),
   },
   {
     path: "/home",
-    loader: () => { return window.location.replace('/') },
-  },  {
+    loader: () => {
+      return window.location.replace("/");
+    },
+  },
+  {
     path: "/profile",
-    element: <Layout><ProtectedRoute><ProfilePage /></ProtectedRoute></Layout>,
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <ProfilePage />
+        </ProtectedRoute>
+      </Layout>
+    ),
   },
   {
     path: "/progress",
-    element: <Layout><ProtectedRoute><ProgressPage /></ProtectedRoute></Layout>,
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <ProgressPage />
+        </ProtectedRoute>
+      </Layout>
+    ),
   },
   {
     path: "/test",
-    element: <Layout><TestPage /></Layout>,
+    element: (
+      <Layout>
+        <TestPage />
+      </Layout>
+    ),
   },
   {
     path: "/about",
-    element: <Layout><ComingSoon title="Về chúng tôi" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Về chúng tôi" />
+      </Layout>
+    ),
   },
   {
     path: "/journey",
-    element: <Layout><JourneyStepper /></Layout>, // Sử dụng JourneyStepper cho trang Công Cụ
+    element: (
+      <Layout>
+        <JourneyStepper />
+      </Layout>
+    ), // Sử dụng JourneyStepper cho trang Công Cụ
   },
   {
     path: "/blog",
-    element: <Layout><Blog /></Layout>,
+    element: (
+      <Layout>
+        <Blog />
+      </Layout>
+    ),
   },
   {
     path: "/testimonials",
-    element: <Layout><ComingSoon title="Câu chuyện thành công" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Câu chuyện thành công" />
+      </Layout>
+    ),
   },
   {
     path: "/contact",
-    element: <Layout><ComingSoon title="Liên hệ" /></Layout>,
-  },  {
+    element: (
+      <Layout>
+        <ComingSoon title="Liên hệ" />
+      </Layout>
+    ),
+  },
+  {
     path: "/support",
-    element: <Layout><Support /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Hỗ trợ" />
+      </Layout>
+    ),
   },
   {
     path: "/team",
-    element: <Layout><ComingSoon title="Đội ngũ" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Đội ngũ" />
+      </Layout>
+    ),
   },
   {
     path: "/partners",
-    element: <Layout><ComingSoon title="Đối tác" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Đối tác" />
+      </Layout>
+    ),
   },
   {
     path: "/community",
-    element: <Layout><ComingSoon title="Cộng đồng hỗ trợ" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Cộng đồng hỗ trợ" />
+      </Layout>
+    ),
   },
   {
     path: "/feedback",
-    element: <Layout><ComingSoon title="Góp ý" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Góp ý" />
+      </Layout>
+    ),
   },
   {
     path: "/privacy",
-    element: <Layout><ComingSoon title="Chính sách bảo mật" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Chính sách bảo mật" />
+      </Layout>
+    ),
   },
   {
     path: "/terms",
-    element: <Layout><ComingSoon title="Điều khoản sử dụng" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Điều khoản sử dụng" />
+      </Layout>
+    ),
   },
   {
     path: "/sitemap",
-    element: <Layout><ComingSoon title="Sơ đồ trang" /></Layout>,
-  }, {
+    element: (
+      <Layout>
+        <ComingSoon title="Sơ đồ trang" />
+      </Layout>
+    ),
+  },
+  {
     path: "/login",
-    element: <Layout><Login /></Layout>,
+    element: (
+      <Layout>
+        <Login />
+      </Layout>
+    ),
   },
   {
     path: "/signup",
-    element: <Layout><Register /></Layout>,
-  },  {
+    element: (
+      <Layout>
+        <Register />
+      </Layout>
+    ),
+  },
+  {
     path: "/payment",
-    element: <Layout><Pay /></Layout>,
-  },  {
+    element: (
+      <Layout>
+        <Pay />
+      </Layout>
+    ),
+  },
+  {
     path: "/payment/success",
-    element: <Layout><PaymentSuccess /></Layout>,
+    element: (
+      <Layout>
+        <PaymentSuccess />
+      </Layout>
+    ),
   },
   {
     path: "/notifications",
-    element: <Layout><Notification /></Layout>, // Đường dẫn đến trang thông báo
+    element: (
+      <Layout>
+        <Notification />
+      </Layout>
+    ), // Đường dẫn đến trang thông báo
   },
   {
     path: "/membership",
-    element: <Layout><MembershipPackage /></Layout>, // Đường dẫn đến trang gói thành viên
-    
-  },  {
+    element: (
+      <Layout>
+        <MembershipPackage />
+      </Layout>
+    ), // Đường dẫn đến trang gói thành viên
+  },
+  {
     path: "/settings",
-    element: <Layout><ProtectedRoute><SettingsPage /></ProtectedRoute></Layout>,
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <SettingsPage />
+        </ProtectedRoute>
+      </Layout>
+    ),
   },
   {
     path: "/appointment",
-    element: <Layout><ProtectedRoute><BookAppointment /></ProtectedRoute></Layout>,
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <BookAppointment />
+        </ProtectedRoute>
+      </Layout>
+    ),
   },
   {
     path: "/feedback",
-    element: <Layout><ComingSoon title="Góp ý" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Góp ý" />
+      </Layout>
+    ),
   },
   {
     path: "/privacy",
-    element: <Layout><ComingSoon title="Chính sách bảo mật" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Chính sách bảo mật" />
+      </Layout>
+    ),
   },
   {
     path: "/terms",
-    element: <Layout><ComingSoon title="Điều khoản sử dụng" /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Điều khoản sử dụng" />
+      </Layout>
+    ),
   },
   {
     path: "/sitemap",
-    element: <Layout><ComingSoon title="Sơ đồ trang" /></Layout>,
-  }, {
-    path: "/login",
-    element: <Layout><Login /></Layout>,
-  },  {
-    path: "/signup",
-    element: <Layout><Register /></Layout>,
+    element: (
+      <Layout>
+        <ComingSoon title="Sơ đồ trang" />
+      </Layout>
+    ),
   },
   {
-    path: "/settings",
-    element: <Layout><ProtectedRoute><SettingsPage /></ProtectedRoute></Layout>,
+    path: "/login",
+    element: (
+      <Layout>
+        <Login />
+      </Layout>
+    ),
   },
-
+  {
+    path: "/signup",
+    element: (
+      <Layout>
+        <Register />
+      </Layout>
+    ),
+  },  {
+    path: "/settings",
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <SettingsPage />
+        </ProtectedRoute>
+      </Layout>
+    ),
+  },  {
+    path: "/access-denied",
+    element: (
+      <Layout>
+        <AccessDenied />
+      </Layout>
+    ),
+  },
+  {
+    path: "/membership-test",
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <MembershipTest />
+        </ProtectedRoute>
+      </Layout>
+    ),
+  },
   {
     path: "*",
-    loader: () => { return window.location.replace('/') },
-  }
+    loader: () => {
+      return window.location.replace("/");
+    },
+  },
 ]);
 
 // Simple BackToTopButton component nếu thành phần kia không hoạt động
 const SimpleBackToTop = () => {
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
     <button
       onClick={scrollToTop}
       style={{
-        position: 'fixed',
-        bottom: '30px',
-        right: '30px',
-        width: '50px',
-        height: '50px',
-        backgroundColor: 'red',
-        color: 'white',
-        borderRadius: '50%',
-        border: 'none',
-        fontSize: '20px',
-        cursor: 'pointer',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
-        zIndex: 9999
+        position: "fixed",
+        bottom: "30px",
+        right: "30px",
+        width: "50px",
+        height: "50px",
+        backgroundColor: "red",
+        color: "white",
+        borderRadius: "50%",
+        border: "none",
+        fontSize: "20px",
+        cursor: "pointer",
+        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+        zIndex: 9999,
       }}
     >
       ↑
@@ -214,10 +377,12 @@ const SimpleBackToTop = () => {
   );
 };
 
-export default function App() {
-  return (
+export default function App() {  return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <MembershipProvider>
+        <RouterProvider router={router} />
+        <MembershipDebugger />
+      </MembershipProvider>
     </AuthProvider>
   );
 }

@@ -49,12 +49,21 @@ const PaymentSuccess = () => {
       }
     }
   }, [location, navigate]);
-  
   // Update user membership if package info is available
   useEffect(() => {
     if (user && packageInfo) {
+      // Lấy loại membership từ package
       const membershipType = packageInfo.name.toLowerCase();
-      updateUser({ membershipType });
+      
+      // Cập nhật cả hai trường để đảm bảo tính nhất quán
+      updateUser({ 
+        membership: membershipType,
+        membershipType: membershipType 
+      });
+      console.log('Đã cập nhật membership và membershipType:', membershipType);
+      
+      // Đánh dấu hiển thị thông báo thành công
+      window.sessionStorage.setItem('membership_updated', 'true');
     }
   }, [packageInfo, user, updateUser]);
     // Countdown timer effect
