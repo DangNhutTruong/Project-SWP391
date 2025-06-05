@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid } from 'react-icons/fa';
 import { FaRegStar as FaStarRegular } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './AppointmentList.css';
-import CoachChat from './CoachChat';
+import ProtectedCoachChat from './ProtectedCoachChat';
 
 // Component hiển thị cho thẻ lịch hẹn đã hủy
 const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
@@ -75,7 +76,8 @@ export default function AppointmentList() {
   const [ratingHover, setRatingHover] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
-  const navigate = useNavigate();  useEffect(() => {
+  const { user } = useAuth(); // Lấy thông tin user từ AuthContext
+  const navigate = useNavigate();useEffect(() => {
     // Fetch appointments from localStorage
     const fetchAppointments = () => {
       setLoading(true);
@@ -509,15 +511,17 @@ export default function AppointmentList() {
                   )}
                 </div>
               </div>
-                <div className="appointment-footer">
-                {getStatusClass(appointment) === 'confirmed' && (
+                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
                   <>
                     <button 
-                      className="chat-button"
+                      className={`chat-button ${(!user?.membership || user?.membership === 'free') ? 'premium-feature' : ''}`}
                       onClick={() => handleOpenChat(appointment)}
                     >
                       <FaComments className="chat-button-icon" /> 
                       Chat với Coach
+                      {(!user?.membership || user?.membership === 'free') && (
+                        <span className="premium-badge">Premium</span>
+                      )}
                       {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
                     </button>
                     <button 
@@ -525,7 +529,7 @@ export default function AppointmentList() {
                       onClick={() => handleRescheduleAppointment(appointment)}
                     >
                       Thay đổi lịch
-                    </button>                    <button 
+                    </button><button 
                       className="cancel-button"
                       onClick={() => openCancelModal(appointment.id)}
                     >
@@ -565,16 +569,15 @@ export default function AppointmentList() {
             </div>
             )
           ))}
-        </div>      )}
-        {/* Coach Chat Modal */}
+        </div>      )}        {/* Coach Chat Modal */}
       {showChat && selectedCoach && selectedAppointment && (
-        <CoachChat
+        <ProtectedCoachChat
           coach={selectedCoach}
           appointment={selectedAppointment}
           isOpen={showChat}
           onClose={handleCloseChat}
         />
-      )}      {/* Cancel Confirmation Modal */}
+      )}{/* Cancel Confirmation Modal */}
       {showCancelModal && (
         <div className="modal-overlay">
           <div className="confirmation-modal">

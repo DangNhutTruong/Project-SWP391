@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { FaBell } from 'react-icons/fa';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LoginModal from './LoginModal';
 import { useAuth } from '../context/AuthContext';
+import { formatMembershipName } from '../utils/membershipUtils';
 import './Header.css';
 
 export default function Header() {
@@ -10,6 +11,21 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0); // Add this state for notification count
   const { user, logout } = useAuth();
+    // Debug user membership và đảm bảo nhất quán
+  useEffect(() => {
+    if (user) {
+      console.log('Header - User Membership:', user.membership);
+      console.log('Header - User MembershipType:', user.membershipType);
+      console.log('Header - User Object:', user);
+
+      // Đảm bảo nhất quán giữa membership và membershipType
+      if (!user.membership && user.membershipType) {
+        console.log('Header - Syncing membership from membershipType:', user.membershipType);
+        // Đánh dấu cần refresh để đồng bộ dữ liệu
+        window.sessionStorage.setItem('membership_refresh_needed', 'true');
+      }
+    }
+  }, [user]);
 
   const handleLoginClick = (e) => {
     e.preventDefault();
@@ -44,12 +60,16 @@ export default function Header() {
                 {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
               </Link>
               <div className="user-menu-container">                <button className="user-menu-button" onClick={toggleUserMenu}>
-                  <span className="user-initial">{user.name.charAt(0)}</span>
-                  <span className="user-name">
+                  <span className="user-initial">{user.name.charAt(0)}</span>                  <span className="user-name">                    
                     {user.name}
-                    {user.membershipType && user.membershipType !== 'free' && (
+                    {/* Kiểm tra cả hai trường hợp để hiển thị nhãn thành viên */}
+                    {(user.membership && user.membership !== 'free') ? (
+                      <span className={`membership-label ${user.membership}`}>
+                        {formatMembershipName(user.membership)}
+                      </span>
+                    ) : (user.membershipType && user.membershipType !== 'free') && (
                       <span className={`membership-label ${user.membershipType}`}>
-                        {user.membershipType === 'premium' ? 'Premium' : 'Pro'}
+                        {formatMembershipName(user.membershipType)}
                       </span>
                     )}
                   </span>
