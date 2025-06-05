@@ -14,7 +14,15 @@ import {
   FaBell,
   FaCrown,
   FaTimes,
+  FaPhone,
+  FaHeadset,
+  FaComments,
+  FaVideo,
+  FaWhatsapp,
+  FaEnvelope,
+  FaQuestionCircle,
 } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 import "./Profile.css";
 import "./membership.css";
@@ -338,15 +346,21 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("appointments")}
           >
             <FaCalendarAlt /> Lịch hẹn Coach
-          </Link>
-
-          <Link
+          </Link>          <Link
             to="#"
             className={`nav-item ${activeTab === "achievements" ? "active" : ""
               }`}
             onClick={() => setActiveTab("achievements")}
           >
             <FaTrophy /> Huy hiệu
+          </Link>
+
+          <Link
+            to="#"
+            className={`nav-item ${activeTab === "support" ? "active" : ""}`}
+            onClick={() => setActiveTab("support")}
+          >
+            <FaHeadset /> Hỗ trợ
           </Link>
           
           
@@ -677,6 +691,135 @@ export default function ProfilePage() {
               </div>
 
               <button className="view-all-button">Xem tất cả</button>
+            </div>
+          </div>        )}
+
+        {activeTab === "support" && (
+          <div className="support-section">
+            <div className="section-header">
+              <h1>Hỗ trợ và liên hệ</h1>
+              <p>Chúng tôi luôn sẵn sàng hỗ trợ bạn trong hành trình cai thuốc</p>
+            </div>
+
+            <div className="support-content">
+              {/* Quick Support Actions */}
+              <div className="quick-support">
+                <h2>Hỗ trợ nhanh</h2>
+                <div className="support-cards">
+                  <div className="support-card urgent">
+                    <FaPhone className="support-icon" />
+                    <h3>Hotline khẩn cấp</h3>
+                    <p>Hỗ trợ 24/7 khi bạn cần giúp đỡ ngay lập tức</p>
+                    <a href="tel:1800-1098" className="support-btn emergency">
+                      Gọi ngay: 1800-1098
+                    </a>
+                  </div>
+
+                  <div className="support-card">
+                    <FaComments className="support-icon" />
+                    <h3>Chat trực tuyến</h3>
+                    <p>Trò chuyện với chuyên gia tư vấn</p>
+                    <Link to="/consultation" className="support-btn">
+                      Bắt đầu chat
+                    </Link>
+                  </div>
+
+                  <div className="support-card">
+                    <FaVideo className="support-icon" />
+                    <h3>Tư vấn video</h3>
+                    <p>Gặp mặt trực tiếp với chuyên gia</p>
+                    <Link to="/consultation" className="support-btn">
+                      Đặt lịch tư vấn
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Methods */}
+              <div className="contact-methods">
+                <h2>Các phương thức liên hệ</h2>
+                <div className="contact-grid">
+                  <div className="contact-item">
+                    <FaWhatsapp className="contact-icon whatsapp" />
+                    <div className="contact-info">
+                      <h4>WhatsApp</h4>
+                      <p>Nhắn tin nhanh chóng</p>
+                      <a href="https://wa.me/84901234567" target="_blank" rel="noopener noreferrer" className="contact-link">
+                        +84 90 123 4567
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="contact-item">
+                    <FaEnvelope className="contact-icon email" />
+                    <div className="contact-info">
+                      <h4>Email</h4>
+                      <p>Gửi thắc mắc chi tiết</p>
+                      <a href="mailto:support@quit-smoking.com" className="contact-link">
+                        support@quit-smoking.com
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="contact-item">
+                    <FaHeadset className="contact-icon support" />
+                    <div className="contact-info">
+                      <h4>Hỗ trợ kỹ thuật</h4>
+                      <p>Giải quyết vấn đề ứng dụng</p>
+                      <a href="tel:028-3456-7890" className="contact-link">
+                        028-3456-7890
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* FAQ Section */}
+              <div className="faq-section">
+                <h2>Câu hỏi thường gặp</h2>
+                <div className="faq-list">
+                  <div className="faq-item">
+                    <FaQuestionCircle className="faq-icon" />
+                    <div className="faq-content">
+                      <h4>Làm sao để liên hệ với coach cá nhân?</h4>
+                      <p>Bạn có thể đặt lịch hẹn trong mục "Lịch hẹn Coach" hoặc gọi hotline để được hỗ trợ ngay.</p>
+                    </div>
+                  </div>
+
+                  <div className="faq-item">
+                    <FaQuestionCircle className="faq-icon" />
+                    <div className="faq-content">
+                      <h4>Tôi có thể thay đổi kế hoạch cai thuốc không?</h4>
+                      <p>Có, bạn có thể cập nhật kế hoạch bất cứ lúc nào trong mục "Hồ sơ cá nhân".</p>
+                    </div>
+                  </div>
+
+                  <div className="faq-item">
+                    <FaQuestionCircle className="faq-icon" />
+                    <div className="faq-content">
+                      <h4>Làm sao để nâng cấp gói thành viên?</h4>
+                      <p>Truy cập mục "Gói thành viên" để xem và nâng cấp gói phù hợp với nhu cầu của bạn.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Emergency Contact */}
+              <div className="emergency-contact">
+                <div className="emergency-header">
+                  <FaPhone className="emergency-icon" />
+                  <h2>Liên hệ khẩn cấp</h2>
+                </div>
+                <p>Nếu bạn đang gặp khó khăn nghiêm trọng hoặc cần hỗ trợ tâm lý ngay lập tức:</p>
+                <div className="emergency-buttons">
+                  <a href="tel:1800-1098" className="emergency-btn primary">
+                    <FaPhone /> Hotline 24/7: 1800-1098
+                  </a>
+                  <a href="tel:113" className="emergency-btn secondary">
+                    <FaPhone /> Cấp cứu: 113
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         )}

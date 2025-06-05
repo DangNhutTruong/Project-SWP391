@@ -14,12 +14,15 @@ import {
   FaHeadset,
   FaChevronDown,
   FaChevronUp,
+  FaTimes,
+  FaInfoCircle,
 } from "react-icons/fa";
 import "./Support.css";
 
 export default function Support() {
   const [activeTab, setActiveTab] = useState("hotline");
   const [expandedFaq, setExpandedFaq] = useState(null);
+  const [showCallModal, setShowCallModal] = useState(false);
 
   const stats = {
     callsAnswered: "2.5M+",
@@ -125,6 +128,20 @@ export default function Support() {
     setExpandedFaq(expandedFaq === index ? null : index);
   };
 
+  const handleCallClick = (e) => {
+    e.preventDefault();
+    setShowCallModal(true);
+  };
+
+  const closeCallModal = () => {
+    setShowCallModal(false);
+  };
+
+  const makeCall = () => {
+    window.location.href = "tel:18001098";
+    setShowCallModal(false);
+  };
+
   return (
     <div className="support-page">
       {/* Hero Section */}
@@ -140,11 +157,13 @@ export default function Support() {
             <div className="hero-phone">
               <div className="phone-highlight">
                 <FaPhone className="phone-icon" />
-                <div className="phone-info">
-                  <span className="phone-label">Hotline miễn phí</span>
-                  <a href="tel:18001098" className="phone-number">
+                <div className="phone-info">                  <span className="phone-label">Hotline miễn phí</span>
+                  <button 
+                    onClick={handleCallClick}
+                    className="phone-number phone-button"
+                  >
                     1800-1098
-                  </a>
+                  </button>
                   <span className="phone-hours">24/7 - Hoàn toàn miễn phí</span>
                 </div>
               </div>
@@ -217,11 +236,13 @@ export default function Support() {
                   <div className="hotline-card featured">
                     <div className="hotline-header">
                       <FaPhone className="hotline-icon" />
-                      <div className="hotline-info">
-                        <h3>Đường Dây Nóng Cai Thuốc</h3>
-                        <a href="tel:18001098" className="hotline-number">
+                      <div className="hotline-info">                      <h3>Đường Dây Nóng Cai Thuốc</h3>
+                        <button 
+                          onClick={handleCallClick}
+                          className="hotline-number hotline-button"
+                        >
                           1800-1098
-                        </a>
+                        </button>
                       </div>
                       <div className="hotline-status">
                         <span className="status-indicator active"></span>
@@ -250,11 +271,13 @@ export default function Support() {
                           <p>Không tốn bất kỳ chi phí nào</p>
                         </div>
                       </div>
-                    </div>{" "}
-                    <div className="call-to-action">
-                      <a href="tel:18001098" className="call-btn primary">
+                    </div>{" "}                    <div className="call-to-action">
+                      <button
+                        className="call-btn primary"
+                        onClick={handleCallClick}
+                      >
                         <FaPhone /> Gọi Ngay 1800-1098
-                      </a>
+                      </button>
                       <Link to="/consultation" className="call-btn secondary">
                         <FaVideo /> Tư Vấn Chuyên Sâu
                       </Link>
@@ -352,14 +375,15 @@ export default function Support() {
                       )}
                     </div>
                   ))}
-                </div>
-
-                <div className="faq-contact">
+                </div>                <div className="faq-contact">
                   <h3>Không tìm thấy câu trả lời?</h3>
                   <p>Hãy gọi trực tiếp để được hỗ trợ chi tiết</p>
-                  <a href="tel:18001098" className="faq-call-btn">
+                  <button 
+                    onClick={handleCallClick}
+                    className="faq-call-btn"
+                  >
                     <FaPhone /> Gọi 1800-1098
-                  </a>
+                  </button>
                 </div>
               </div>
             )}
@@ -391,14 +415,15 @@ export default function Support() {
                       </div>
                     </div>
                   ))}
-                </div>
-
-                <div className="stories-cta">
+                </div>                <div className="stories-cta">
                   <h3>Bạn cũng có thể thành công như họ!</h3>
                   <p>Hãy bắt đầu hành trình cai thuốc của bạn ngay hôm nay</p>
-                  <a href="tel:18001098" className="stories-call-btn">
+                  <button 
+                    onClick={handleCallClick}
+                    className="stories-call-btn"
+                  >
                     <FaPhone /> Gọi 1800-1098 để bắt đầu
-                  </a>
+                  </button>
                 </div>
               </div>
             )}
@@ -414,12 +439,13 @@ export default function Support() {
             <p>
               Đừng để thuốc lá tiếp tục ảnh hưởng đến sức khỏe và cuộc sống của
               bạn
-            </p>
-
-            <div className="cta-actions">
-              <a href="tel:18001098" className="cta-btn primary">
+            </p>            <div className="cta-actions">
+              <button 
+                onClick={handleCallClick}
+                className="cta-btn primary"
+              >
                 <FaPhone /> Gọi Ngay 1800-1098
-              </a>
+              </button>
               <Link to="/journey" className="cta-btn secondary">
                 <FaCalendarAlt /> Tạo Kế Hoạch Cai Thuốc
               </Link>
@@ -434,6 +460,54 @@ export default function Support() {
           </div>
         </div>
       </section>
+
+      {/* Call Confirmation Modal */}
+      {showCallModal && (
+        <div className="call-modal-overlay" onClick={closeCallModal}>
+          <div className="call-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                <FaPhone className="modal-phone-icon" />
+                Gọi Hotline Cai Thuốc
+              </h3>
+              <button className="close-btn" onClick={closeCallModal}>
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="modal-content">
+              <div className="call-number">
+                <span className="number-label">Bạn sẽ gọi tới:</span>
+                <span className="number-display">1800-1098</span>
+              </div>
+
+              <div className="call-info">
+                <div className="info-item">
+                  <FaInfoCircle className="info-icon" />
+                  <span>Cuộc gọi hoàn toàn miễn phí</span>
+                </div>
+                <div className="info-item">
+                  <FaClock className="info-icon" />
+                  <span>Hỗ trợ 24/7 - Bất kỳ lúc nào</span>
+                </div>
+                <div className="info-item">
+                  <FaUsers className="info-icon" />
+                  <span>Chuyên gia sẽ tư vấn trực tiếp</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="modal-btn cancel" onClick={closeCallModal}>
+                Hủy
+              </button>
+              <button className="modal-btn call" onClick={makeCall}>
+                <FaPhone /> Gọi Ngay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
