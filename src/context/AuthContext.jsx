@@ -91,10 +91,20 @@ export const AuthProvider = ({ children }) => {
       
       // Tìm user với email và password tương ứng
       const foundUser = users.find(user => user.email === email && user.password === password);
-      
-      if (foundUser) {
+        if (foundUser) {
         // Không lưu mật khẩu vào user session
         const { password, ...userWithoutPassword } = foundUser;
+        
+        // Đảm bảo user có trường membership
+        if (!userWithoutPassword.membership) {
+          userWithoutPassword.membership = 'free';
+          
+          // Cập nhật lại danh sách users
+          const updatedUsers = users.map(user => 
+            user.email === email ? { ...user, membership: 'free' } : user
+          );
+          localStorage.setItem('nosmoke_users', JSON.stringify(updatedUsers));
+        }
         
         setUser(userWithoutPassword);
         setLoading(false);

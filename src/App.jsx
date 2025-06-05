@@ -7,6 +7,7 @@ import BackToTop from "./components/BackToTop.jsx";
 import Home from "./page/Home.jsx";
 import ProfilePage from "./page/Profile.jsx"; // Đổi tên từ Tools sang ProfilePage
 import ProgressPage from "./page/Progress.jsx"; // Import component Progress
+import MembershipDebugger from "./components/MembershipDebugger.jsx"; // Import component để debug membership
 import TestPage from "./page/TestPage.jsx"; // Thêm trang test đơn giản
 import Blog from "./page/Blog.jsx"; // Import component Blog
 import Login from "./page/Login.jsx"; // Import component Login
@@ -14,13 +15,16 @@ import Register from "./page/Register.jsx"; // Import component Register
 import MembershipPackage from "./page/MembershipPackage.jsx"; // Import component MembershipPackage
 import BookAppointment from "./page/BookAppointment.jsx"; // Import component BookAppointment
 import ProtectedRoute from "./components/ProtectedRoute.jsx"; // Import ProtectedRoute
+import AccessDenied from "./page/AccessDenied.jsx"; // Import AccessDenied
 import { AuthProvider } from "./context/AuthContext.jsx"; // Import AuthProvider
+import { MembershipProvider } from "./context/MembershipContext.jsx"; // Import MembershipProvider
 import "./style.css";
 import JourneyStepper from "./components/JourneyStepper.jsx";
 import Notification from "./page/Notification.jsx"; // Import component Notification
 import SettingsPage from "./page/Settings.jsx"; // Import component Settings
 import Pay from "./page/Pay.jsx";
 import PaymentSuccess from "./page/PaymentSuccess.jsx";
+import MembershipTest from "./components/MembershipTest.jsx";
 /**
  * App - Component chính của ứng dụng
  *
@@ -310,8 +314,7 @@ const router = createBrowserRouter([
         <Register />
       </Layout>
     ),
-  },
-  {
+  },  {
     path: "/settings",
     element: (
       <Layout>
@@ -320,8 +323,24 @@ const router = createBrowserRouter([
         </ProtectedRoute>
       </Layout>
     ),
+  },  {
+    path: "/access-denied",
+    element: (
+      <Layout>
+        <AccessDenied />
+      </Layout>
+    ),
   },
-
+  {
+    path: "/membership-test",
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <MembershipTest />
+        </ProtectedRoute>
+      </Layout>
+    ),
+  },
   {
     path: "*",
     loader: () => {
@@ -358,10 +377,12 @@ const SimpleBackToTop = () => {
   );
 };
 
-export default function App() {
-  return (
+export default function App() {  return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <MembershipProvider>
+        <RouterProvider router={router} />
+        <MembershipDebugger />
+      </MembershipProvider>
     </AuthProvider>
   );
 }

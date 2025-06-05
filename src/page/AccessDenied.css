@@ -1,0 +1,163 @@
+.access-denied-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: #f5f5f5;
+  background-image: linear-gradient(135deg, rgba(245, 246, 252, 0.52), rgba(245, 246, 252, 0.73));
+}
+
+.access-denied-card {
+  max-width: 600px;
+  width: 100%;
+  background-color: white;
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  text-align: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.access-denied-icon {
+  width: 80px;
+  height: 80px;
+  background-color: #fff0f0;
+  color: #e74c3c;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin: 0 auto 1.5rem;
+}
+
+.access-denied-title {
+  font-size: 2rem;
+  color: #343a40;
+  margin-bottom: 1.5rem;
+}
+
+.access-denied-message {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.membership-comparison {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin: 2rem 0;
+}
+
+.current-membership,
+.required-membership {
+  text-align: center;
+}
+
+.current-membership h3,
+.required-membership h3 {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+  font-weight: normal;
+}
+
+.membership-badge {
+  padding: 0.5rem 1.5rem;
+  background-color: #f1f3f5;
+  color: #495057;
+  border-radius: 30px;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.membership-badge.required {
+  background-color: #fff4db;
+  color: #ff9800;
+}
+
+.crown-icon {
+  font-size: 0.9rem;
+}
+
+.access-denied-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.back-button {
+  padding: 0.75rem 1.5rem;
+  background-color: white;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #f8f9fa;
+}
+
+.upgrade-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.upgrade-button:hover {
+  background-color: #43a047;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .access-denied-card {
+    padding: 1.5rem;
+  }
+  
+  .membership-comparison {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .access-denied-actions {
+    flex-direction: column;
+  }
+  
+  .access-denied-title {
+    font-size: 1.8rem;
+  }
+}

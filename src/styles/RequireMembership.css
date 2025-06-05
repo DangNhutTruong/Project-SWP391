@@ -1,113 +1,118 @@
-/* RequireMembership.css */
-
+/* Modal khi không có quyền truy cập */
 .membership-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-.membership-modal {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  padding: 2rem;
-  width: 90%;
-  max-width: 450px;
-  text-align: center;
-  animation: fadeInUp 0.3s ease-out;
-}
-
-@keyframes fadeInUp {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
-.membership-modal-icon {
+.membership-modal {
+  background: #ffffff;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 450px;
+  padding: 0;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.membership-modal-header {
+  background: #f8f9fa;
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
   display: flex;
-  justify-content: center;
   align-items: center;
-  width: 70px;
-  height: 70px;
+  gap: 12px;
+}
+
+.membership-modal-header h3 {
+  margin: 0;
+  color: #343a40;
+  font-size: 1.25rem;
+}
+
+.membership-lock-icon {
+  font-size: 24px;
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.1);
+  padding: 10px;
   border-radius: 50%;
-  background-color: #fff0e5;
-  color: #ff6b35;
-  font-size: 28px;
-  margin: 0 auto 20px;
 }
 
-.membership-modal h3 {
-  font-size: 22px;
-  margin: 0 0 15px;
-  color: #333;
+.membership-modal-body {
+  padding: 20px;
 }
 
-.membership-modal p {
-  font-size: 16px;
-  margin-bottom: 25px;
-  color: #666;
+.membership-modal-body p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 1rem;
   line-height: 1.5;
 }
 
-.membership-modal-actions {
+.membership-modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e9ecef;
   display: flex;
-  justify-content: center;
-  gap: 15px;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
-.membership-modal button {
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-size: 15px;
-  font-weight: 600;
+.membership-cancel-button {
+  padding: 8px 16px;
+  background-color: #f8f9fa;
+  color: #495057;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
   cursor: pointer;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
 }
 
-.membership-modal-cancel {
-  background-color: #f1f1f1;
-  color: #666;
-  border: 1px solid #ddd;
+.membership-cancel-button:hover {
+  background-color: #e9ecef;
 }
 
-.membership-modal-cancel:hover {
-  background-color: #e6e6e6;
-}
-
-.membership-modal-upgrade {
-  background-color: #ff6b35;
+.membership-upgrade-button {
+  padding: 8px 16px;
+  background-color: #28a745;
   color: white;
   border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.membership-modal-upgrade:hover {
-  background-color: #ff5a1f;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(255, 107, 53, 0.3);
-}
-
-/* Style for disabled chat button in AppointmentList */
-.chat-button.disabled {
-  background-color: #f0f0f0;
-  color: #888;
-  cursor: not-allowed;
-  position: relative;
-}
-
-.membership-lock {
-  display: inline-block;
-  margin-left: 5px;
-  font-size: 12px;
+.membership-upgrade-button:hover {
+  background-color: #218838;
 }

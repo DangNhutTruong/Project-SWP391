@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid, FaLock } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid } from 'react-icons/fa';
 import { FaRegStar as FaStarRegular } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AppointmentList.css';
 import ProtectedCoachChat from './ProtectedCoachChat';
-import ChatWithCoachButton from './ChatWithCoachButton';
 
 // Component hiển thị cho thẻ lịch hẹn đã hủy
 const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
@@ -511,21 +510,26 @@ export default function AppointmentList() {
                     </div>
                   )}
                 </div>
-              </div>                <div className="appointment-footer">
-                {getStatusClass(appointment) === 'confirmed' && (
+              </div>
+                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
                   <>
-                    <ChatWithCoachButton
-                      appointment={appointment}
-                      userMembership={user?.membership || 'free'}
-                      hasUnread={hasUnreadMessages(appointment.id)}
-                      onChatOpen={() => handleOpenChat(appointment)}
-                    />
+                    <button 
+                      className={`chat-button ${(!user?.membership || user?.membership === 'free') ? 'premium-feature' : ''}`}
+                      onClick={() => handleOpenChat(appointment)}
+                    >
+                      <FaComments className="chat-button-icon" /> 
+                      Chat với Coach
+                      {(!user?.membership || user?.membership === 'free') && (
+                        <span className="premium-badge">Premium</span>
+                      )}
+                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
+                    </button>
                     <button 
                       className="reschedule-button"
                       onClick={() => handleRescheduleAppointment(appointment)}
                     >
                       Thay đổi lịch
-                    </button>                    <button 
+                    </button><button 
                       className="cancel-button"
                       onClick={() => openCancelModal(appointment.id)}
                     >
@@ -534,13 +538,14 @@ export default function AppointmentList() {
                   </>
                 )}                {getStatusClass(appointment) === 'completed' && (
                   <>
-                    <ChatWithCoachButton
-                      appointment={appointment}
-                      userMembership={user?.membership || 'free'}
-                      hasUnread={hasUnreadMessages(appointment.id)}
-                      onChatOpen={() => handleOpenChat(appointment)}
-                    />
                     <button 
+                      className="chat-button"
+                      onClick={() => handleOpenChat(appointment)}
+                    >
+                      <FaComments className="chat-button-icon" /> 
+                      Chat với Coach
+                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
+                    </button>                    <button 
                       className="feedback-button"
                       onClick={() => openRatingModal(appointment)}
                     >
