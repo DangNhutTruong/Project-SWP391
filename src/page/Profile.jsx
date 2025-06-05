@@ -33,14 +33,11 @@ import QuitPlanDisplay from "../components/QuitPlanDisplay";
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
   const [planData, setPlanData] = useState({
-    strategy:
-      currentPlan.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
+    strategy: currentPlan.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
     startDate: currentPlan.startDate
-      ? new Date(
-        currentPlan.startDate.split("/").reverse().join("-")
-      )
-        .toISOString()
-        .split("T")[0]
+      ? new Date(currentPlan.startDate.split("/").reverse().join("-"))
+          .toISOString()
+          .split("T")[0]
       : new Date().toISOString().split("T")[0],
     goal: currentPlan.goal || "Cai thuốc hoàn toàn và duy trì lâu dài",
   });
@@ -83,7 +80,9 @@ function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
               <option value="Cai thuốc hoàn toàn và duy trì lâu dài">
                 Cai thuốc hoàn toàn
               </option>
-              <option value="Giảm dần số điếu thuốc">Giảm dần số điếu thuốc</option>
+              <option value="Giảm dần số điếu thuốc">
+                Giảm dần số điếu thuốc
+              </option>
               <option value="Sử dụng sản phẩm thay thế nicotine">
                 Sử dụng sản phẩm thay thế nicotine
               </option>
@@ -134,11 +133,11 @@ export default function ProfilePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const savedTab = localStorage.getItem('activeProfileTab');
+    const savedTab = localStorage.getItem("activeProfileTab");
     if (savedTab) {
       setActiveTab(savedTab);
       // Clear the saved tab after using it
-      localStorage.removeItem('activeProfileTab');
+      localStorage.removeItem("activeProfileTab");
     }
   }, []);
 
@@ -243,8 +242,8 @@ export default function ProfilePage() {
         date:
           savings.days >= 1
             ? new Date(
-              new Date(user?.startDate).getTime() + 86400000
-            ).toLocaleDateString("vi-VN")
+                new Date(user?.startDate).getTime() + 86400000
+              ).toLocaleDateString("vi-VN")
             : "",
         icon: "⭐",
       },
@@ -254,8 +253,8 @@ export default function ProfilePage() {
         date:
           savings.days >= 7
             ? new Date(
-              new Date(user?.startDate).getTime() + 7 * 86400000
-            ).toLocaleDateString("vi-VN")
+                new Date(user?.startDate).getTime() + 7 * 86400000
+              ).toLocaleDateString("vi-VN")
             : "",
         icon: "🏅",
       },
@@ -265,8 +264,8 @@ export default function ProfilePage() {
         date:
           savings.days >= 14
             ? new Date(
-              new Date(user?.startDate).getTime() + 14 * 86400000
-            ).toLocaleDateString("vi-VN")
+                new Date(user?.startDate).getTime() + 14 * 86400000
+              ).toLocaleDateString("vi-VN")
             : "",
         icon: "🏆",
       },
@@ -276,8 +275,8 @@ export default function ProfilePage() {
         date:
           savings.days >= 30
             ? new Date(
-              new Date(user?.startDate).getTime() + 30 * 86400000
-            ).toLocaleDateString("vi-VN")
+                new Date(user?.startDate).getTime() + 30 * 86400000
+              ).toLocaleDateString("vi-VN")
             : "",
         icon: "👑",
       },
@@ -289,7 +288,8 @@ export default function ProfilePage() {
         date: "Hôm nay",
         mood: "Bình thường",
         symptoms: "Không có triệu chứng",
-        notes: '"Hôm nay là một ngày bình thường, không có cảm giác thèm thuốc."',
+        notes:
+          '"Hôm nay là một ngày bình thường, không có cảm giác thèm thuốc."',
       },
       {
         id: 2,
@@ -320,18 +320,23 @@ export default function ProfilePage() {
         <div className="user-info">
           <div className="user-avatar">
             <span className="user-initial">NT</span>
-          </div>          <div className="user-details">
+          </div>{" "}
+          <div className="user-details">
             <h3>
               {userData.name}
-              {userData.membershipType && userData.membershipType !== 'free' && (
-                <span className={`membership-label ${userData.membershipType}`}>
-                  {userData.membershipType === 'premium' ? 'Premium' : 'Pro'}
-                </span>
-              )}
+              {userData.membershipType &&
+                userData.membershipType !== "free" && (
+                  <span
+                    className={`membership-label ${userData.membershipType}`}
+                  >
+                    {userData.membershipType === "premium" ? "Premium" : "Pro"}
+                  </span>
+                )}
             </h3>
             <p>Đang cai thuốc: {userData.daysWithoutSmoking} ngày</p>
           </div>
-        </div>        <nav className="profile-nav">
+        </div>{" "}
+        <nav className="profile-nav">
           <Link
             to="#"
             className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
@@ -339,22 +344,24 @@ export default function ProfilePage() {
           >
             <FaUserAlt /> Hồ sơ cá nhân
           </Link>
-          
           <Link
             to="#"
-            className={`nav-item ${activeTab === "appointments" ? "active" : ""}`}
+            className={`nav-item ${
+              activeTab === "appointments" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("appointments")}
           >
             <FaCalendarAlt /> Lịch hẹn Coach
-          </Link>          <Link
+          </Link>{" "}
+          <Link
             to="#"
-            className={`nav-item ${activeTab === "achievements" ? "active" : ""
-              }`}
+            className={`nav-item ${
+              activeTab === "achievements" ? "active" : ""
+            }`}
             onClick={() => setActiveTab("achievements")}
           >
             <FaTrophy /> Huy hiệu
           </Link>
-
           <Link
             to="#"
             className={`nav-item ${activeTab === "support" ? "active" : ""}`}
@@ -362,9 +369,6 @@ export default function ProfilePage() {
           >
             <FaHeadset /> Hỗ trợ
           </Link>
-          
-          
-          
           <button onClick={logout} className="nav-item logout-btn">
             <i className="fas fa-sign-out-alt"></i> Đăng xuất
           </button>
@@ -393,7 +397,10 @@ export default function ProfilePage() {
                   <div className="health-stat-row">
                     <div className="health-stat">
                       <h4>Tình trạng hút thuốc ban đầu</h4>
-                      <p>Cập nhật lần cuối: {userData.daysWithoutSmoking} ngày trước</p>
+                      <p>
+                        Cập nhật lần cuối: {userData.daysWithoutSmoking} ngày
+                        trước
+                      </p>
                     </div>
                   </div>
 
@@ -427,8 +434,12 @@ export default function ProfilePage() {
                   <div className="improvements-list">
                     {userData.healthImprovements.map((improvement, index) => (
                       <div key={index} className="improvement-item">
-                        <span className="improvement-time">{improvement.time}</span>
-                        <span className="improvement-description">{improvement.description}</span>
+                        <span className="improvement-time">
+                          {improvement.time}
+                        </span>
+                        <span className="improvement-description">
+                          {improvement.description}
+                        </span>
                         {improvement.completed ? (
                           <FaCheckCircle className="completed-icon" />
                         ) : (
@@ -438,10 +449,11 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 </div>
-              </div>              <div className="plan-section">
-                <h2>Kế hoạch cai thuốc</h2>                {/* Hiển thị kế hoạch cai thuốc từ localStorage */}
+              </div>{" "}
+              <div className="plan-section">
+                <h2>Kế hoạch cai thuốc</h2>{" "}
+                {/* Hiển thị kế hoạch cai thuốc từ localStorage */}
                 <QuitPlanDisplay />
-
                 <div className="current-plan">
                   <h3>Kế hoạch hiện tại</h3>
                   <p className="plan-strategy">
@@ -454,7 +466,8 @@ export default function ProfilePage() {
                       <span>Ngày bắt đầu cai thuốc: {userData.startDate}</span>
                     </div>
                     <div className="plan-goal">
-                      <strong>Mục tiêu:</strong> Cai thuốc hoàn toàn và duy trì lâu dài
+                      <strong>Mục tiêu:</strong> Cai thuốc hoàn toàn và duy trì
+                      lâu dài
                     </div>
                   </div>
 
@@ -492,7 +505,8 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        )}        {activeTab === "membership" && (
+        )}{" "}
+        {activeTab === "membership" && (
           <div className="membership-section">
             <h1>Thông tin Thành viên</h1>
 
@@ -500,24 +514,38 @@ export default function ProfilePage() {
               <div className="card membership-status-card">
                 <h2>Trạng thái thành viên</h2>
                 <div className="membership-status-info">
-                  {userData.membershipType && userData.membershipType !== 'free' ? (
+                  {userData.membershipType &&
+                  userData.membershipType !== "free" ? (
                     <div className="current-membership">
                       <div className="membership-badge-large">
-                        <FaCrown className={userData.membershipType === "premium" ? "premium-icon" : "pro-icon"} />
-                        <span className={`membership-type ${userData.membershipType}`}>
-                          {userData.membershipType === "premium" ? "Premium" : "Pro"}
+                        <FaCrown
+                          className={
+                            userData.membershipType === "premium"
+                              ? "premium-icon"
+                              : "pro-icon"
+                          }
+                        />
+                        <span
+                          className={`membership-type ${userData.membershipType}`}
+                        >
+                          {userData.membershipType === "premium"
+                            ? "Premium"
+                            : "Pro"}
                         </span>
                       </div>
                       <p className="membership-description">
-                        {userData.membershipType === "premium" 
-                          ? "Bạn đang sử dụng gói Premium với đầy đủ tính năng hỗ trợ." 
+                        {userData.membershipType === "premium"
+                          ? "Bạn đang sử dụng gói Premium với đầy đủ tính năng hỗ trợ."
                           : "Bạn đang sử dụng gói Pro với đầy đủ tính năng hàng năm."}
                       </p>
                     </div>
                   ) : (
                     <div className="free-membership">
                       <p>Bạn đang sử dụng gói Miễn phí</p>
-                      <button className="upgrade-btn" onClick={() => navigate('/membership')}>
+                      <button
+                        className="upgrade-btn"
+                        onClick={() => navigate("/membership")}
+                      >
                         Nâng cấp ngay
                       </button>
                     </div>
@@ -543,8 +571,9 @@ export default function ProfilePage() {
                     <p>Tạo kế hoạch cai thuốc phù hợp với bạn</p>
                   </div>
                 </div>
-                
-                {userData.membershipType && userData.membershipType !== 'free' ? (
+
+                {userData.membershipType &&
+                userData.membershipType !== "free" ? (
                   <>
                     <div className="feature-item">
                       <FaCheck className="feature-check" />
@@ -594,11 +623,15 @@ export default function ProfilePage() {
                   </>
                 )}
               </div>
-              
-              {!userData.membershipType || userData.membershipType === 'free' ? (
+
+              {!userData.membershipType ||
+              userData.membershipType === "free" ? (
                 <div className="membership-upgrade">
                   <h3>Nâng cấp để sử dụng đầy đủ tính năng</h3>
-                  <button className="upgrade-btn-large" onClick={() => navigate('/membership')}>
+                  <button
+                    className="upgrade-btn-large"
+                    onClick={() => navigate("/membership")}
+                  >
                     Khám phá gói thành viên
                   </button>
                 </div>
@@ -606,7 +639,6 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-
         {activeTab === "achievements" && (
           <div className="achievements-section">
             <h1>Huy hiệu đã đạt</h1>
@@ -615,8 +647,9 @@ export default function ProfilePage() {
               {userData.achievements.map((achievement) => (
                 <div
                   key={achievement.id}
-                  className={`achievement-card ${!achievement.date ? "locked" : ""
-                    }`}
+                  className={`achievement-card ${
+                    !achievement.date ? "locked" : ""
+                  }`}
                 >
                   <div className="achievement-icon">{achievement.icon}</div>
                   <h3>{achievement.name}</h3>
@@ -628,14 +661,12 @@ export default function ProfilePage() {
             <h2>Xem tất cả huy hiệu</h2>
           </div>
         )}
-
         {activeTab === "appointments" && (
           <div className="appointments-section">
             <h1>Lịch hẹn Coach</h1>
             <AppointmentList />
           </div>
         )}
-
         {activeTab === "journal" && (
           <div className="journal-section">
             <h1>Cập nhật hàng ngày</h1>
@@ -692,13 +723,15 @@ export default function ProfilePage() {
 
               <button className="view-all-button">Xem tất cả</button>
             </div>
-          </div>        )}
-
+          </div>
+        )}
         {activeTab === "support" && (
           <div className="support-section">
             <div className="section-header">
               <h1>Hỗ trợ và liên hệ</h1>
-              <p>Chúng tôi luôn sẵn sàng hỗ trợ bạn trong hành trình cai thuốc</p>
+              <p>
+                Chúng tôi luôn sẵn sàng hỗ trợ bạn trong hành trình cai thuốc
+              </p>
             </div>
 
             <div className="support-content">
@@ -744,7 +777,12 @@ export default function ProfilePage() {
                     <div className="contact-info">
                       <h4>WhatsApp</h4>
                       <p>Nhắn tin nhanh chóng</p>
-                      <a href="https://wa.me/84901234567" target="_blank" rel="noopener noreferrer" className="contact-link">
+                      <a
+                        href="https://wa.me/84901234567"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="contact-link"
+                      >
                         +84 90 123 4567
                       </a>
                     </div>
@@ -755,7 +793,10 @@ export default function ProfilePage() {
                     <div className="contact-info">
                       <h4>Email</h4>
                       <p>Gửi thắc mắc chi tiết</p>
-                      <a href="mailto:support@quit-smoking.com" className="contact-link">
+                      <a
+                        href="mailto:support@quit-smoking.com"
+                        className="contact-link"
+                      >
                         support@quit-smoking.com
                       </a>
                     </div>
@@ -782,7 +823,10 @@ export default function ProfilePage() {
                     <FaQuestionCircle className="faq-icon" />
                     <div className="faq-content">
                       <h4>Làm sao để liên hệ với coach cá nhân?</h4>
-                      <p>Bạn có thể đặt lịch hẹn trong mục "Lịch hẹn Coach" hoặc gọi hotline để được hỗ trợ ngay.</p>
+                      <p>
+                        Bạn có thể đặt lịch hẹn trong mục "Lịch hẹn Coach" hoặc
+                        gọi hotline để được hỗ trợ ngay.
+                      </p>
                     </div>
                   </div>
 
@@ -790,7 +834,10 @@ export default function ProfilePage() {
                     <FaQuestionCircle className="faq-icon" />
                     <div className="faq-content">
                       <h4>Tôi có thể thay đổi kế hoạch cai thuốc không?</h4>
-                      <p>Có, bạn có thể cập nhật kế hoạch bất cứ lúc nào trong mục "Hồ sơ cá nhân".</p>
+                      <p>
+                        Có, bạn có thể cập nhật kế hoạch bất cứ lúc nào trong
+                        mục "Hồ sơ cá nhân".
+                      </p>
                     </div>
                   </div>
 
@@ -798,7 +845,10 @@ export default function ProfilePage() {
                     <FaQuestionCircle className="faq-icon" />
                     <div className="faq-content">
                       <h4>Làm sao để nâng cấp gói thành viên?</h4>
-                      <p>Truy cập mục "Gói thành viên" để xem và nâng cấp gói phù hợp với nhu cầu của bạn.</p>
+                      <p>
+                        Truy cập mục "Gói thành viên" để xem và nâng cấp gói phù
+                        hợp với nhu cầu của bạn.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -810,7 +860,10 @@ export default function ProfilePage() {
                   <FaPhone className="emergency-icon" />
                   <h2>Liên hệ khẩn cấp</h2>
                 </div>
-                <p>Nếu bạn đang gặp khó khăn nghiêm trọng hoặc cần hỗ trợ tâm lý ngay lập tức:</p>
+                <p>
+                  Nếu bạn đang gặp khó khăn nghiêm trọng hoặc cần hỗ trợ tâm lý
+                  ngay lập tức:
+                </p>
                 <div className="emergency-buttons">
                   <a href="tel:1800-1098" className="emergency-btn primary">
                     <FaPhone /> Hotline 24/7: 1800-1098
@@ -823,7 +876,6 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-
         {/* Modal chỉnh sửa kế hoạch */}
         <PlanEditModal
           isOpen={isPlanEditOpen}
