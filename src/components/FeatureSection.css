@@ -103,8 +103,8 @@
 }
 
 .feature-icon {
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height:60px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -140,9 +140,8 @@
 }
 
 .feature-icon.blue {
-  background: linear-gradient(135deg, #2570e8, #1a5cbf);
+  background: linear-gradient(135deg, #b905e6, #b905e6);
 }
-
 .feature-icon.yellow {
   background: linear-gradient(135deg, #ffc107, #ff9800);
 }
@@ -152,11 +151,38 @@
 }
 
 .feature-icon.purple {
-  background: linear-gradient(135deg, #6f42c1, #6610f2);
+  background: linear-gradient(135deg, #827a92, #827a92);
 }
 
 .feature-icon.red {
   background: linear-gradient(135deg, #dc3545, #ff4b5a);
+}
+.fas.fa-chart-line {
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.fas.fa-trophy {
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.fas.fa-calendar {
+  font-size: 1.5rem;
+  color: #fff;
+}
+.fas.fa-users {
+  font-size: 1.5rem;
+  color: #fff;
+}
+.fas.fa-comments {
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.fas.fa-heartbeat {
+  font-size: 1.5rem;
+  color: #fff;
 }
 
 .feature-icon.teal {
