@@ -922,3 +922,66 @@
   background-color: #a5d6a7;
   cursor: not-allowed;
 }
+
+/* Premium feature message styling */
+.premium-feature-message {
+  background: linear-gradient(to right, #f1f5f9, #e2e8f0);
+  border-radius: 8px;
+  padding: 30px;
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.premium-icon {
+  font-size: 28px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #2570e8, #1a5cbf);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 16px;
+}
+
+.premium-feature-message h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.premium-feature-message p {
+  font-size: 16px;
+  color: #475569;
+  margin-bottom: 24px;
+  max-width: 400px;
+}
+
+.upgrade-now-button {
+  background: linear-gradient(45deg, #2570e8, #1a5cbf);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(37, 112, 232, 0.3);
+}
+
+.upgrade-now-button:hover {
+  background: linear-gradient(45deg, #1a5cbf, #114499);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(37, 112, 232, 0.4);
+}

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useMembership } from '../context/MembershipContext';
 import '../styles/RequireMembership.css';
 import { FaLock, FaCrown } from 'react-icons/fa';
-import { hasAccessToFeature, getMinimumRequiredMembership, formatMembershipName } from '../utils/membershipUtils';
+import { formatMembershipName } from '../utils/membershipUtils';
 
 /**
  * Higher-Order Component (HOC) để giới hạn truy cập các tính năng dựa trên gói thành viên
@@ -26,11 +26,6 @@ const RequireMembership = ({ allowedMemberships = [], showModal = false, childre
     const levels = { 'free': 0, 'premium': 1, 'pro': 2 };
     return levels[a] - levels[b];
   })[0];
-    // Kiểm tra xem user có quyền truy cập không dựa trên phân cấp membership
-  // Ghi log để debug
-  console.log('User membership:', userMembership);
-  console.log('Allowed memberships:', allowedMemberships);
-  console.log('Min required membership:', minRequiredMembership);
   
   // Thiết lập mảng cấp độ thành viên để so sánh
   const membershipLevels = ['free', 'premium', 'pro'];
@@ -38,10 +33,10 @@ const RequireMembership = ({ allowedMemberships = [], showModal = false, childre
   const requiredLevel = membershipLevels.indexOf(minRequiredMembership);
   
   // Người dùng có quyền nếu họ có membership cấp cao hơn hoặc bằng yêu cầu
-  const hasAccess = userLevel >= requiredLevel;  // Component modal hiển thị khi không có quyền truy cập
+  const hasAccess = userLevel >= requiredLevel;
+
+  // Modal khi người dùng không có quyền truy cập
   const AccessDeniedModal = () => {
-    const { membershipTiers } = useMembership();
-      // Sử dụng utility function để lấy tên hiển thị của gói thành viên
     const requiredMembershipName = formatMembershipName(minRequiredMembership);
     const currentMembershipName = formatMembershipName(userMembership);
     
@@ -50,13 +45,15 @@ const RequireMembership = ({ allowedMemberships = [], showModal = false, childre
         <div className="membership-modal">
           <div className="membership-modal-header">
             <FaLock className="membership-lock-icon" />
-            <h3>Tính năng bị giới hạn</h3>
-          </div>          <div className="membership-modal-body">
+            <h3>Đặt lịch hẹn - Tính năng Premium</h3>
+          </div>
+          <div className="membership-modal-body">
             <p>
               {userMembership === 'free' ? (
                 <>
-                  Chức năng chat với Coach yêu cầu gói thành viên <strong>{requiredMembershipName}</strong> trở lên.
-                  Vui lòng nâng cấp để sử dụng tính năng này.
+                  Đặt lịch hẹn với Coach là tính năng độc quyền dành cho gói thành viên <strong>{requiredMembershipName}</strong> trở lên.
+                  Việc đặt lịch sẽ giúp bạn nhận được tư vấn 1:1 chuyên sâu từ các chuyên gia cai thuốc có kinh nghiệm.
+                  Vui lòng nâng cấp để mở khóa tính năng này.
                 </>
               ) : (
                 <>
@@ -74,7 +71,7 @@ const RequireMembership = ({ allowedMemberships = [], showModal = false, childre
                   {userMembership === 'free' ? '○' : userMembership === 'premium' ? '✓' : '★'} {currentMembershipName}
                 </span>
               </div>
-                <div className="membership-item">
+              <div className="membership-item">
                 <h4>Yêu cầu tối thiểu</h4>
                 <span className="membership-badge required-badge">
                   {minRequiredMembership === 'premium' ? '✓' : '★'} {requiredMembershipName}
@@ -85,7 +82,8 @@ const RequireMembership = ({ allowedMemberships = [], showModal = false, childre
           <div className="membership-modal-footer">
             <button className="membership-cancel-button" onClick={() => navigate(-1)}>
               Quay lại
-            </button>            {userMembership === 'free' && (
+            </button>
+            {userMembership === 'free' && (
               <button className="membership-upgrade-button" onClick={() => navigate('/membership')}>
                 <FaCrown /> Nâng cấp ngay
               </button>

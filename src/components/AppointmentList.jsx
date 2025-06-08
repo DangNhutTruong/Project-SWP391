@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid, FaCrown, FaLock } from 'react-icons/fa';
 import { FaRegStar as FaStarRegular } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { hasAccessToFeature, formatMembershipName } from '../utils/membershipUtils';
 import './AppointmentList.css';
 import ProtectedCoachChat from './ProtectedCoachChat';
 
@@ -75,9 +76,14 @@ export default function AppointmentList() {
   const [rating, setRating] = useState(0);
   const [ratingHover, setRatingHover] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
-  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
-  const { user } = useAuth(); // Lấy thông tin user từ AuthContext
-  const navigate = useNavigate();useEffect(() => {
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);  const { user } = useAuth(); // Lấy thông tin user từ AuthContext
+  const navigate = useNavigate();
+  
+  // Check if user has access to appointment feature
+  const userMembership = user?.membership || 'free';
+  const hasAccess = hasAccessToFeature(userMembership, 'premium');
+
+  useEffect(() => {
     // Fetch appointments from localStorage
     const fetchAppointments = () => {
       setLoading(true);
@@ -373,7 +379,6 @@ export default function AppointmentList() {
     setRatingHover(0);
     setRatingComment('');
   };
-
   // Handle rating submission
   const handleRatingSubmit = () => {
     if (appointmentToRate && rating > 0) {
@@ -415,29 +420,48 @@ export default function AppointmentList() {
     <div className="appointments-container">
       <div className="appointments-header">
         <h2><FaCalendarAlt /> Lịch hẹn Coach</h2>
-        <div className="filter-controls">
-          <button 
-            className={`filter-button ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => setFilter('all')}
-          >
-            Tất cả
-          </button>
-          <button 
-            className={`filter-button ${filter === 'upcoming' ? 'active' : ''}`}
-            onClick={() => setFilter('upcoming')}
-          >
-            Sắp tới
-          </button>
-          <button 
-            className={`filter-button ${filter === 'past' ? 'active' : ''}`}
-            onClick={() => setFilter('past')}
-          >
-            Đã qua
-          </button>
-        </div>
+        {hasAccess && (
+          <div className="filter-controls">
+            <button 
+              className={`filter-button ${filter === 'all' ? 'active' : ''}`}
+              onClick={() => setFilter('all')}
+            >
+              Tất cả
+            </button>
+            <button 
+              className={`filter-button ${filter === 'upcoming' ? 'active' : ''}`}
+              onClick={() => setFilter('upcoming')}
+            >
+              Sắp tới
+            </button>
+            <button 
+              className={`filter-button ${filter === 'past' ? 'active' : ''}`}
+              onClick={() => setFilter('past')}
+            >
+              Đã qua
+            </button>
+          </div>
+        )}
       </div>
 
-      {loading ? (
+      {/* Premium feature message for free users */}
+      {!hasAccess ? (
+        <div className="premium-feature-message">
+          <div className="premium-icon">
+            <FaLock />
+          </div>
+          <h3>Tính năng dành riêng cho gói Premium</h3>
+          <p>
+            Để truy cập tính năng lịch hẹn Coach, vui lòng nâng cấp lên gói Premium hoặc Pro.
+          </p>
+          <button 
+            className="upgrade-now-button"
+            onClick={() => navigate('/membership')}
+          >
+            <FaCrown /> Nâng cấp ngay
+          </button>
+        </div>
+      ) : loading ? (
         <div className="loading-message">
           <p>Đang tải lịch hẹn...</p>
         </div>
@@ -510,18 +534,14 @@ export default function AppointmentList() {
                     </div>
                   )}
                 </div>
-              </div>
-                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
+              </div>                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
                   <>
                     <button 
-                      className={`chat-button ${(!user?.membership || user?.membership === 'free') ? 'premium-feature' : ''}`}
+                      className="chat-button"
                       onClick={() => handleOpenChat(appointment)}
                     >
                       <FaComments className="chat-button-icon" /> 
                       Chat với Coach
-                      {(!user?.membership || user?.membership === 'free') && (
-                        <span className="premium-badge">Premium</span>
-                      )}
                       {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
                     </button>
                     <button 
@@ -536,7 +556,7 @@ export default function AppointmentList() {
                       Hủy lịch hẹn
                     </button>
                   </>
-                )}                {getStatusClass(appointment) === 'completed' && (
+                )}{getStatusClass(appointment) === 'completed' && (
                   <>
                     <button 
                       className="chat-button"
