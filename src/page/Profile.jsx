@@ -124,14 +124,48 @@ export default function ProfilePage() {
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị
-    // Check if redirected from appointment booking
+  const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị  // Check if redirected from appointment booking
   useEffect(() => {
     const savedTab = localStorage.getItem('activeProfileTab');
     if (savedTab) {
       setActiveTab(savedTab);
       // Clear the saved tab after using it
       localStorage.removeItem('activeProfileTab');
+      
+      // Scroll to the top of the content area
+      const profileContent = document.querySelector('.profile-content');
+      if (profileContent) {
+        window.scrollTo({ top: profileContent.offsetTop, behavior: 'smooth' });
+      }
+    }
+    
+    // Check for hash in URL to navigate to specific section
+    if (window.location.hash) {
+      const hash = window.location.hash.substring(1); // remove the # symbol
+      if (hash === 'achievements' || hash === 'profile' || hash === 'appointments' || hash === 'journal' || hash === 'membership' || hash === 'health') {
+        setActiveTab(hash === 'health' ? 'profile' : hash);
+        
+        // Scroll to the top of the content area
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        
+        // Use setTimeout to ensure the DOM has updated after the tab change
+        setTimeout(() => {
+          const profileContent = document.querySelector('.profile-content');
+          if (profileContent) {
+            window.scrollTo({ top: profileContent.offsetTop, behavior: 'auto' });
+          }
+          
+          // If it's the health section, scroll to that section
+          if (hash === 'health') {
+            setTimeout(() => {
+              const healthSection = document.querySelector('.health-section');
+              if (healthSection) {
+                healthSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }, 100);
+          }
+        }, 100);
+      }
     }
   }, []);
 
@@ -325,11 +359,19 @@ export default function ProfilePage() {
             </h3>
             <p>Đang cai thuốc: {userData.daysWithoutSmoking} ngày</p>
           </div>
-        </div>        <nav className="profile-nav">
-          <Link
+        </div>        <nav className="profile-nav">          <Link
             to="#"
             className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
-            onClick={() => setActiveTab("profile")}
+            onClick={() => {
+              setActiveTab("profile");
+              // Scroll to the top of the content area
+              const profileContent = document.querySelector('.profile-content');
+              if (profileContent) {
+                setTimeout(() => {
+                  profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 10);
+              }
+            }}
           >
             <FaUserAlt /> Hồ sơ cá nhân
           </Link>
@@ -337,7 +379,16 @@ export default function ProfilePage() {
           <Link
             to="#"
             className={`nav-item ${activeTab === "appointments" ? "active" : ""}`}
-            onClick={() => setActiveTab("appointments")}
+            onClick={() => {
+              setActiveTab("appointments");
+              // Scroll to the top of the content area
+              const profileContent = document.querySelector('.profile-content');
+              if (profileContent) {
+                setTimeout(() => {
+                  profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 10);
+              }
+            }}
           >
             <FaCalendarAlt /> Lịch hẹn Coach
           </Link>
@@ -347,7 +398,16 @@ export default function ProfilePage() {
             className={`nav-item ${
               activeTab === "achievements" ? "active" : ""
             }`}
-            onClick={() => setActiveTab("achievements")}
+            onClick={() => {
+              setActiveTab("achievements");
+              // Scroll to the top of the content area
+              const profileContent = document.querySelector('.profile-content');
+              if (profileContent) {
+                setTimeout(() => {
+                  profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 10);
+              }
+            }}
           >
             <FaTrophy /> Huy hiệu
           </Link>

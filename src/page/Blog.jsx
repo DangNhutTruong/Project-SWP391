@@ -228,13 +228,33 @@ export default function Blog() {
               <div className="user-avatar">
                 <img src="/image/hero/quit-smoking-2.png" alt="User Avatar" />
               </div>
-              <div className="share-input">
-                <input
-                  type="text"
-                  placeholder="Chia sẻ hành trình hôm nay của bạn..."
-                />
+              <div className="share-input-container">
+                <div className="share-input">
+                  <textarea
+                    placeholder="Chia sẻ hành trình cai thuốc hôm nay của bạn... Bạn đã làm gì để vượt qua cơn thèm thuốc?"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div className="share-options">
+                  <div className="share-attachments">
+                    <button className="attachment-btn">
+                      <i className="fas fa-image"></i> Thêm ảnh
+                    </button>
+                    <button className="attachment-btn">
+                      <i className="fas fa-smile"></i> Cảm xúc
+                    </button>
+                    <button className="attachment-btn">
+                      <i className="fas fa-medal"></i> Mốc thành tựu
+                    </button>
+                  </div>
+                  <div className="share-actions">
+                    <span className="milestone-tracker">
+                      Ngày không hút thuốc: <strong>7</strong>
+                    </span>
+                    <button className="share-btn">Chia sẻ ngay</button>
+                  </div>
+                </div>
               </div>
-              <button className="share-btn">Viết bài chia sẻ đầy đủ</button>
             </div>
 
             <div className="community-posts">
