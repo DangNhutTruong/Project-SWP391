@@ -5,6 +5,7 @@ export default function JourneyStepper() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     cigarettesPerDay: 10,
     packPrice: 25000,
@@ -34,9 +35,43 @@ export default function JourneyStepper() {
       // Add animation effect for the progress bar when going back
       animateProgressBar(currentStep - 1);
     }
-  };
-  const handleBackToSummary = () => {
+  };  const handleBackToSummary = () => {
     setCurrentStep(4);  // Always go to step 4 (confirmation step)
+    setShowCompletionScreen(true);
+  };
+
+  // Xử lý khi người dùng muốn chỉnh sửa kế hoạch
+  const handleEditPlan = (stepToEdit) => {
+    setIsEditing(true);
+    setShowCompletionScreen(false);
+    setCurrentStep(stepToEdit);
+    // Hiệu ứng animation cho progress bar khi quay lại
+    animateProgressBar(stepToEdit);
+  };
+
+  // Xử lý khi người dùng lưu kế hoạch sau khi chỉnh sửa
+  const handleSaveEdit = () => {
+    // Lưu thông tin đã chỉnh sửa vào localStorage
+    const completionData = {
+      completionDate: new Date().toISOString(),
+      userPlan: formData.selectedPlan,
+      formData: formData,
+      lastEdited: new Date().toISOString()
+    };
+    localStorage.setItem('quitPlanCompletion', JSON.stringify(completionData));
+    
+    // Cập nhật kế hoạch đang hoạt động
+    const activePlan = {
+      ...formData.selectedPlan,
+      startDate: new Date().toISOString().split('T')[0],
+      initialCigarettes: formData.cigarettesPerDay,
+      lastEdited: new Date().toISOString()
+    };
+    localStorage.setItem('activePlan', JSON.stringify(activePlan));
+    
+    // Trở lại màn hình hoàn thành
+    setIsEditing(false);
+    setCurrentStep(4);
     setShowCompletionScreen(true);
   };
 
@@ -447,8 +482,7 @@ export default function JourneyStepper() {
             </React.Fragment>
           ))}
         </div>        {/* Form content */}
-        <div className="stepper-content">
-          {isCompleted && showCompletionScreen ? (
+        <div className="stepper-content">          {isCompleted && showCompletionScreen ? (
             <div className="completion-screen">
               <div className="completion-checkmark-container">
                 <div className="completion-checkmark">✓</div>
@@ -456,6 +490,47 @@ export default function JourneyStepper() {
 
               <h2 className="completion-title">Chúc mừng bạn đã hoàn thành kế hoạch cai thuốc!</h2>
               <p className="completion-subtitle">Hành trình mới của bạn bắt đầu từ hôm nay</p>
+
+              {/* Tóm tắt kế hoạch */}
+              <div className="plan-summary-container">
+                <h3 className="summary-title">Kế hoạch của bạn</h3>
+                <div className="plan-summary-card">
+                  <div className="plan-summary-header" style={{ backgroundColor: formData.selectedPlan?.color || '#2570e8' }}>
+                    <h4>{formData.selectedPlan?.name || "Kế hoạch cai thuốc"}</h4>
+                    <p>{formData.selectedPlan?.description || ""}</p>
+                  </div>
+                  <div className="plan-summary-body">
+                    <div className="plan-summary-item">
+                      <span className="summary-label">Số điếu/ngày:</span>
+                      <span className="summary-value">{formData.cigarettesPerDay}</span>
+                    </div>
+                    <div className="plan-summary-item">
+                      <span className="summary-label">Giá mỗi gói:</span>
+                      <span className="summary-value">{formData.packPrice.toLocaleString()} VNĐ</span>
+                    </div>
+                    <div className="plan-summary-item">
+                      <span className="summary-label">Số năm hút thuốc:</span>
+                      <span className="summary-value">{formData.smokingYears} năm</span>
+                    </div>
+                    <div className="plan-summary-item">
+                      <span className="summary-label">Lý do cai thuốc:</span>
+                      <span className="summary-value">{formData.reasonToQuit}</span>
+                    </div>
+                    <div className="plan-summary-item">
+                      <span className="summary-label">Thời gian hoàn thành:</span>
+                      <span className="summary-value">{formData.selectedPlan?.totalWeeks || 0} tuần</span>
+                    </div>
+                  </div>
+                  <div className="plan-edit-options">
+                    <button className="btn-edit-plan" onClick={() => handleEditPlan(1)}>
+                      <i className="fas fa-pencil-alt"></i> Chỉnh sửa thói quen
+                    </button>
+                    <button className="btn-edit-plan" onClick={() => handleEditPlan(2)}>
+                      <i className="fas fa-list-alt"></i> Chỉnh sửa kế hoạch
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <div className="completion-stats">
                 <div className="completion-stat-card">
@@ -470,7 +545,7 @@ export default function JourneyStepper() {
                 </div>
                 <div className="completion-stat-card">
                   <div className="stat-icon">⏱️</div>
-                  <div className="stat-value">{formData.targetTimeframe}</div>
+                  <div className="stat-value">{formData.selectedPlan?.totalWeeks / 4 || 0}</div>
                   <div className="stat-label">Tháng để hoàn thành</div>
                 </div>
               </div>
@@ -502,14 +577,18 @@ export default function JourneyStepper() {
                     <span className="action-text">Tài liệu hỗ trợ</span>
                   </a>
                 </div>
-              </div>
-              <div className="completion-motivation">
+              </div>              <div className="completion-motivation">
                 <blockquote>
                   "Hành trình ngàn dặm bắt đầu từ một bước chân. Hôm nay bạn đã bước những bước đầu tiên để hướng tới cuộc sống khỏe mạnh hơn."
                 </blockquote>
               </div>
               <div className="back-to-plan">
-                <p>Bạn có thể nhấn vào các bước phía trên để xem lại thông tin chi tiết mỗi bước trong kế hoạch.</p>
+                <p>Bạn có thể chỉnh sửa kế hoạch bất cứ lúc nào bằng cách nhấn vào nút chỉnh sửa tương ứng với từng phần.</p>
+                <div className="edit-plan-buttons">
+                  <button className="btn-edit-all" onClick={() => handleEditPlan(1)}>
+                    <i className="fas fa-edit"></i> Chỉnh sửa toàn bộ kế hoạch
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -721,19 +800,38 @@ export default function JourneyStepper() {
                             </div>
                           ));
                         })()}
-                      </div>
-
-                      <div className="form-actions">
-                        <button className="btn-back" onClick={handleBackInStep2}>
-                          <span className="btn-arrow">←</span> Quay lại
-                        </button>
-                        <button
-                          className="btn-next"
-                          onClick={handleContinue}
-                          disabled={!formData.selectedPlan}
-                        >
-                          Tiếp tục <span className="btn-arrow">→</span>
-                        </button>
+                      </div>                      <div className="form-actions">
+                        {isEditing ? (
+                          <>
+                            <button className="btn-back" onClick={() => {
+                              setIsEditing(false);
+                              setShowCompletionScreen(true);
+                              setCurrentStep(4);
+                            }}>
+                              <span className="btn-arrow">←</span> Hủy chỉnh sửa
+                            </button>
+                            <button
+                              className="btn-next"
+                              onClick={handleContinue}
+                              disabled={!formData.selectedPlan}
+                            >
+                              Tiếp tục <span className="btn-arrow">→</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button className="btn-back" onClick={handleBackInStep2}>
+                              <span className="btn-arrow">←</span> Quay lại
+                            </button>
+                            <button
+                              className="btn-next"
+                              onClick={handleContinue}
+                              disabled={!formData.selectedPlan}
+                            >
+                              Tiếp tục <span className="btn-arrow">→</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </>
                   ) : (
@@ -823,15 +921,30 @@ export default function JourneyStepper() {
                             </ul>
                           </div>
                         </>
-                      )}
-
-                      <div className="form-actions">
-                        <button className="btn-back" onClick={handleBackInStep2}>
-                          <span className="btn-arrow">←</span> Quay lại
-                        </button>
-                        <button className="btn-next" onClick={handleContinue}>
-                          Tiếp tục <span className="btn-arrow">→</span>
-                        </button>
+                      )}                      <div className="form-actions">
+                        {isEditing ? (
+                          <>
+                            <button className="btn-back" onClick={() => {
+                              setIsEditing(false);
+                              setShowCompletionScreen(true);
+                              setCurrentStep(4);
+                            }}>
+                              <span className="btn-arrow">←</span> Hủy chỉnh sửa
+                            </button>
+                            <button className="btn-next" onClick={handleContinue}>
+                              Tiếp tục <span className="btn-arrow">→</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button className="btn-back" onClick={handleBackInStep2}>
+                              <span className="btn-arrow">←</span> Quay lại
+                            </button>
+                            <button className="btn-next" onClick={handleContinue}>
+                              Tiếp tục <span className="btn-arrow">→</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </>
                   )}
@@ -924,14 +1037,30 @@ export default function JourneyStepper() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="form-actions">
-                    <button className="btn-back" onClick={handleBack}>
-                      <span className="btn-arrow">←</span> Quay lại
-                    </button>
-                    <button className="btn-next" onClick={handleContinue}>
-                      Tiếp tục <span className="btn-arrow">→</span>
-                    </button>
+                  </div>                  <div className="form-actions">
+                    {isEditing ? (
+                      <>
+                        <button className="btn-back" onClick={() => {
+                          setIsEditing(false);
+                          setShowCompletionScreen(true);
+                          setCurrentStep(4);
+                        }}>
+                          <span className="btn-arrow">←</span> Hủy chỉnh sửa
+                        </button>
+                        <button className="btn-next" onClick={handleContinue}>
+                          Tiếp tục <span className="btn-arrow">→</span>
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn-back" onClick={handleBack}>
+                          <span className="btn-arrow">←</span> Quay lại
+                        </button>
+                        <button className="btn-next" onClick={handleContinue}>
+                          Tiếp tục <span className="btn-arrow">→</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -1036,19 +1165,36 @@ export default function JourneyStepper() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="form-actions">                <button className="btn-back" onClick={handleBack}>
-                    <span className="btn-arrow">←</span> Quay lại
-                  </button>
-                    {isCompleted ? (
-                      <button className="btn-back-to-summary" onClick={handleBackToSummary}>
-                        Xem màn hình hoàn thành
+                  </div>                  <div className="form-actions">
+                  {isEditing ? (
+                    <>
+                      <button className="btn-back" onClick={() => {
+                        setIsEditing(false);
+                        setShowCompletionScreen(true);
+                        setCurrentStep(4);
+                      }}>
+                        <span className="btn-arrow">←</span> Hủy chỉnh sửa
                       </button>
-                    ) : (
-                      <button className="btn-submit" onClick={handleSubmit}>
-                        Hoàn thành kế hoạch
+                      <button className="btn-save-edit" onClick={handleSaveEdit}>
+                        Lưu thay đổi
                       </button>
-                    )}
+                    </>
+                  ) : (
+                    <>
+                      <button className="btn-back" onClick={handleBack}>
+                        <span className="btn-arrow">←</span> Quay lại
+                      </button>
+                      {isCompleted ? (
+                        <button className="btn-back-to-summary" onClick={handleBackToSummary}>
+                          Xem màn hình hoàn thành
+                        </button>
+                      ) : (
+                        <button className="btn-submit" onClick={handleSubmit}>
+                          Hoàn thành kế hoạch
+                        </button>
+                      )}
+                    </>
+                  )}
                   </div>
                 </div>
               )}
