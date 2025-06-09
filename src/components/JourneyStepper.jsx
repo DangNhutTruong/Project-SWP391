@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/JourneyStepper.css';
 
 export default function JourneyStepper() {
@@ -6,6 +6,7 @@ export default function JourneyStepper() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const [formData, setFormData] = useState({
     cigarettesPerDay: 10,
     packPrice: 25000,
@@ -20,6 +21,28 @@ export default function JourneyStepper() {
     { id: 3, name: "Lợi ích" },
     { id: 4, name: "Xác nhận" },
   ];
+
+  // Phục hồi kế hoạch từ localStorage khi component được gắn vào
+  useEffect(() => {
+    const storedCompletionData = localStorage.getItem('quitPlanCompletion');
+    const storedActivePlan = localStorage.getItem('activePlan');
+
+    if (storedCompletionData) {
+      const completionData = JSON.parse(storedCompletionData);
+      setFormData(completionData.formData);
+      setIsCompleted(true);
+      setShowCompletionScreen(true);
+      setCurrentStep(4);
+    } else if (storedActivePlan) {
+      const activePlan = JSON.parse(storedActivePlan);
+      setFormData((prevData) => ({
+        ...prevData,
+        selectedPlan: activePlan.id,
+        cigarettesPerDay: activePlan.initialCigarettes,
+      }));
+      setCurrentStep(2);
+    }
+  }, []);
 
   const handleContinue = () => {
     if (currentStep < 4) {
@@ -104,19 +127,27 @@ export default function JourneyStepper() {
         item.classList.add('completed');
       });
       
+      // Lấy thời gian hiện tại
+      const now = new Date().toISOString();
+      
       // Lưu thông tin hoàn thành vào localStorage
       const completionData = {
-        completionDate: new Date().toISOString(),
+        completionDate: now,
         userPlan: formData.selectedPlan,
-        formData: formData
+        formData: formData,
+        lastEdited: now
       };
       localStorage.setItem('quitPlanCompletion', JSON.stringify(completionData));
+      
+      // Đánh dấu là đã ghé thăm trong phiên này
+      sessionStorage.setItem('lastVisit', Date.now().toString());
       
       // Lưu kế hoạch đang hoạt động với startDate
       const activePlan = {
         ...formData.selectedPlan,
-        startDate: new Date().toISOString().split('T')[0],
-        initialCigarettes: formData.cigarettesPerDay
+        startDate: now.split('T')[0],
+        initialCigarettes: formData.cigarettesPerDay,
+        lastEdited: now
       };
       localStorage.setItem('activePlan', JSON.stringify(activePlan));
       
@@ -134,6 +165,47 @@ export default function JourneyStepper() {
       [field]: value
     });
   };
+  // Kiểm tra nếu có kế hoạch cai thuốc đã lưu trong localStorage
+  useEffect(() => {
+    const savedPlan = localStorage.getItem('quitPlanCompletion');
+    if (savedPlan) {
+      try {
+        const parsedPlan = JSON.parse(savedPlan);
+        // Khôi phục dữ liệu form từ localStorage
+        setFormData(parsedPlan.formData);
+        // Hiển thị màn hình hoàn thành
+        setIsCompleted(true);
+        setShowCompletionScreen(true);
+        setCurrentStep(4);
+        
+        // Kiểm tra xem có phải lần đầu ghé thăm trong phiên làm việc này không
+        const lastVisit = sessionStorage.getItem('lastVisit');
+        if (!lastVisit) {
+          setShowWelcomeBack(true);
+          // Đánh dấu là đã ghé thăm trong phiên này
+          sessionStorage.setItem('lastVisit', Date.now().toString());
+          
+          // Tự động ẩn thông báo sau 5 giây
+          setTimeout(() => {
+            setShowWelcomeBack(false);
+          }, 5000);
+        }
+        
+        // Đánh dấu tất cả các bước là đã hoàn thành
+        setTimeout(() => {
+          document.querySelectorAll('.step-line').forEach((line) => {
+            line.classList.add('active');
+          });
+          document.querySelectorAll('.step-item').forEach((item) => {
+            item.classList.add('completed');
+          });
+        }, 100);
+      } catch (error) {
+        console.error('Lỗi khi khôi phục kế hoạch cai thuốc:', error);
+      }
+    }
+  }, []);
+
   // Xử lý input số
   const handleNumberInput = (field, e) => {
     const value = parseInt(e.target.value) || 0;
@@ -148,6 +220,77 @@ export default function JourneyStepper() {
     } else {
       // Nếu chưa chọn kế hoạch, quay lại step trước đó
       handleBack();
+    }
+  };
+
+  // Xử lý khi người dùng muốn xóa kế hoạch đã lưu
+  const handleClearPlan = () => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa kế hoạch cai thuốc? Hành động này không thể hoàn tác.')) {
+      localStorage.removeItem('quitPlanCompletion');
+      localStorage.removeItem('activePlan');
+      
+      // Reset lại trạng thái
+      setFormData({
+        cigarettesPerDay: 10,
+        packPrice: 25000,
+        smokingYears: 5,
+        reasonToQuit: 'sức khỏe',
+        selectedPlan: null,
+      });
+      setCurrentStep(1);
+      setIsCompleted(false);
+      setShowCompletionScreen(false);
+      setIsEditing(false);
+      
+      // Reset lại trạng thái UI
+      setTimeout(() => {
+        document.querySelectorAll('.step-line').forEach((line) => {
+          line.classList.remove('active');
+        });
+        document.querySelectorAll('.step-item').forEach((item) => {
+          item.classList.remove('completed');
+        });
+        document.querySelector('.step-item:first-child').classList.add('active');
+      }, 100);
+    }
+  };
+
+  // Hàm để chia sẻ kế hoạch cai thuốc
+  const handleSharePlan = () => {
+    // Tạo text để chia sẻ
+    const planDetails = `
+🚭 KẾ HOẠCH CAI THUỐC LÁ CỦA TÔI 🚭
+
+👤 Thông tin:
+- Số điếu mỗi ngày: ${formData.cigarettesPerDay} điếu
+- Giá mỗi gói: ${formData.packPrice.toLocaleString()} VNĐ
+- Đã hút thuốc: ${formData.smokingYears} năm
+- Lý do cai thuốc: ${formData.reasonToQuit}
+
+📋 Kế hoạch: ${formData.selectedPlan?.name || "Kế hoạch cai thuốc"}
+- Thời gian hoàn thành: ${formData.selectedPlan?.totalWeeks || 0} tuần
+- Mô tả: ${formData.selectedPlan?.description || ""}
+
+💪 Hãy ủng hộ hành trình cai thuốc của tôi!
+    `;
+    
+    // Kiểm tra xem trình duyệt có hỗ trợ Web Share API không
+    if (navigator.share) {
+      navigator.share({
+        title: 'Kế hoạch cai thuốc lá của tôi',
+        text: planDetails,
+      })
+      .catch((error) => console.log('Lỗi khi chia sẻ:', error));
+    } else {
+      // Fallback cho các trình duyệt không hỗ trợ Web Share API
+      try {
+        navigator.clipboard.writeText(planDetails);
+        alert('Đã sao chép kế hoạch vào clipboard! Bạn có thể dán và chia sẻ ngay bây giờ.');
+      } catch (err) {
+        console.log('Lỗi khi sao chép vào clipboard:', err);
+        // Hiển thị text để người dùng có thể sao chép thủ công
+        alert('Không thể sao chép tự động. Vui lòng sao chép text thủ công.');
+      }
     }
   };
 
@@ -441,6 +584,21 @@ export default function JourneyStepper() {
 
   return (
     <div className="journey-container">
+      {showWelcomeBack && (
+        <div className="welcome-back-notification">
+          <div className="notification-content">
+            <i className="fas fa-check-circle"></i>
+            <div className="notification-text">
+              <p className="notification-title">Chào mừng bạn trở lại!</p>
+              <p className="notification-message">Kế hoạch cai thuốc lá của bạn đã được khôi phục tự động.</p>
+            </div>
+          </div>
+          <button className="notification-close" onClick={() => setShowWelcomeBack(false)}>
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
+      )}
+      
       <div className="stepper-wrapper">
         <h1 className="stepper-title">Kế Hoạch Cai Thuốc</h1>
         {/* Stepper header */}
@@ -520,14 +678,57 @@ export default function JourneyStepper() {
                       <span className="summary-label">Thời gian hoàn thành:</span>
                       <span className="summary-value">{formData.selectedPlan?.totalWeeks || 0} tuần</span>
                     </div>
-                  </div>
-                  <div className="plan-edit-options">
+                    <div className="plan-summary-item">
+                      <span className="summary-label">Kế hoạch được tạo:</span>
+                      <span className="summary-value">
+                        {(() => {
+                          const savedPlan = localStorage.getItem('quitPlanCompletion');
+                          if (savedPlan) {
+                            const { completionDate } = JSON.parse(savedPlan);
+                            const date = new Date(completionDate);
+                            return `${date.toLocaleDateString('vi-VN')} ${date.toLocaleTimeString('vi-VN')}`;
+                          }
+                          return new Date().toLocaleString('vi-VN');
+                        })()}
+                      </span>
+                    </div>
+                    {(() => {
+                      const savedPlan = localStorage.getItem('quitPlanCompletion');
+                      if (savedPlan) {
+                        const { lastEdited } = JSON.parse(savedPlan);
+                        if (lastEdited) {
+                          const date = new Date(lastEdited);
+                          return (
+                            <div className="plan-summary-item">
+                              <span className="summary-label">Cập nhật lần cuối:</span>
+                              <span className="summary-value">
+                                {`${date.toLocaleDateString('vi-VN')} ${date.toLocaleTimeString('vi-VN')}`}
+                              </span>
+                            </div>
+                          );
+                        }
+                      }
+                      return null;
+                    })()}
+                  </div>                  <div className="plan-edit-options">
                     <button className="btn-edit-plan" onClick={() => handleEditPlan(1)}>
                       <i className="fas fa-pencil-alt"></i> Chỉnh sửa thói quen
                     </button>
                     <button className="btn-edit-plan" onClick={() => handleEditPlan(2)}>
                       <i className="fas fa-list-alt"></i> Chỉnh sửa kế hoạch
                     </button>
+                    <button className="btn-edit-plan btn-clear-plan" onClick={handleClearPlan}>
+                      <i className="fas fa-trash-alt"></i> Bắt đầu lại
+                    </button>
+                  </div>
+                  <div className="plan-share-container">
+                    <button className="btn-share-plan" onClick={handleSharePlan}>
+                      <i className="fas fa-share-alt"></i> Chia sẻ kế hoạch của bạn
+                    </button>
+                  </div>
+                  <div className="plan-persistence-notice">
+                    <i className="fas fa-info-circle"></i> 
+                    Kế hoạch của bạn đã được lưu tự động. Bạn có thể quay lại bất kỳ lúc nào mà không cần tạo lại.
                   </div>
                 </div>
               </div>
