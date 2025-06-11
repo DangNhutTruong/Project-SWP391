@@ -14,6 +14,91 @@
   font-weight: 600;
 }
 
+.chart-container {
+  position: relative;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+/* Thêm style cho nút tải lại dữ liệu */
+.refresh-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  margin-bottom: 25px;
+  padding: 10px 0;
+}
+
+.refresh-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.refresh-btn:hover {
+  background-color: #3e8e41;
+}
+
+/* Nút tải lại dữ liệu tiến trình với style hiện đại */
+.refresh-btn-important {
+  background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  margin: 20px auto;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.refresh-btn-important:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(255, 107, 107, 0.4);
+  background: linear-gradient(45deg, #ff5252, #ff7676);
+}
+
+.refresh-btn-important:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px rgba(255, 107, 107, 0.3);
+}
+
+.refresh-btn-important::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.5s;
+}
+
+.refresh-btn-important:hover::before {
+  left: 100%;
+}
+
 /* Stats cards */
 .stats-cards {
   display: grid;
@@ -132,6 +217,11 @@
 
 .chart-container {
   position: relative;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
 }
 
 .chart-legend {
@@ -594,6 +684,32 @@
   font-weight: 500;
 }
 
+/* Thêm style cho nút tải lại dữ liệu */
+.refresh-section {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.refresh-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.refresh-btn:hover {
+  background-color: #3e8e41;
+}
+
 /* Responsive Design */
 @media (max-width: 992px) {
   .stats-cards {
@@ -701,4 +817,74 @@
   bottom: 10px;
   font-size: 12px;
   color: #999;
+}
+
+/* Nút tải lại dữ liệu - CSS mới */
+.refresh-btn-important {
+  background: linear-gradient(45deg, #ff4d4d, #ff8c00);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;  font-weight: bold;
+  box-shadow: 0 6px 16px rgba(255, 77, 77, 0.3);
+  margin: 35px auto 20px;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+.refresh-btn-important:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 77, 77, 0.4);
+  background: linear-gradient(45deg, #ff3333, #ff7700);
+}
+
+.refresh-btn-important:active {
+  transform: translateY(1px);
+  box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
+}
+
+/* Hiệu ứng lấp lánh cho nút */
+.refresh-btn-important::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.7s;
+}
+
+.refresh-btn-important:hover::before {
+  left: 100%;
+}
+
+/* Hiệu ứng xoay cho biểu tượng refresh */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.refresh-btn-important:active .spin-icon {
+  animation: spin 0.7s linear;
+}
+
+/* Hiệu ứng nhấp nháy thu hút */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.refresh-btn-important {
+  animation: pulse 2.5s infinite ease-in-out;
 }
