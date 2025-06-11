@@ -74,10 +74,9 @@ export default function Progress() {
         { week: 1, amount: 20, phase: "Thích nghi" },
         { week: 2, amount: 16, phase: "Thích nghi" },
         { week: 3, amount: 12, phase: "Tăng tốc" },
-        { week: 4, amount: 8, phase: "Tăng tốc" },
-        { week: 5, amount: 5, phase: "Hoàn thiện" },
+        { week: 4, amount: 8, phase: "Tăng tốc" },        { week: 5, amount: 5, phase: "Hoàn thiện" },
         { week: 6, amount: 2, phase: "Hoàn thiện" },
-        { week: 7, amount: 0, phase: "Hoàn thành" }
+        { week: 7, amount: 0, phase: "Mục tiêu đạt được" }
       ],
       initialCigarettes: 20
     };
@@ -172,11 +171,27 @@ export default function Progress() {
   }
 
   return (
-    <div className="progress-container">
-      <h1 className="page-title">
-        {showCompletionDashboard ? 'Chúc mừng! Bạn đã hoàn thành kế hoạch' : 'Tiến trình cai thuốc hiện tại'}
-      </h1>
-      
+    <div className="progress-container">      <h1 className="page-title">
+        {showCompletionDashboard ? 'Chúc mừng! Bạn đã lập kế hoạch cai thuốc' : 'Tiến trình cai thuốc hiện tại'}
+      </h1>        {/* Daily Checkin Section - Luôn hiển thị để người dùng có thể nhập số điếu đã hút */}
+      <DailyCheckin 
+        onProgressUpdate={handleProgressUpdate}
+        currentPlan={userPlan || {
+          name: "Kế hoạch mặc định",
+          startDate: new Date().toISOString().split('T')[0],
+          weeks: [
+            { week: 1, amount: 20, phase: "Thích nghi" },
+            { week: 2, amount: 16, phase: "Thích nghi" },
+            { week: 3, amount: 12, phase: "Tăng tốc" },
+            { week: 4, amount: 8, phase: "Tăng tốc" },
+            { week: 5, amount: 5, phase: "Hoàn thiện" },
+            { week: 6, amount: 2, phase: "Hoàn thiện" },
+            { week: 7, amount: 0, phase: "Mục tiêu đạt được" }
+          ],
+          initialCigarettes: 20
+        }}
+      />
+
       {/* Show completion dashboard if plan is completed */}
       {showCompletionDashboard && completionData ? (
         <ProgressDashboard 
@@ -185,12 +200,6 @@ export default function Progress() {
         />
       ) : (
         <>
-          {/* Daily Checkin Section - Moved to top */}
-          <DailyCheckin 
-            onProgressUpdate={handleProgressUpdate}
-            currentPlan={userPlan}
-          />
-
           {/* Enhanced Progress Chart with Chart.js */}
           <QuitProgressChart 
             userPlan={userPlan}
