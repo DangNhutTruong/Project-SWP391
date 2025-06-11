@@ -4,6 +4,7 @@ import QuitProgressChart from '../components/QuitProgressChart';
 import DailyCheckin from '../components/DailyCheckin';
 import MoodTracking from '../components/MoodTracking';
 import ProgressDashboard from '../components/ProgressDashboard';
+import ResetCheckinData from '../components/ResetCheckinData';
 import './Progress.css';
 import '../styles/DailyCheckin.css';
 import '../styles/MoodTracking.css';
@@ -258,9 +259,7 @@ export default function Progress() {
                 <span className="value">{userPlan.initialCigarettes || userPlan.weeks[0]?.amount || 20} điếu/ngày</span>
               </div>
             </div>
-          </div>
-
-          {/* Progress Statistics */}
+          </div>          {/* Progress Statistics */}
           {actualProgress.length > 0 && (
             <div className="progress-stats">
               <h2>Thống kê tiến trình</h2>
@@ -290,6 +289,9 @@ export default function Progress() {
                   <div className="stat-label">Tỷ lệ thành công</div>
                 </div>
               </div>
+              
+              {/* Công cụ Reset dữ liệu */}
+              <ResetCheckinData />
             </div>
           )}
         </>

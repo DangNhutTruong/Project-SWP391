@@ -108,22 +108,7 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
   const achievementProgress = getAchievementProgress();
 
   return (
-    <div className="progress-dashboard">
-      {/* Header Celebration */}
-      <div className="dashboard-header">
-        <div className="celebration-badge">
-          <FaTrophy className="trophy-icon" />
-          <div className="celebration-text">
-            <h1>Bạn đã lập kế hoạch thành công!</h1>
-            <p>Hãy tiếp tục duy trì thành quả này</p>
-          </div>
-        </div>        <div className="completion-date">
-          <FaCalendarCheck className="date-icon" />
-          <span>Kế hoạch được lập: {new Date(completionDate).toLocaleDateString('vi-VN')}</span>
-        </div>
-      </div>
-
-      {/* Key Statistics */}
+    <div className="progress-dashboard">      {/* Key Statistics */}
       <div className="dashboard-stats">
         <div className="stat-card primary">
           <div className="stat-icon">
