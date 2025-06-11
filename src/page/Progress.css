@@ -132,11 +132,6 @@
 
 .chart-container {
   position: relative;
-  background: #ffffff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
 }
 
 .chart-legend {
@@ -597,32 +592,6 @@
   font-size: 0.9rem;
   color: #5f6368;
   font-weight: 500;
-}
-
-/* Thêm style cho nút tải lại dữ liệu */
-.refresh-section {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-  margin-bottom: 15px;
-}
-
-.refresh-btn {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.refresh-btn:hover {
-  background-color: #3e8e41;
 }
 
 /* Responsive Design */

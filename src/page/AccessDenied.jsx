@@ -38,10 +38,11 @@ const AccessDenied = () => {
 
   return (
     <div className="access-denied-container">
-      <div className="access-denied-card">        <div className="access-denied-icon">
+      <div className="access-denied-card">
+        <div className="access-denied-icon">
           <FaLock />
         </div>
-        <h1 className="access-denied-title">Tính năng đòi hỏi nâng cấp gói dịch vụ</h1>
+        <h1 className="access-denied-title">Quyền truy cập bị từ chối</h1>
         
         <div className="membership-comparison">          <div className="current-membership">
             <h3>Gói hiện tại của bạn</h3>
@@ -60,9 +61,8 @@ const AccessDenied = () => {
         </div>        <p className="access-denied-message">
           {userMembership === 'free' ? (
             <>
-              Rất tiếc, đặt lịch hẹn với Coach là tính năng độc quyền chỉ có sẵn cho thành viên {getMembershipDisplayName(requiredMembership)} trở lên.
-              Việc đặt lịch giúp bạn nhận được tư vấn 1:1 chuyên sâu từ các chuyên gia cai thuốc có kinh nghiệm.
-              Vui lòng nâng cấp gói thành viên để mở khóa tính năng này.
+              Rất tiếc, tính năng này chỉ có sẵn cho thành viên {getMembershipDisplayName(requiredMembership)} trở lên.
+              Vui lòng nâng cấp gói thành viên của bạn để truy cập.
             </>
           ) : (
             <>
