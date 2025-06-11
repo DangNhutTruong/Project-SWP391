@@ -14,8 +14,6 @@ import Login from "./page/Login.jsx"; // Import component Login
 import Register from "./page/Register.jsx"; // Import component Register
 import MembershipPackage from "./page/MembershipPackage.jsx"; // Import component MembershipPackage
 import BookAppointment from "./page/BookAppointment.jsx"; // Import component BookAppointment
-import Support from "./page/Support.jsx"; // Import component Support
-import Consultation from "./page/Consultation.jsx"; // Import component Consultation
 import ProtectedRoute from "./components/ProtectedRoute.jsx"; // Import ProtectedRoute
 import AccessDenied from "./page/AccessDenied.jsx"; // Import AccessDenied
 import { AuthProvider } from "./context/AuthContext.jsx"; // Import AuthProvider
@@ -136,11 +134,12 @@ const router = createBrowserRouter([
         <ComingSoon title="Liên hệ" />
       </Layout>
     ),
-  },  {
+  },
+  {
     path: "/support",
     element: (
       <Layout>
-        <Support />
+        <ComingSoon title="Hỗ trợ" />
       </Layout>
     ),
   },
@@ -339,14 +338,6 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <MembershipTest />
         </ProtectedRoute>
-      </Layout>
-    ),
-  },
-  {
-    path: "/consultation",
-    element: (
-      <Layout>
-        <Consultation />
       </Layout>
     ),
   },

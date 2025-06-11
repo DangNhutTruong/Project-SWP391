@@ -1,15 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaCalendarAlt, FaEye, FaHeart, FaComment } from "react-icons/fa";
-import { getArticleImagePath, getHeroImagePath } from '../utils/imageUtils';
 import "./Blog.css";
 
 export default function Blog() {
   // Dữ liệu mẫu cho bài viết blog
   //yeye
-  const blogPosts = [    {
+  const blogPosts = [
+    {
       id: 1,
-      image: getArticleImagePath("OIP.jpg"),
+      image: "/image/articles/OIP.jpg",
       title: "7 ngày đầu không thuốc lá – Làm thế nào để vượt qua?",
       excerpt:
         "Tuần đầu tiên luôn là giai đoạn khó khăn nhất. Hãy tìm hiểu những phương pháp hiệu quả để vượt qua cơn thèm thuốc và duy trì quyết tâm cai thuốc lá của bạn.",
@@ -23,7 +23,7 @@ export default function Blog() {
     },
     {
       id: 2,
-      image: getArticleImagePath("r.jpg"),
+      image: "/image/articles/r.jpg",
       title: "Chia sẻ từ một người đã bỏ thuốc 1 năm",
       excerpt:
         "Câu chuyện cảm động về hành trình 365 ngày không thuốc lá và những thay đổi tích cực trong cuộc sống, sức khỏe và mối quan hệ của một người đã thành công.",
@@ -37,7 +37,7 @@ export default function Blog() {
     },
     {
       id: 3,
-      image: getHeroImagePath("quit-smoking-2.png"),
+      image: "/image/hero/quit-smoking-2.png",
       title: "Thói quen thay thế giúp bạn không tái nghiện",
       excerpt:
         "Khám phá 10 thói quen lành mạnh có thể thay thế việc hút thuốc và giúp bạn duy trì lối sống không khói thuốc trong thời gian dài.",
@@ -48,9 +48,10 @@ export default function Blog() {
       comments: "39",
       category: "tips",
       url: "/blog/thoi-quen-thay-the",
-    },    {
+    },
+    {
       id: 4,
-      image: getArticleImagePath("th.jpg"),
+      image: "/image/articles/th.jpg",
       title: "Tác hại của thuốc lá điện tử - Sự thật bạn nên biết",
       excerpt:
         "Nhiều người nghĩ rằng thuốc lá điện tử an toàn hơn thuốc lá thông thường. Hãy cùng tìm hiểu sự thật về những tác hại của chúng.",
@@ -64,7 +65,7 @@ export default function Blog() {
     },
     {
       id: 5,
-      image: getArticleImagePath("d.jpg"),
+      image: "/image/articles/d.jpg",
       title: "Lợi ích sức khỏe khi bỏ thuốc lá - Từng ngày một",
       excerpt:
         "Cơ thể bạn bắt đầu hồi phục ngay từ 20 phút đầu tiên sau khi bỏ thuốc lá. Hãy xem những thay đổi tích cực qua từng mốc thời gian.",
@@ -78,7 +79,7 @@ export default function Blog() {
     },
     {
       id: 6,
-      image: getArticleImagePath("c.jpg"),
+      image: "/image/articles/c.jpg",
       title: "Hỗ trợ người thân cai thuốc - Điều bạn nên và không nên làm",
       excerpt:
         "Khi người thân đang cố gắng cai thuốc lá, sự hỗ trợ từ gia đình rất quan trọng. Bài viết này sẽ giúp bạn biết cách đồng hành hiệu quả.",
@@ -92,7 +93,7 @@ export default function Blog() {
     },
     {
       id: 7,
-      image: getArticleImagePath("e.jpg"),
+      image: "/image/articles/e.jpg",
       title: "Ứng dụng thiền và yoga trong quá trình cai thuốc lá",
       excerpt:
         "Thiền và yoga không chỉ giúp giảm stress mà còn hỗ trợ đáng kể trong việc kiểm soát cơn thèm thuốc. Tìm hiểu cách áp dụng hiệu quả.",
@@ -106,7 +107,7 @@ export default function Blog() {
     },
     {
       id: 8,
-      image: getHeroImagePath("quit-smoking-2.png"),
+      image: "/image/hero/quit-smoking-2.png",
       title: "Chế độ dinh dưỡng giúp giảm cơn thèm thuốc lá",
       excerpt:
         "Một số thực phẩm có thể giúp giảm cơn thèm thuốc và hỗ trợ cơ thể thải độc. Tìm hiểu chế độ ăn phù hợp cho người đang cai thuốc lá.",
@@ -223,24 +224,46 @@ export default function Blog() {
         <div className="community-section">
           <h2 className="section-title">Chia sẻ từ cộng đồng</h2>
           <div className="community-box">
-            <div className="share-post">              <div className="user-avatar">
-                <img src={getHeroImagePath("quit-smoking-2.png")} alt="User Avatar" />
+            <div className="share-post">
+              <div className="user-avatar">
+                <img src="/image/hero/quit-smoking-2.png" alt="User Avatar" />
               </div>
-              <div className="share-input">
-                <input
-                  type="text"
-                  placeholder="Chia sẻ hành trình hôm nay của bạn..."
-                />
+              <div className="share-input-container">
+                <div className="share-input">
+                  <textarea
+                    placeholder="Chia sẻ hành trình cai thuốc hôm nay của bạn... Bạn đã làm gì để vượt qua cơn thèm thuốc?"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div className="share-options">
+                  <div className="share-attachments">
+                    <button className="attachment-btn">
+                      <i className="fas fa-image"></i> Thêm ảnh
+                    </button>
+                    <button className="attachment-btn">
+                      <i className="fas fa-smile"></i> Cảm xúc
+                    </button>
+                    <button className="attachment-btn">
+                      <i className="fas fa-medal"></i> Mốc thành tựu
+                    </button>
+                  </div>
+                  <div className="share-actions">
+                    <span className="milestone-tracker">
+                      Ngày không hút thuốc: <strong>7</strong>
+                    </span>
+                    <button className="share-btn">Chia sẻ ngay</button>
+                  </div>
+                </div>
               </div>
-              <button className="share-btn">Viết bài chia sẻ đầy đủ</button>
             </div>
 
             <div className="community-posts">
               {/* Bài đăng cộng đồng 1 */}
               <div className="community-post">
                 <div className="post-header">
-                  <div className="user-info">                    <img
-                      src={getHeroImagePath("quit-smoking-2.png")}
+                  <div className="user-info">
+                    <img
+                      src="/image/hero/quit-smoking-2.png"
                       alt="Trần An Nhiên"
                       className="avatar"
                     />
@@ -269,8 +292,9 @@ export default function Blog() {
               {/* Bài đăng cộng đồng 2 */}
               <div className="community-post">
                 <div className="post-header">
-                  <div className="user-info">                    <img
-                      src={getHeroImagePath("quit-smoking-2.png")}
+                  <div className="user-info">
+                    <img
+                      src="/image/hero/quit-smoking-2.png"
                       alt="Lê Thu Thảo"
                       className="avatar"
                     />
@@ -287,8 +311,9 @@ export default function Blog() {
                   <p>
                     Hôm nay mình tự thưởng cho bản thân một món quà nhỏ sau 3
                     tuần không hút thuốc! Cảm giác tự hào thật sự.
-                  </p>                  <div className="post-image">
-                    <img src={getArticleImagePath("a.jpg")} alt="Phong cảnh" />
+                  </p>
+                  <div className="post-image">
+                    <img src="/image/articles/a.jpg" alt="Phong cảnh" />
                   </div>
                 </div>
                 <div className="post-actions">
@@ -304,8 +329,9 @@ export default function Blog() {
               {/* Bài đăng cộng đồng 3 */}
               <div className="community-post">
                 <div className="post-header">
-                  <div className="user-info">                    <img
-                      src={getHeroImagePath("quit-smoking-2.png")}
+                  <div className="user-info">
+                    <img
+                      src="/image/hero/quit-smoking-2.png"
                       alt="Nguyễn Minh Tùng"
                       className="avatar"
                     />
@@ -337,8 +363,9 @@ export default function Blog() {
               {/* Bài đăng cộng đồng 4 */}
               <div className="community-post">
                 <div className="post-header">
-                  <div className="user-info">                    <img
-                      src={getHeroImagePath("quit-smoking-2.png")}
+                  <div className="user-info">
+                    <img
+                      src="/image/hero/quit-smoking-2.png"
                       alt="Phạm Hữu Phước"
                       className="avatar"
                     />
@@ -380,8 +407,9 @@ export default function Blog() {
               Chia sẻ hành trình cai thuốc, nhận hỗ trợ và động viên từ đội ngũ huấn luyện viên chuyên nghiệp
             </p>
             <Link to="/membership" className="join-btn">Trở thành thành viên</Link>
-          </div>          <div className="join-image">
-            <img src={getHeroImagePath("quit-smoking-2.png")} alt="Cộng đồng NoSmoke" />
+          </div>
+          <div className="join-image">
+            <img src="/image/hero/quit-smoking-2.png" alt="Cộng đồng NoSmoke" />
           </div>
         </div>
       </div>

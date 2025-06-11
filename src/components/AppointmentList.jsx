@@ -1,31 +1,42 @@
+// Import các thư viện và dependencies cần thiết
 import React, { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid, FaCrown, FaLock } from 'react-icons/fa';
 import { FaRegStar as FaStarRegular } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { hasAccessToFeature, formatMembershipName } from '../utils/membershipUtils';
+import { hasAccessToFeature } from '../utils/membershipUtils';
 import './AppointmentList.css';
 import ProtectedCoachChat from './ProtectedCoachChat';
 
-// Component hiển thị cho thẻ lịch hẹn đã hủy
-const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
+/**
+ * Component hiển thị card cho lịch hẹn đã bị hủy
+ * @param {Object} appointment - Thông tin lịch hẹn đã hủy
+ * @param {Function} onRebook - Hàm callback để đặt lại lịch hẹn
+ * @param {Function} onDelete - Hàm callback để xóa lịch hẹn
+ */
+const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {  // Hàm format ngày hiển thị theo định dạng Việt Nam
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' });
   };
-  
-  // Gọi hàm mở modal đặt lại lịch hẹn
+    /**
+   * Hàm xử lý khi người dùng click nút "Đặt lại lịch hẹn"
+   * Lưu thông tin appointment vào localStorage để tái sử dụng
+   */
   const handleRebookClick = () => {
     onRebook(appointment);
   };
   
-  // Gọi hàm mở modal xóa lịch hẹn
+  /**
+   * Hàm xử lý khi người dùng click nút "Xóa lịch hẹn"
+   * Gọi callback từ component cha để xử lý việc xóa
+   */
   const handleDeleteClick = () => {
     onDelete(appointment);
   };
-
   return (
     <div className="cancelled-appointment-card">
+      {/* Header hiển thị trạng thái đã hủy và ID lịch hẹn */}
       <div className="cancelled-header">
         <FaTimes className="cancelled-icon" />
         <div className="cancelled-status">
@@ -34,6 +45,7 @@ const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
         </div>
       </div>
       
+      {/* Body hiển thị thông tin coach và lịch hẹn */}
       <div className="cancelled-body">
         <img src={appointment.coachAvatar} alt={appointment.coachName} className="coach-avatar" />
         <div className="cancelled-info">
@@ -44,7 +56,10 @@ const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
             {formatDate(appointment.date)}, {appointment.time}
             <span className="online-badge">Tư vấn trực tuyến</span>
           </div>
-        </div>      </div>      <div className="cancelled-footer">
+        </div>      </div>      
+      
+      {/* Footer chứa các nút hành động */}
+      <div className="cancelled-footer">
         <button className="delete-button" onClick={handleDeleteClick}>
           <FaTrashAlt /> Xóa lịch hẹn
         </button>
@@ -56,57 +71,85 @@ const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
   );
 };
 
+/**
+ * Component chính hiển thị danh sách lịch hẹn với coach
+ * Bao gồm các chức năng: xem, hủy, đặt lại, đánh giá, chat
+ */
 export default function AppointmentList() {
+  // States quản lý danh sách lịch hẹn và các filter
   const [appointments, setAppointments] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'upcoming', 'past'
   const [loading, setLoading] = useState(true);
   const [newAppointmentId, setNewAppointmentId] = useState(null);
+  
+  // States quản lý chức năng chat với coach
   const [showChat, setShowChat] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  
+  // States quản lý modal hủy lịch hẹn
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
+  
+  // States quản lý modal đặt lại lịch hẹn
   const [showRebookModal, setShowRebookModal] = useState(false);
   const [appointmentToRebook, setAppointmentToRebook] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);  const [appointmentToDelete, setAppointmentToDelete] = useState(null);  const [showToast, setShowToast] = useState(false);
+  
+  // States quản lý modal xóa lịch hẹn
+  const [showDeleteModal, setShowDeleteModal] = useState(false);  
+  const [appointmentToDelete, setAppointmentToDelete] = useState(null);  
+  
+  // States quản lý thông báo toast
+  const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // States quản lý modal đánh giá coach
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [appointmentToRate, setAppointmentToRate] = useState(null);
   const [rating, setRating] = useState(0);
   const [ratingHover, setRatingHover] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
-  const [isSubmittingRating, setIsSubmittingRating] = useState(false);  const { user } = useAuth(); // Lấy thông tin user từ AuthContext
-  const navigate = useNavigate();
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);  
   
-  // Check if user has access to appointment feature
+  // Lấy thông tin user từ AuthContext và khởi tạo navigate
+  const { user } = useAuth();
+  const navigate = useNavigate();    /**
+   * Kiểm tra quyền truy cập tính năng dựa trên membership của user
+   * - Free: Không có quyền truy cập lịch hẹn coach
+   * - Premium/Pro: Có quyền truy cập đầy đủ
+   */
   const userMembership = user?.membership || 'free';
   const hasAccess = hasAccessToFeature(userMembership, 'premium');
 
+  // useEffect để tải danh sách lịch hẹn từ localStorage khi component mount
   useEffect(() => {
-    // Fetch appointments from localStorage
+    /**
+     * Hàm fetch dữ liệu lịch hẹn từ localStorage
+     * Sắp xếp theo thời gian và highlight lịch hẹn mới nhất
+     */
     const fetchAppointments = () => {
       setLoading(true);
       const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
       
-      // Log ngày hiện tại để debug
+      // Debug: Log ngày hiện tại
       console.log('Ngày hiện tại:', new Date().toLocaleDateString('vi-VN'));
       
-      // Sort appointments by date (newest first)
+      // Sắp xếp lịch hẹn theo thời gian (mới nhất trước)
       const sortedAppointments = storedAppointments.sort((a, b) => {
         const dateA = new Date(`${a.date.split('T')[0]}T${a.time}`);
         const dateB = new Date(`${b.date.split('T')[0]}T${b.time}`);
         return dateB - dateA;
       });
       
-      // Check if there's a new appointment (most recently added)
+      // Highlight lịch hẹn mới nhất nếu có
       if (sortedAppointments.length > 0) {
         setNewAppointmentId(sortedAppointments[0].id);
         
-        // Set filter to "upcoming" to show the new appointment
+        // Tự động chuyển sang tab "Sắp tới" để hiển thị lịch hẹn mới
         setFilter('upcoming');
         
-        // After 5 seconds, remove the highlight
+        // Sau 5 giây thì tắt highlight
         setTimeout(() => {
           setNewAppointmentId(null);
         }, 5000);
@@ -117,18 +160,23 @@ export default function AppointmentList() {
     };
 
     fetchAppointments();
-  }, []);  // Filter appointments based on the selected filter
+  }, []);  /**
+   * Hàm lọc danh sách lịch hẹn dựa trên filter được chọn
+   * - 'all': Hiển thị tất cả lịch hẹn
+   * - 'upcoming': Hiển thị lịch hẹn sắp tới (ngày >= hôm nay, chưa hủy)
+   * - 'past': Hiển thị lịch hẹn đã qua (ngày < hôm nay hoặc đã hủy)
+   */
   const filteredAppointments = appointments.filter(appointment => {
-    // Lấy ngày hiện tại và reset giờ về 00:00:00
+    // Lấy ngày hiện tại và reset giờ về 00:00:00 để so sánh chính xác theo ngày
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Lấy ngày lịch hẹn và reset giờ về 00:00:00 để so sánh theo ngày
+    // Lấy ngày lịch hẹn và reset giờ về 00:00:00
     const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
     const appointmentDay = new Date(appointmentDate);
     appointmentDay.setHours(0, 0, 0, 0);
     
-    // Đã hủy chỉ hiển thị trong "Tất cả" và "Đã qua", không hiển thị trong "Sắp tới"
+    // Xử lý đặc biệt cho lịch hẹn đã hủy
     if (appointment.status === 'cancelled') {
       if (filter === 'upcoming') {
         return false; // Lịch đã hủy không hiển thị trong "Sắp tới"
@@ -139,16 +187,19 @@ export default function AppointmentList() {
 
     // Logic lọc dựa trên ngày và trạng thái
     if (filter === 'upcoming') {
-      // Filter "Sắp tới": Hiển thị tất cả lịch hẹn có ngày >= ngày hiện tại và chưa hoàn thành hoặc chưa hủy
+      // Filter "Sắp tới": Lịch hẹn có ngày >= hôm nay và chưa hoàn thành/hủy
       return appointmentDay >= today;
     } else if (filter === 'past') {
-      // Filter "Đã qua": Hiển thị lịch hẹn có ngày < ngày hiện tại hoặc đã hủy
+      // Filter "Đã qua": Lịch hẹn có ngày < hôm nay hoặc đã hủy
       return appointmentDay < today || appointment.status === 'cancelled';
     }
     
     return true; // 'all' filter: hiển thị tất cả
-  });
-  // Format date for display
+  });  /**
+   * Hàm format ngày hiển thị theo định dạng tiếng Việt
+   * @param {string} dateString - Chuỗi ngày cần format
+   * @returns {string} - Ngày đã được format
+   */
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', { 
@@ -157,37 +208,24 @@ export default function AppointmentList() {
       month: 'numeric', 
       year: 'numeric' 
     });
-  };
-    // Hàm so sánh ngày (chỉ so sánh ngày, tháng, năm, không tính giờ phút giây)
-  const isSameOrBeforeDate = (date1, date2) => {
-    const d1 = new Date(date1);
-    const d2 = new Date(date2);
-    
-    // Reset time to 00:00:00
-    d1.setHours(0, 0, 0, 0);
-    d2.setHours(0, 0, 0, 0);
-    
-    // So sánh ngày tháng năm
-    return (
-      d1.getFullYear() < d2.getFullYear() ||
-      (d1.getFullYear() === d2.getFullYear() && d1.getMonth() < d2.getMonth()) ||
-      (d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() <= d2.getDate())
-    );
-  };  // Get status class based on appointment status
+  };  /**
+   * Hàm xác định class CSS cho trạng thái lịch hẹn
+   * @param {Object} appointment - Thông tin lịch hẹn
+   * @returns {string} - Class CSS tương ứng với trạng thái
+   */
   const getStatusClass = (appointment) => {
     if (appointment.status === 'cancelled') {
       return 'cancelled';
     } else if (appointment.status === 'confirmed') {
-      // Lấy ngày hiện tại (chỉ lấy ngày, không lấy giờ)
+      // So sánh ngày để xác định lịch hẹn đã hoàn thành hay chưa
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // Lấy ngày lịch hẹn (chỉ lấy ngày, không lấy giờ)
       const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
       const appointmentDay = new Date(appointmentDate);
       appointmentDay.setHours(0, 0, 0, 0);
       
-      // Lịch hẹn chỉ được đánh dấu hoàn thành nếu ngày hẹn < ngày hiện tại
+      // Lịch hẹn được đánh dấu hoàn thành nếu ngày hẹn < ngày hiện tại
       if (appointmentDay < today) {
         return 'completed';
       } else {
@@ -196,21 +234,24 @@ export default function AppointmentList() {
     }
     
     return '';
-  };  // Get status text based on appointment status
+  };  /**
+   * Hàm lấy text hiển thị cho trạng thái lịch hẹn
+   * @param {Object} appointment - Thông tin lịch hẹn
+   * @returns {string} - Text trạng thái để hiển thị
+   */
   const getStatusText = (appointment) => {
     if (appointment.status === 'cancelled') {
       return 'Đã hủy';
     } else if (appointment.status === 'confirmed') {
-      // Lấy ngày hiện tại
+      // So sánh ngày để xác định text phù hợp
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // Lấy ngày lịch hẹn
       const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
       const appointmentDay = new Date(appointmentDate);
       appointmentDay.setHours(0, 0, 0, 0);
       
-      // Lịch hẹn chỉ được đánh dấu hoàn thành nếu ngày hẹn < ngày hiện tại
+      // Text thay đổi dựa trên việc lịch hẹn đã qua hay chưa
       if (appointmentDay < today) {
         return 'Đã hoàn thành';
       } else {
@@ -231,8 +272,12 @@ export default function AppointmentList() {
     setShowCancelModal(false);
     setAppointmentToCancel(null);
   };
-
-  // Handle cancel appointment
+  /**
+   * Hàm xử lý hủy lịch hẹn
+   * - Cập nhật trạng thái appointment thành 'cancelled'
+   * - Lưu vào localStorage để persist data
+   * - Đóng modal xác nhận
+   */
   const handleCancelAppointment = () => {
     if (appointmentToCancel) {
       const updatedAppointments = appointments.map(appointment => {
@@ -246,7 +291,12 @@ export default function AppointmentList() {
       localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
       closeCancelModal();
     }
-  };  // Handle reschedule or rebook appointment
+  };  /**
+   * Hàm xử lý thay đổi lịch hẹn (reschedule)
+   * - Lưu thông tin appointment cần reschedule vào localStorage
+   * - Chuyển hướng đến trang booking với flag reschedule=true
+   * - Trang booking sẽ đọc data từ localStorage để pre-fill form
+   */
   const handleRescheduleAppointment = (appointment) => {
     // Store the appointment to reschedule in localStorage
     localStorage.setItem('appointmentToReschedule', JSON.stringify(appointment));
@@ -264,8 +314,12 @@ export default function AppointmentList() {
   const closeRebookModal = () => {
     setShowRebookModal(false);
     setAppointmentToRebook(null);
-  };
-  // Handle booking new appointment after completion or cancellation
+  };  /**
+   * Hàm xử lý đặt lại lịch hẹn mới sau khi hủy hoặc hoàn thành
+   * - Tạo object chứa thông tin coach để pre-fill form
+   * - Lưu vào localStorage với key 'rebookCoach'
+   * - Chuyển hướng đến trang booking với flag rebook=true
+   */
   const handleRebookAppointment = () => {
     if (appointmentToRebook) {
       // For cancelled or completed appointments, we'll create a new booking
@@ -294,10 +348,16 @@ export default function AppointmentList() {
   const closeDeleteModal = () => {
     setShowDeleteModal(false);
     setAppointmentToDelete(null);
-  };  // Handle delete cancelled appointment
+  };  /**
+   * Hàm xử lý xóa vĩnh viễn lịch hẹn đã hủy
+   * - Hiển thị loading state trong quá trình xóa
+   * - Filter appointment khỏi danh sách
+   * - Cập nhật localStorage và state
+   * - Hiển thị toast notification thành công
+   */
   const handleDeleteAppointment = () => {
     if (appointmentToDelete) {
-      // Set deleting state to true
+      // Set deleting state to true để hiển thị loading
       setIsDeleting(true);
       
       // Simulate a short delay for better UX
@@ -325,8 +385,12 @@ export default function AppointmentList() {
       }, 500); // Small delay for better user experience
     }
   };
-
-  // Handle opening chat with coach
+  /**
+   * Hàm xử lý mở chat với coach
+   * - Tạo object coach từ thông tin appointment
+   * - Set states để hiển thị chat modal
+   * - Clear unread messages khi mở chat
+   */
   const handleOpenChat = (appointment) => {
     const coach = {
       name: appointment.coachName,
@@ -342,12 +406,20 @@ export default function AppointmentList() {
     const unreadKey = `unread_messages_${appointment.id}`;
     localStorage.setItem(unreadKey, '0');
   };
-  // Handle closing chat
+
+  /**
+   * Hàm xử lý đóng chat modal
+   * Reset các states liên quan đến chat
+   */
   const handleCloseChat = () => {
     setShowChat(false);
   };
   
-  // Check if there are unread messages for an appointment
+  /**
+   * Kiểm tra xem appointment có tin nhắn chưa đọc không
+   * @param {string} appointmentId - ID của appointment
+   * @returns {boolean} - true nếu có tin nhắn chưa đọc
+   */
   const hasUnreadMessages = (appointmentId) => {
     const unreadKey = `unread_messages_${appointmentId}`;
     const unreadCount = localStorage.getItem(unreadKey);
@@ -378,8 +450,12 @@ export default function AppointmentList() {
     setRating(0);
     setRatingHover(0);
     setRatingComment('');
-  };
-  // Handle rating submission
+  };  /**
+   * Hàm xử lý submit đánh giá coach
+   * - Tạo object rating với stars, comment và timestamp
+   * - Cập nhật appointment với rating mới
+   * - Lưu vào localStorage và hiển thị toast thành công
+   */
   const handleRatingSubmit = () => {
     if (appointmentToRate && rating > 0) {
       setIsSubmittingRating(true);
