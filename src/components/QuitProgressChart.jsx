@@ -101,13 +101,9 @@ const QuitProgressChart = ({
         
         // Make sure data is an array before filtering
         return Array.isArray(data) ? data.filter(item => new Date(item.date) >= cutoffDate) : [];
-    };    useEffect(() => {
+    };useEffect(() => {
         // Make sure we have valid data or generate sample data
         let data;
-        
-        // Log dữ liệu để debug
-        console.log('QuitProgressChart - userPlan:', userPlan);
-        console.log('QuitProgressChart - actualProgress:', actualProgress);
         
         if (userPlan && Object.keys(userPlan).length > 0) {
             data = { 
@@ -130,35 +126,12 @@ const QuitProgressChart = ({
         const planData = [];
         const actualData = [];        // Tạo map cho việc lookup nhanh
         const actualMap = new Map();
-        if (Array.isArray(filteredActualData) && filteredActualData.length > 0) {
+        if (Array.isArray(filteredActualData)) {
             filteredActualData.forEach(item => {
                 if (item && item.date) {
                     actualMap.set(item.date, item.actualCigarettes);
                 }
             });
-            console.log('Có dữ liệu thực tế:', filteredActualData.length, 'record');
-        } else {
-            console.log('Không có dữ liệu thực tế, sẽ dùng dữ liệu mẫu');
-            // Thêm dữ liệu mẫu nếu không có dữ liệu thực tế
-            const today = new Date();
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(today.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
-                const dayInWeek = Math.floor(i / 7) + 1;
-                let targetAmount = 0;
-                if (filteredPlanData && filteredPlanData[i]) {
-                    targetAmount = filteredPlanData[i].targetCigarettes;
-                } else if (data.plan && data.plan.weeks) {
-                    const weekData = data.plan.weeks.find(w => w.week === dayInWeek) || data.plan.weeks[0];
-                    targetAmount = weekData ? weekData.amount : 12;
-                }
-                
-                // Tạo dữ liệu mẫu ngẫu nhiên xung quanh giá trị mục tiêu
-                const randomOffset = Math.floor(Math.random() * 5) - 2; // -2 to +2
-                const sampleAmount = Math.max(0, targetAmount + randomOffset);
-                actualMap.set(dateStr, sampleAmount);
-            }
         }
 
         // Tạo dữ liệu cho chart
@@ -170,49 +143,40 @@ const QuitProgressChart = ({
             labels.push(label);
             
             // Dữ liệu kế hoạch
-            planData.push(planItem.targetCigarettes);            // Dữ liệu thực tế (nếu có)
+            planData.push(planItem.targetCigarettes);
+              // Dữ liệu thực tế (nếu có)
             const actualValue = actualMap.get(planItem.date);
-            
-            // Đảm bảo luôn có ít nhất một số điểm dữ liệu để vẽ đường
-            if (actualValue !== undefined) {
-                actualData.push(actualValue);
-            } else if (index < 7) { // Tạo dữ liệu mẫu cho 7 ngày gần nhất nếu không có dữ liệu
-                // Tạo giá trị gần với target
-                const randomOffset = Math.floor(Math.random() * 5) - 2; // -2 to +2
-                const sampleValue = Math.max(0, planItem.targetCigarettes + randomOffset);
-                actualData.push(sampleValue);
-            } else {
-                actualData.push(null); // Null cho những ngày không có dữ liệu
-            }
+            actualData.push(actualValue !== undefined ? actualValue : null);
             });
         }
 
         const chartConfig = {
             labels,
-            datasets: [                {
-                    label: 'Kế hoạch cai thuốc',
+            datasets: [
+                {
+                    label: 'Kế hoạch dự kiến',
                     data: planData,
-                    borderColor: '#4285f4', // Xanh dương
+                    borderColor: '#4285f4',
                     backgroundColor: 'rgba(66, 133, 244, 0.1)',
-                    borderWidth: 3,
+                    borderWidth: 2,
                     fill: false,
-                    tension: 0.3,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                     pointBackgroundColor: '#4285f4',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2
                 },
                 {
-                    label: 'Số điếu đã hút',
+                    label: 'Thực tế',
                     data: actualData,
-                    borderColor: '#34a853', // Xanh lá
+                    borderColor: '#34a853',
                     backgroundColor: 'rgba(52, 168, 83, 0.1)',
                     borderWidth: 3,
                     fill: false,
-                    tension: 0.3,
+                    tension: 0.4,
                     pointRadius: 5,
-                    pointHoverRadius: 7,
+                    pointHoverRadius: 8,
                     pointBackgroundColor: '#34a853',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
@@ -276,7 +240,8 @@ const QuitProgressChart = ({
                         const value = context.parsed.y;
                         if (value === null) return null;
 
-                        let label = context.dataset.label + ': ';                        if (context.dataset.label.includes('đã hút')) {
+                        let label = context.dataset.label + ': ';
+                        if (context.dataset.label.includes('thực tế')) {
                             label += value + ' điếu/ngày';
 
                             // Thêm thông tin mood nếu có
@@ -406,7 +371,8 @@ const QuitProgressChart = ({
                 height={height}
             />
 
-            {/* Thêm ghi chú cho biểu đồ */}            <div className="chart-notes" style={{
+            {/* Thêm ghi chú cho biểu đồ */}
+            <div className="chart-notes" style={{
                 marginTop: '15px',
                 padding: '10px',
                 backgroundColor: '#f8f9fa',
@@ -415,7 +381,7 @@ const QuitProgressChart = ({
                 color: '#5f6368'
             }}>
                 <p style={{ margin: '0 0 5px 0' }}>
-                    💡 <strong>Ghi chú:</strong> Đường <span style={{ color: '#4285f4', fontWeight: 'bold' }}>xanh dương</span> là kế hoạch cai thuốc đã lập, đường <span style={{ color: '#34a853', fontWeight: 'bold' }}>xanh lá</span> là số điếu thuốc bạn đã hút mỗi ngày.
+                    💡 <strong>Ghi chú:</strong> Đường xanh dương là kế hoạch, đường xanh lá là tiến độ thực tế của bạn.
                 </p>
                 <p style={{ margin: '0' }}>
                     🎯 Mục tiêu cuối cùng là đạt <strong>0 điếu/ngày</strong> và duy trì lâu dài.
