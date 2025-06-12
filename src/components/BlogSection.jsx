@@ -1,12 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { getArticleImagePath, getHeroImagePath } from '../utils/imageUtils';
 
 export default function BlogSection() {
   const blogPosts = [
     {
       id: 1,
-      image: getArticleImagePath("OIP.jpg"),
+      image: "/image/articles/OIP.jpg",
       date: "22 tháng 5, 2023",
       views: "10.304",
       title: "7 ngày đầu không thuốc lá – Làm thế nào để vượt qua?",
@@ -16,7 +15,7 @@ export default function BlogSection() {
     },
     {
       id: 2,
-      image: getArticleImagePath("th.jpg"),
+      image: "/image/articles/th.jpg",
       date: "3 tháng 4, 2023",
       views: "8.214",
       title: "Chia sẻ từ một người đã bỏ thuốc 1 năm",
@@ -26,7 +25,7 @@ export default function BlogSection() {
     },
     {
       id: 3,
-      image: getHeroImagePath("quit-smoking-2.png"),
+      image: "/image/hero/quit-smoking-2.png",
       date: "20 tháng 3, 2023",
       views: "9.827",
       title: "Thói quen thay thế giúp bạn không tái nghiện",

@@ -29,12 +29,14 @@ export default function JourneyStepper() {
 
     if (storedCompletionData) {
       const completionData = JSON.parse(storedCompletionData);
+      console.log('Khôi phục kế hoạch từ localStorage:', completionData);
       setFormData(completionData.formData);
       setIsCompleted(true);
       setShowCompletionScreen(true);
       setCurrentStep(4);
     } else if (storedActivePlan) {
       const activePlan = JSON.parse(storedActivePlan);
+      console.log('Khôi phục active plan từ localStorage:', activePlan);
       setFormData((prevData) => ({
         ...prevData,
         selectedPlan: activePlan.id,
@@ -68,29 +70,86 @@ export default function JourneyStepper() {
     setIsEditing(true);
     setShowCompletionScreen(false);
     setCurrentStep(stepToEdit);
+    
+    // Nếu chỉnh sửa kế hoạch (step 2), luôn reset về màn hình chọn kế hoạch
+    if (stepToEdit === 2) {
+      // Lưu thông tin về plan hiện tại trước khi reset
+      const currentPlan = formData.selectedPlan;
+      console.log('Đang chỉnh sửa kế hoạch, kế hoạch hiện tại:', currentPlan);
+      
+      // Reset selectedPlan để người dùng có thể chọn lại
+      setFormData(prevData => ({
+        ...prevData,
+        selectedPlan: null
+      }));
+      
+      console.log('Đã reset kế hoạch để người dùng chọn lại');
+    }
+    
     // Hiệu ứng animation cho progress bar khi quay lại
     animateProgressBar(stepToEdit);
   };
 
   // Xử lý khi người dùng lưu kế hoạch sau khi chỉnh sửa
   const handleSaveEdit = () => {
+    // Lấy kế hoạch đầy đủ dựa vào ID đã chọn
+    let completeSelectedPlan = null;
+    
+    if (formData.selectedPlan) {
+      let plans = [];
+      if (formData.cigarettesPerDay < 10) {
+        plans = generateLightSmokerPlans();
+      } else if (formData.cigarettesPerDay <= 20) {
+        plans = generateModerateSmokerPlans();
+      } else {
+        plans = generateHeavySmokerPlans();
+      }
+      
+      // Tìm kế hoạch đầy đủ bằng ID
+      const selectedPlanId = typeof formData.selectedPlan === 'object' 
+        ? formData.selectedPlan.id 
+        : formData.selectedPlan;
+      
+      completeSelectedPlan = plans.find(plan => plan.id === selectedPlanId);
+      
+      console.log('Lưu kế hoạch mới được chọn:', completeSelectedPlan);
+    }
+    
+    // Đảm bảo completeSelectedPlan không null
+    if (!completeSelectedPlan && typeof formData.selectedPlan === 'object') {
+      completeSelectedPlan = formData.selectedPlan;
+    }
+    
+    // Kiểm tra xem có tìm thấy kế hoạch đầy đủ hay không
+    if (!completeSelectedPlan) {
+      console.error('Không tìm thấy kế hoạch đầy đủ. Có thể người dùng chưa chọn kế hoạch.');
+      alert('Vui lòng chọn một kế hoạch trước khi lưu.');
+      return;
+    }
+    
     // Lưu thông tin đã chỉnh sửa vào localStorage
     const completionData = {
       completionDate: new Date().toISOString(),
-      userPlan: formData.selectedPlan,
-      formData: formData,
+      userPlan: completeSelectedPlan,
+      formData: {
+        ...formData,
+        selectedPlan: completeSelectedPlan // Lưu object kế hoạch đầy đủ thay vì chỉ ID
+      },
       lastEdited: new Date().toISOString()
     };
     localStorage.setItem('quitPlanCompletion', JSON.stringify(completionData));
     
     // Cập nhật kế hoạch đang hoạt động
     const activePlan = {
-      ...formData.selectedPlan,
+      ...completeSelectedPlan,
       startDate: new Date().toISOString().split('T')[0],
       initialCigarettes: formData.cigarettesPerDay,
       lastEdited: new Date().toISOString()
     };
     localStorage.setItem('activePlan', JSON.stringify(activePlan));
+    
+    // Hiển thị thông báo thành công
+    alert(`Đã cập nhật kế hoạch thành công! Thời gian dự kiến mới: ${completeSelectedPlan.totalWeeks} tuần.`);
     
     // Trở lại màn hình hoàn thành
     setIsEditing(false);
@@ -130,11 +189,41 @@ export default function JourneyStepper() {
       // Lấy thời gian hiện tại
       const now = new Date().toISOString();
       
+      // Lấy kế hoạch đầy đủ dựa vào ID đã chọn
+      let completeSelectedPlan = null;
+      
+      if (formData.selectedPlan) {
+        let plans = [];
+        if (formData.cigarettesPerDay < 10) {
+          plans = generateLightSmokerPlans();
+        } else if (formData.cigarettesPerDay <= 20) {
+          plans = generateModerateSmokerPlans();
+        } else {
+          plans = generateHeavySmokerPlans();
+        }
+        
+        // Tìm kế hoạch đầy đủ bằng ID
+        const selectedPlanId = typeof formData.selectedPlan === 'object' 
+          ? formData.selectedPlan.id 
+          : formData.selectedPlan;
+        
+        completeSelectedPlan = plans.find(plan => plan.id === selectedPlanId);
+        console.log('Kế hoạch đầy đủ được chọn khi submit:', completeSelectedPlan);
+      }
+      
+      // Đảm bảo completeSelectedPlan không null
+      if (!completeSelectedPlan && typeof formData.selectedPlan === 'object') {
+        completeSelectedPlan = formData.selectedPlan;
+      }
+      
       // Lưu thông tin hoàn thành vào localStorage
       const completionData = {
         completionDate: now,
-        userPlan: formData.selectedPlan,
-        formData: formData,
+        userPlan: completeSelectedPlan || formData.selectedPlan,
+        formData: {
+          ...formData,
+          selectedPlan: completeSelectedPlan // Lưu object kế hoạch đầy đủ thay vì chỉ ID
+        },
         lastEdited: now
       };
       localStorage.setItem('quitPlanCompletion', JSON.stringify(completionData));
@@ -144,7 +233,7 @@ export default function JourneyStepper() {
       
       // Lưu kế hoạch đang hoạt động với startDate
       const activePlan = {
-        ...formData.selectedPlan,
+        ...(completeSelectedPlan || formData.selectedPlan),
         startDate: now.split('T')[0],
         initialCigarettes: formData.cigarettesPerDay,
         lastEdited: now
@@ -257,6 +346,30 @@ export default function JourneyStepper() {
 
   // Hàm để chia sẻ kế hoạch cai thuốc
   const handleSharePlan = () => {
+    // Đảm bảo có kế hoạch đầy đủ để chia sẻ
+    let planToShare = formData.selectedPlan;
+    
+    // Nếu selectedPlan là ID, lấy kế hoạch đầy đủ
+    if (typeof planToShare === 'number' || !planToShare?.totalWeeks) {
+      let plans = [];
+      if (formData.cigarettesPerDay < 10) {
+        plans = generateLightSmokerPlans();
+      } else if (formData.cigarettesPerDay <= 20) {
+        plans = generateModerateSmokerPlans();
+      } else {
+        plans = generateHeavySmokerPlans();
+      }
+      
+      const planId = typeof planToShare === 'object' ? planToShare.id : planToShare;
+      planToShare = plans.find(plan => plan.id === planId) || planToShare;
+    }
+    
+    // Truy xuất thời gian dự kiến từ kế hoạch
+    const totalWeeks = planToShare?.totalWeeks || 
+                      (planToShare?.weeks ? planToShare.weeks.length : 0);
+    
+    console.log('Kế hoạch sẽ chia sẻ:', planToShare, 'với tổng tuần:', totalWeeks);
+    
     // Tạo text để chia sẻ
     const planDetails = `
 🚭 KẾ HOẠCH CAI THUỐC LÁ CỦA TÔI 🚭
@@ -267,9 +380,9 @@ export default function JourneyStepper() {
 - Đã hút thuốc: ${formData.smokingYears} năm
 - Lý do cai thuốc: ${formData.reasonToQuit}
 
-📋 Kế hoạch: ${formData.selectedPlan?.name || "Kế hoạch cai thuốc"}
-- Thời gian dự kiến: ${formData.selectedPlan?.totalWeeks || 0} tuần
-- Mô tả: ${formData.selectedPlan?.description || ""}
+📋 Kế hoạch: ${planToShare?.name || "Kế hoạch cai thuốc"}
+- Thời gian dự kiến: ${totalWeeks} tuần
+- Mô tả: ${planToShare?.description || ""}
 
 💪 Hãy ủng hộ hành trình cai thuốc của tôi!
     `;
@@ -539,6 +652,7 @@ export default function JourneyStepper() {
   // Tạo kế hoạch giảm dần dựa trên WHO Tobacco Cessation Guidelines
   const generateReductionPlan = () => {
     const dependenceLevel = calculateWHODependenceLevel();
+    console.log('Mức độ phụ thuộc:', dependenceLevel, 'Điếu/ngày:', formData.cigarettesPerDay);
 
     // Nếu là người hút nhẹ và chưa chọn kế hoạch, trả về null để hiển thị màn hình chọn
     if (dependenceLevel === 1 && formData.cigarettesPerDay < 10 && !formData.selectedPlan) {
@@ -567,7 +681,34 @@ export default function JourneyStepper() {
         plans = generateHeavySmokerPlans();
       }
 
-      const selectedPlan = plans.find(plan => plan.id === formData.selectedPlan);
+      // Lấy ID kế hoạch dựa trên selectedPlan (có thể là object hoặc số)
+      const selectedPlanId = typeof formData.selectedPlan === 'object' 
+        ? formData.selectedPlan.id 
+        : formData.selectedPlan;
+      
+      console.log('Tìm kế hoạch với ID:', selectedPlanId, 'từ các kế hoạch:', plans);
+      
+      const selectedPlan = plans.find(plan => plan.id === selectedPlanId);
+      
+      // Kiểm tra nếu không tìm thấy kế hoạch phù hợp
+      if (!selectedPlan) {
+        console.log('Không tìm thấy kế hoạch với ID:', selectedPlanId);
+        
+        // Nếu selectedPlan là object, sử dụng nó
+        if (typeof formData.selectedPlan === 'object' && formData.selectedPlan !== null) {
+          console.log('Sử dụng kế hoạch từ formData:', formData.selectedPlan);
+          return {
+            weeks: formData.selectedPlan.weeks || [],
+            strategy: formData.selectedPlan,
+            dependenceLevel,
+            totalWeeks: formData.selectedPlan.totalWeeks || (formData.selectedPlan.weeks ? formData.selectedPlan.weeks.length : 0)
+          };
+        }
+        
+        return null;
+      }
+      
+      console.log('Đã tìm thấy kế hoạch:', selectedPlan);
       return {
         weeks: selectedPlan.weeks,
         strategy: selectedPlan,
@@ -673,7 +814,28 @@ export default function JourneyStepper() {
                       <span className="summary-value">{formData.reasonToQuit}</span>
                     </div>                    <div className="plan-summary-item">
                       <span className="summary-label">Thời gian dự kiến:</span>
-                      <span className="summary-value">{formData.selectedPlan?.totalWeeks || 0} tuần</span>
+                      <span className="summary-value">
+                        {(() => {
+                          // Đảm bảo hiển thị đúng số tuần
+                          if (formData.selectedPlan?.totalWeeks) {
+                            return `${formData.selectedPlan.totalWeeks} tuần`;
+                          } else if (formData.selectedPlan?.weeks) {
+                            return `${formData.selectedPlan.weeks.length} tuần`;
+                          } else {
+                            // Lấy thông tin kế hoạch từ localStorage nếu cần
+                            const storedPlan = localStorage.getItem('activePlan');
+                            if (storedPlan) {
+                              const parsedPlan = JSON.parse(storedPlan);
+                              if (parsedPlan.totalWeeks) {
+                                return `${parsedPlan.totalWeeks} tuần`;
+                              } else if (parsedPlan.weeks) {
+                                return `${parsedPlan.weeks.length} tuần`;
+                              }
+                            }
+                            return '0 tuần'; // Fallback nếu không tìm thấy dữ liệu
+                          }
+                        })()}
+                      </span>
                     </div>
                     <div className="plan-summary-item">
                       <span className="summary-label">Kế hoạch được tạo:</span>
@@ -742,7 +904,30 @@ export default function JourneyStepper() {
                   <div className="stat-label">Điếu thuốc không hút mỗi năm</div>
                 </div>
                 <div className="completion-stat-card">
-                  <div className="stat-icon">⏱️</div>                  <div className="stat-value">{formData.selectedPlan?.totalWeeks / 4 || 0}</div>
+                  <div className="stat-icon">⏱️</div>
+                  <div className="stat-value">
+                    {(() => {
+                      // Đảm bảo hiển thị đúng số tháng
+                      let totalWeeks = 0;
+                      if (formData.selectedPlan?.totalWeeks) {
+                        totalWeeks = formData.selectedPlan.totalWeeks;
+                      } else if (formData.selectedPlan?.weeks) {
+                        totalWeeks = formData.selectedPlan.weeks.length;
+                      } else {
+                        // Lấy thông tin kế hoạch từ localStorage nếu cần
+                        const storedPlan = localStorage.getItem('activePlan');
+                        if (storedPlan) {
+                          const parsedPlan = JSON.parse(storedPlan);
+                          if (parsedPlan.totalWeeks) {
+                            totalWeeks = parsedPlan.totalWeeks;
+                          } else if (parsedPlan.weeks) {
+                            totalWeeks = parsedPlan.weeks.length;
+                          }
+                        }
+                      }
+                      return (totalWeeks / 4).toFixed(1);
+                    })()}
+                  </div>
                   <div className="stat-label">Tháng thực hiện dự kiến</div>
                 </div>
               </div>
@@ -961,8 +1146,22 @@ export default function JourneyStepper() {
                           return plans.map((plan) => (
                             <div
                               key={plan.id}
-                              className={`plan-option ${formData.selectedPlan === plan.id ? 'selected' : ''}`}
-                              onClick={() => handleInputChange('selectedPlan', plan.id)}
+                              className={`plan-option ${
+                                // Đảm bảo so sánh ID đúng cho cả trường hợp selectedPlan là object hoặc ID
+                                (typeof formData.selectedPlan === 'object' 
+                                  ? formData.selectedPlan?.id === plan.id 
+                                  : formData.selectedPlan === plan.id) 
+                                  ? 'selected' : ''
+                              }`}
+                              onClick={() => {
+                                console.log('Đã chọn kế hoạch mới:', plan);
+                                handleInputChange('selectedPlan', plan.id);
+                                
+                                // Nếu đang ở chế độ chỉnh sửa, hiển thị thông báo
+                                if (isEditing) {
+                                  console.log('Thời gian dự kiến mới:', plan.totalWeeks, 'tuần');
+                                }
+                              }}
                             >
                               <div className="plan-header">
                                 <div className="plan-icon" style={{ backgroundColor: plan.color }}>
@@ -1008,11 +1207,11 @@ export default function JourneyStepper() {
                               <span className="btn-arrow">←</span> Hủy chỉnh sửa
                             </button>
                             <button
-                              className="btn-next"
-                              onClick={handleContinue}
+                              className="btn-save-edit"
+                              onClick={handleSaveEdit}
                               disabled={!formData.selectedPlan}
                             >
-                              Tiếp tục <span className="btn-arrow">→</span>
+                              Lưu thay đổi
                             </button>
                           </>
                         ) : (
@@ -1075,7 +1274,7 @@ export default function JourneyStepper() {
                               <div>Giai đoạn</div>
                             </div>
 
-                            {reductionPlan.weeks.map((week, index) => (
+                            {reductionPlan.weeks && reductionPlan.weeks.map((week, index) => (
                               <div className="timeline-item" key={index}>
                                 <div className="timeline-week">Tuần {week.week}</div>
                                 <div className="timeline-amount">{week.amount} điếu</div>

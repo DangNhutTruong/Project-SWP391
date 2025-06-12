@@ -314,8 +314,7 @@ const router = createBrowserRouter([
         <Register />
       </Layout>
     ),
-  },
-  {
+  },  {
     path: "/settings",
     element: (
       <Layout>
@@ -324,8 +323,7 @@ const router = createBrowserRouter([
         </ProtectedRoute>
       </Layout>
     ),
-  },
-  {
+  },  {
     path: "/access-denied",
     element: (
       <Layout>
@@ -379,8 +377,7 @@ const SimpleBackToTop = () => {
   );
 };
 
-export default function App() {
-  return (
+export default function App() {  return (
     <AuthProvider>
       <MembershipProvider>
         <RouterProvider router={router} />
