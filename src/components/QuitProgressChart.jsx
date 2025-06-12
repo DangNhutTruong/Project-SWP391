@@ -39,22 +39,22 @@ const QuitProgressChart = ({
     const generateDailyPlanData = (plan) => {
         if (!plan || !plan.weeks || !Array.isArray(plan.weeks) || plan.weeks.length === 0) return [];
         const dailyPlan = [];
-        
+
         // Check if plan exists
         if (!plan) {
             // Return an empty array if plan is null or undefined
             return dailyPlan;
         }
-        
+
         const startDate = new Date(plan.startDate || new Date());
-        
+
         if (plan.weeks && Array.isArray(plan.weeks)) {
             plan.weeks.forEach((week, weekIndex) => {
                 // Mỗi tuần có 7 ngày
                 for (let day = 0; day < 7; day++) {
                     const date = new Date(startDate);
                     date.setDate(date.getDate() + (weekIndex * 7) + day);
-                    
+
                     dailyPlan.push({
                         date: date.toISOString().split('T')[0],
                         targetCigarettes: week.amount,
@@ -72,7 +72,7 @@ const QuitProgressChart = ({
                 phase: "Hoàn thành"
             });
         }
-        
+
         return dailyPlan;
     };
 
@@ -80,7 +80,7 @@ const QuitProgressChart = ({
     const filterDataByTime = (data, filter) => {
         const today = new Date();
         let daysToShow = 30;
-        
+
         switch (filter) {
             case '7 ngày':
                 daysToShow = 7;
@@ -96,19 +96,26 @@ const QuitProgressChart = ({
             default:
                 daysToShow = 30;
         }
-          const cutoffDate = new Date(today);
+        const cutoffDate = new Date(today);
         cutoffDate.setDate(cutoffDate.getDate() - daysToShow);
-        
+
         // Make sure data is an array before filtering
         return Array.isArray(data) ? data.filter(item => new Date(item.date) >= cutoffDate) : [];
-    };useEffect(() => {
+    }; useEffect(() => {
+        console.log('🔄 QuitProgressChart useEffect triggered', {
+            userPlan: userPlan?.name,
+            actualProgressLength: actualProgress?.length,
+            timeFilter,
+            actualProgressData: actualProgress
+        });
+
         // Make sure we have valid data or generate sample data
         let data;
-        
+
         if (userPlan && Object.keys(userPlan).length > 0) {
-            data = { 
-                plan: userPlan, 
-                actual: Array.isArray(actualProgress) ? actualProgress : [] 
+            data = {
+                plan: userPlan,
+                actual: Array.isArray(actualProgress) ? actualProgress : []
             };
         } else {
             data = generateSampleData();
@@ -116,7 +123,7 @@ const QuitProgressChart = ({
 
         // Tạo dữ liệu kế hoạch theo ngày
         const dailyPlanData = generateDailyPlanData(data.plan);
-        
+
         // Filter dữ liệu theo timeFilter
         const filteredPlanData = filterDataByTime(dailyPlanData || [], timeFilter);
         const filteredActualData = filterDataByTime(data.actual || [], timeFilter);
@@ -137,16 +144,16 @@ const QuitProgressChart = ({
         // Tạo dữ liệu cho chart
         if (Array.isArray(filteredPlanData)) {
             filteredPlanData.forEach((planItem, index) => {
-            // Format ngày cho label (chỉ hiển thị ngày/tháng)
-            const date = new Date(planItem.date);
-            const label = `${date.getDate()}/${date.getMonth() + 1}`;
-            labels.push(label);
-            
-            // Dữ liệu kế hoạch
-            planData.push(planItem.targetCigarettes);
-              // Dữ liệu thực tế (nếu có)
-            const actualValue = actualMap.get(planItem.date);
-            actualData.push(actualValue !== undefined ? actualValue : null);
+                // Format ngày cho label (chỉ hiển thị ngày/tháng)
+                const date = new Date(planItem.date);
+                const label = `${date.getDate()}/${date.getMonth() + 1}`;
+                labels.push(label);
+
+                // Dữ liệu kế hoạch
+                planData.push(planItem.targetCigarettes);
+                // Dữ liệu thực tế (nếu có)
+                const actualValue = actualMap.get(planItem.date);
+                actualData.push(actualValue !== undefined ? actualValue : null);
             });
         }
 
@@ -194,9 +201,9 @@ const QuitProgressChart = ({
                     pointHoverRadius: 0
                 }
             ]
-        };        setChartData(chartConfig);
+        }; setChartData(chartConfig);
         setIsLoading(false);
-    }, [userPlan, actualProgress, timeFilter]);
+    }, [userPlan, actualProgress, actualProgress?.length, timeFilter]);
 
     const options = {
         responsive: true,
@@ -355,9 +362,11 @@ const QuitProgressChart = ({
     // Handling case when chartData is not properly initialized
     if (!chartData) {
         return (
-            <div className="chart-loading" style={{ height: height, display: 'flex', 
-                 justifyContent: 'center', alignItems: 'center', 
-                 backgroundColor: 'rgba(240, 240, 240, 0.5)' }}>
+            <div className="chart-loading" style={{
+                height: height, display: 'flex',
+                justifyContent: 'center', alignItems: 'center',
+                backgroundColor: 'rgba(240, 240, 240, 0.5)'
+            }}>
                 <p>Đang tải biểu đồ...</p>
             </div>
         );
@@ -365,7 +374,7 @@ const QuitProgressChart = ({
 
     return (
         <div className="quit-progress-chart" style={{ height: height }}>
-            <Line 
+            <Line
                 data={chartData}
                 options={options}
                 height={height}
