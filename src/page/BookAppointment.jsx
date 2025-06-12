@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaArrowLeft, FaArrowRight, FaCheck } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import RequireMembership from '../components/RequireMembership';
 import './BookAppointment.css';
 
-export default function BookAppointment() {
+function BookAppointment() {
   const [step, setStep] = useState(1); // 1: Choose coach, 2: Select date, 3: Select time
   const [selectedCoach, setSelectedCoach] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -307,7 +308,6 @@ export default function BookAppointment() {
       </div>
     );
   };
-
   return (
     <section className="appointment-section">
       <div className="container">        <div className="appointment-header">
@@ -318,7 +318,7 @@ export default function BookAppointment() {
         </div>
         
         {showSuccess ? renderSuccess() : (
-          <>
+          <RequireMembership allowedMemberships={['premium', 'pro']} showModal={true}>
             <div className="appointment-stepper">
               <div 
                 className={`stepper-step ${step >= 1 ? 'active' : ''} ${selectedCoach ? 'clickable' : ''}`} 
@@ -348,11 +348,13 @@ export default function BookAppointment() {
             <div className="appointment-content">
               {step === 1 && renderCoachSelection()}
               {step === 2 && renderDateSelection()}
-              {step === 3 && renderTimeSelection()}
-            </div>
-          </>
+              {step === 3 && renderTimeSelection()}            </div>
+          </RequireMembership>
         )}
       </div>
     </section>
   );
 }
+
+// Export the component wrapped with membership requirement
+export default BookAppointment;
