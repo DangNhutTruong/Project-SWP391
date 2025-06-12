@@ -1,3 +1,19 @@
+/**
+ * AppointmentList.jsx
+ * Component quản lý và hiển thị danh sách lịch hẹn với coach cho người dùng.
+ * Bao gồm các chức năng: xem, lọc, hủy, đặt lại, xóa, chat, đánh giá lịch hẹn.
+ * Sử dụng localStorage để lưu trữ dữ liệu lịch hẹn phía client.
+ *
+ * Các khối chính:
+ * - CancelledAppointmentCard: Hiển thị lịch hẹn đã bị hủy với nút xóa/đặt lại
+ * - AppointmentList: Quản lý state, filter, modal, toast, và render danh sách lịch hẹn
+ * - Modal xác nhận: Hủy, xóa, đặt lại lịch hẹn, đánh giá coach
+ * - Chat với coach: Hiển thị chat modal khi người dùng chọn chat
+ *
+ * Tác giả: [Tên của bạn]
+ * Ngày cập nhật: 2025-06-12
+ */
+
 // Import các thư viện và dependencies cần thiết
 import React, { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid, FaCrown, FaLock } from 'react-icons/fa';
