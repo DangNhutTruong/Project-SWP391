@@ -16,10 +16,11 @@ import {
   FaLock,
 } from "react-icons/fa";
 import { FaRegStar as FaStarRegular } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import "./AppointmentList.css";
-import ProtectedCoachChat from "./ProtectedCoachChat";
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import './AppointmentList.css';
+import ProtectedCoachChat from './ProtectedCoachChat';
+import RequireMembership from './RequireMembership';
 
 /**
  * Component hiển thị card cho lịch hẹn đã bị hủy
@@ -94,12 +95,7 @@ const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
   );
 };
 
-/**
- * Component chính hiển thị danh sách lịch hẹn với coach
- * Bao gồm các chức năng: xem, hủy, đặt lại, đánh giá, chat
- */
-export default function AppointmentList() {
-  // States quản lý danh sách lịch hẹn và các filter
+function AppointmentList() {
   const [appointments, setAppointments] = useState([]);
   const [filter, setFilter] = useState("all"); // 'all', 'upcoming', 'past'
   const [loading, setLoading] = useState(true);
@@ -930,8 +926,15 @@ export default function AppointmentList() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>      )}
     </div>
+  );
+}
+
+export default function ProtectedAppointmentList() {
+  return (
+    <RequireMembership allowedMemberships={['premium', 'pro']} showModal={true}>
+      <AppointmentList />
+    </RequireMembership>
   );
 }
