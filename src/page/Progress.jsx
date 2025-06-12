@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useEffect, useCallback } from 'react';
 import QuitProgressChart from '../components/QuitProgressChart';
 import DailyCheckin from '../components/DailyCheckin';
 import MoodTracking from '../components/MoodTracking';
@@ -11,19 +10,14 @@ import '../styles/MoodTracking.css';
 import '../styles/ProgressDashboard.css';
 
 export default function Progress() {
-  const { user } = useAuth();
   const [activeTimeFilter, setActiveTimeFilter] = useState('30 ngày');
   const [showCompletionDashboard, setShowCompletionDashboard] = useState(false);
   const [completionData, setCompletionData] = useState(null);
   const [userPlan, setUserPlan] = useState(null);
-  const [userProgress, setUserProgress] = useState([]);
   const [actualProgress, setActualProgress] = useState([]);
-  const [moodData, setMoodData] = useState([]);
+  
   // Load user plan and progress from localStorage
-  useEffect(() => {
-    loadUserPlanAndProgress();
-  }, []);
-  const loadUserPlanAndProgress = () => {
+  const loadUserPlanAndProgress = useCallback(() => {
     console.log('🔍 Loading user plan and progress...');
 
     // Debug localStorage
@@ -67,11 +61,13 @@ export default function Progress() {
       const activePlan = getActivePlan();
       console.log('📋 Active plan:', activePlan);
       setUserPlan(activePlan);
-    }
-
-    // Load actual progress từ daily check-ins
+    }    // Load actual progress từ daily check-ins
     loadActualProgressFromCheckins();
-  }; const getActivePlan = () => {
+  }, []);
+
+  useEffect(() => {
+    loadUserPlanAndProgress();
+  }, [loadUserPlanAndProgress]);const getActivePlan = () => {
     try {
       // Kiểm tra JourneyStepper data trước
       const journeyData = localStorage.getItem('journeyStepperData');
@@ -181,12 +177,11 @@ export default function Progress() {
     // Cập nhật state để trigger re-render của biểu đồ
     setActualProgress(actualData);
   };
-
   // Xử lý cập nhật tâm trạng từ Mood Tracking
   const handleMoodUpdate = (newMoodData) => {
     console.log('Mood updated:', newMoodData);
-    // Có thể thêm logic cập nhật mood data ở đây nếu cần
-    setMoodData(prev => [...prev, newMoodData]);
+    // Mood data is handled internally by MoodTracking component
+    // No need to maintain state here since it's stored in localStorage
   };
 
   // Check for plan completion data on component mount

@@ -1,11 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid } from 'react-icons/fa';
-import { FaRegStar as FaStarRegular } from "react-icons/fa";
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import './AppointmentList.css';
-import ProtectedCoachChat from './ProtectedCoachChat';
-
 // Import các thư viện và dependencies cần thiết
 import React, { useState, useEffect } from "react";
 import {
@@ -26,7 +18,6 @@ import {
 import { FaRegStar as FaStarRegular } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { hasAccessToFeature } from "../utils/membershipUtils";
 import "./AppointmentList.css";
 import ProtectedCoachChat from "./ProtectedCoachChat";
 
@@ -141,10 +132,11 @@ export default function AppointmentList() {
   const [appointmentToRate, setAppointmentToRate] = useState(null);
   const [rating, setRating] = useState(0);
   const [ratingHover, setRatingHover] = useState(0);
-  const [ratingComment, setRatingComment] = useState('');
+  const [ratingComment, setRatingComment] = useState("");
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const { user } = useAuth(); // Lấy thông tin user từ AuthContext
-  const navigate = useNavigate();useEffect(() => {
+  const navigate = useNavigate();
+  useEffect(() => {
     // Fetch appointments from localStorage
     const fetchAppointments = () => {
       setLoading(true);
@@ -530,29 +522,30 @@ export default function AppointmentList() {
   return (
     <div className="appointments-container">
       <div className="appointments-header">
-        <h2><FaCalendarAlt /> Lịch hẹn Coach</h2>
+        <h2>
+          <FaCalendarAlt /> Lịch hẹn Coach
+        </h2>
         <div className="filter-controls">
-          <button 
-            className={`filter-button ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => setFilter('all')}
+          <button
+            className={`filter-button ${filter === "all" ? "active" : ""}`}
+            onClick={() => setFilter("all")}
           >
             Tất cả
           </button>
-          <button 
-            className={`filter-button ${filter === 'upcoming' ? 'active' : ''}`}
-            onClick={() => setFilter('upcoming')}
+          <button
+            className={`filter-button ${filter === "upcoming" ? "active" : ""}`}
+            onClick={() => setFilter("upcoming")}
           >
             Sắp tới
           </button>
-          <button 
-            className={`filter-button ${filter === 'past' ? 'active' : ''}`}
-            onClick={() => setFilter('past')}
+          <button
+            className={`filter-button ${filter === "past" ? "active" : ""}`}
+            onClick={() => setFilter("past")}
           >
             Đã qua
           </button>
         </div>
       </div>
-
       {loading ? (
         <div className="loading-message">
           <p>Đang tải lịch hẹn...</p>
@@ -656,15 +649,21 @@ export default function AppointmentList() {
                   </div>
                 </div>{" "}
                 <div className="appointment-footer">
-                  {" "}
                   {getStatusClass(appointment) === "confirmed" && (
                     <>
                       <button
-                        className="chat-button"
+                        className={`chat-button ${
+                          !user?.membership || user?.membership === "free"
+                            ? "premium-feature"
+                            : ""
+                        }`}
                         onClick={() => handleOpenChat(appointment)}
                       >
                         <FaComments className="chat-button-icon" />
                         Chat với Coach
+                        {(!user?.membership || user?.membership === "free") && (
+                          <span className="premium-badge">Premium</span>
+                        )}
                         {hasUnreadMessages(appointment.id) && (
                           <span className="chat-notification">!</span>
                         )}
@@ -683,54 +682,33 @@ export default function AppointmentList() {
                       </button>
                     </>
                   )}
-                </div>
-              </div>
-                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
-                  <>
-                    <button 
-                      className={`chat-button ${(!user?.membership || user?.membership === 'free') ? 'premium-feature' : ''}`}
-                      onClick={() => handleOpenChat(appointment)}
-                    >
-                      <FaComments className="chat-button-icon" /> 
-                      Chat với Coach
-                      {(!user?.membership || user?.membership === 'free') && (
-                        <span className="premium-badge">Premium</span>
-                      )}
-                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
-                    </button>
-                    <button 
-                      className="reschedule-button"
-                      onClick={() => handleRescheduleAppointment(appointment)}
-                    >
-                      Thay đổi lịch
-                    </button><button 
-                      className="cancel-button"
-                      onClick={() => openCancelModal(appointment.id)}
-                    >
-                      Hủy lịch hẹn
-                    </button>
-                  </>
-                )}                {getStatusClass(appointment) === 'completed' && (
-                  <>
-                    <button 
-                      className="chat-button"
-                      onClick={() => handleOpenChat(appointment)}
-                    >
-                      <FaComments className="chat-button-icon" /> 
-                      Chat với Coach
-                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
-                    </button>                    <button 
-                      className="feedback-button"
-                      onClick={() => openRatingModal(appointment)}
-                    >
-                      {appointment.rating ? 'Cập nhật đánh giá' : 'Đánh giá Coach'}
-                    </button>
-                    <button 
-                      className="rebook-button"
-                      onClick={() => openRebookModal(appointment)}
-                    >
-                      Đặt lại lịch hẹn
-                    </button>
+                  {getStatusClass(appointment) === "completed" && (
+                    <>
+                      <button
+                        className="chat-button"
+                        onClick={() => handleOpenChat(appointment)}
+                      >
+                        <FaComments className="chat-button-icon" />
+                        Chat với Coach
+                        {hasUnreadMessages(appointment.id) && (
+                          <span className="chat-notification">!</span>
+                        )}
+                      </button>
+                      <button
+                        className="feedback-button"
+                        onClick={() => openRatingModal(appointment)}
+                      >
+                        {appointment.rating
+                          ? "Cập nhật đánh giá"
+                          : "Đánh giá Coach"}
+                      </button>
+                      <button
+                        className="rebook-button"
+                        onClick={() => openRebookModal(appointment)}
+                      >
+                        Đặt lại lịch hẹn
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
