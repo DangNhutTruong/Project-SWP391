@@ -147,7 +147,8 @@ const QuitPlanDisplay = () => {
           <div className="detail-content">
             <span className="detail-label">Thời gian:</span>
             <span className="detail-value">
-              {planData.weeks ? `${planData.weeks.length} tuần` : 'Không xác định'}
+              {planData.totalWeeks ? `${planData.totalWeeks} tuần` : 
+               planData.weeks ? `${planData.weeks.length} tuần` : 'Không xác định'}
             </span>
           </div>
         </div>
@@ -177,7 +178,7 @@ const QuitPlanDisplay = () => {
               </div>
             ))}
           </div>          <div className="plan-duration">
-            <strong>Thời gian dự kiến:</strong> {planData.weeks.length} tuần
+            <strong>Thời gian dự kiến:</strong> {planData.totalWeeks || (planData.weeks ? planData.weeks.length : 0)} tuần
           </div>
         </div>
       )}
