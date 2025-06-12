@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AppointmentList.css';
 import ProtectedCoachChat from './ProtectedCoachChat';
+import RequireMembership from './RequireMembership';
 
 // Component hiển thị cho thẻ lịch hẹn đã hủy
 const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
@@ -55,7 +56,7 @@ const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
   );
 };
 
-export default function AppointmentList() {
+function AppointmentList() {
   const [appointments, setAppointments] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'upcoming', 'past'
   const [loading, setLoading] = useState(true);
@@ -762,8 +763,15 @@ export default function AppointmentList() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>      )}
     </div>
+  );
+}
+
+export default function ProtectedAppointmentList() {
+  return (
+    <RequireMembership allowedMemberships={['premium', 'pro']} showModal={true}>
+      <AppointmentList />
+    </RequireMembership>
   );
 }
