@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { FaCalendarAlt, FaArrowLeft, FaArrowRight, FaCheck } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import RequireMembership from '../components/RequireMembership';
 import './BookAppointment.css';
 
 export default function BookAppointment() {
@@ -308,6 +307,7 @@ export default function BookAppointment() {
       </div>
     );
   };
+
   return (
     <section className="appointment-section">
       <div className="container">        <div className="appointment-header">
@@ -318,7 +318,7 @@ export default function BookAppointment() {
         </div>
         
         {showSuccess ? renderSuccess() : (
-          <RequireMembership allowedMemberships={['premium', 'pro']} showModal={true}>
+          <>
             <div className="appointment-stepper">
               <div 
                 className={`stepper-step ${step >= 1 ? 'active' : ''} ${selectedCoach ? 'clickable' : ''}`} 
@@ -350,7 +350,7 @@ export default function BookAppointment() {
               {step === 2 && renderDateSelection()}
               {step === 3 && renderTimeSelection()}
             </div>
-          </RequireMembership>
+          </>
         )}
       </div>
     </section>

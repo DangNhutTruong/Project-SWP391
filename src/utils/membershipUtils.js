@@ -47,7 +47,7 @@ export const formatMembershipName = (membershipType = 'free') => {
   const names = {
     'free': 'Miễn phí',
     'premium': 'Premium',
-    'pro': 'Pro'
+    'pro': 'Professional'
   };
   
   return names[membershipType] || 'Miễn phí';

@@ -1,18 +1,10 @@
-/**
- * AppointmentList.jsx
- * Component quản lý và hiển thị danh sách lịch hẹn với coach cho người dùng.
- * Bao gồm các chức năng: xem, lọc, hủy, đặt lại, xóa, chat, đánh giá lịch hẹn.
- * Sử dụng localStorage để lưu trữ dữ liệu lịch hẹn phía client.
- *
- * Các khối chính:
- * - CancelledAppointmentCard: Hiển thị lịch hẹn đã bị hủy với nút xóa/đặt lại
- * - AppointmentList: Quản lý state, filter, modal, toast, và render danh sách lịch hẹn
- * - Modal xác nhận: Hủy, xóa, đặt lại lịch hẹn, đánh giá coach
- * - Chat với coach: Hiển thị chat modal khi người dùng chọn chat
- *
- * Tác giả: [Tên của bạn]
- * Ngày cập nhật: 2025-06-12
- */
+import React, { useState, useEffect } from 'react';
+import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid } from 'react-icons/fa';
+import { FaRegStar as FaStarRegular } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import './AppointmentList.css';
+import ProtectedCoachChat from './ProtectedCoachChat';
 
 // Import các thư viện và dependencies cần thiết
 import React, { useState, useEffect } from "react";
@@ -149,26 +141,11 @@ export default function AppointmentList() {
   const [appointmentToRate, setAppointmentToRate] = useState(null);
   const [rating, setRating] = useState(0);
   const [ratingHover, setRatingHover] = useState(0);
-  const [ratingComment, setRatingComment] = useState("");
+  const [ratingComment, setRatingComment] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
-
-  // Lấy thông tin user từ AuthContext và khởi tạo navigate
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  /**
-   * Kiểm tra quyền truy cập tính năng dựa trên membership của user
-   * - Free: Không có quyền truy cập lịch hẹn coach
-   * - Premium/Pro: Có quyền truy cập đầy đủ
-   */
-  const userMembership = user?.membership || "free";
-  const hasAccess = hasAccessToFeature(userMembership, "premium");
-
-  // useEffect để tải danh sách lịch hẹn từ localStorage khi component mount
-  useEffect(() => {
-    /**
-     * Hàm fetch dữ liệu lịch hẹn từ localStorage
-     * Sắp xếp theo thời gian và highlight lịch hẹn mới nhất
-     */
+  const { user } = useAuth(); // Lấy thông tin user từ AuthContext
+  const navigate = useNavigate();useEffect(() => {
+    // Fetch appointments from localStorage
     const fetchAppointments = () => {
       setLoading(true);
       const storedAppointments =
@@ -512,12 +489,8 @@ export default function AppointmentList() {
     setRatingHover(0);
     setRatingComment("");
   };
-  /**
-   * Hàm xử lý submit đánh giá coach
-   * - Tạo object rating với stars, comment và timestamp
-   * - Cập nhật appointment với rating mới
-   * - Lưu vào localStorage và hiển thị toast thành công
-   */
+
+  // Handle rating submission
   const handleRatingSubmit = () => {
     if (appointmentToRate && rating > 0) {
       setIsSubmittingRating(true);
@@ -557,53 +530,30 @@ export default function AppointmentList() {
   return (
     <div className="appointments-container">
       <div className="appointments-header">
-        <h2>
-          <FaCalendarAlt /> Lịch hẹn Coach
-        </h2>
-        {hasAccess && (
-          <div className="filter-controls">
-            <button
-              className={`filter-button ${filter === "all" ? "active" : ""}`}
-              onClick={() => setFilter("all")}
-            >
-              Tất cả
-            </button>
-            <button
-              className={`filter-button ${
-                filter === "upcoming" ? "active" : ""
-              }`}
-              onClick={() => setFilter("upcoming")}
-            >
-              Sắp tới
-            </button>
-            <button
-              className={`filter-button ${filter === "past" ? "active" : ""}`}
-              onClick={() => setFilter("past")}
-            >
-              Đã qua
-            </button>
-          </div>
-        )}
-      </div>
-      {/* Premium feature message for free users */}
-      {!hasAccess ? (
-        <div className="premium-feature-message">
-          <div className="premium-icon">
-            <FaLock />
-          </div>
-          <h3>Tính năng dành riêng cho gói Premium</h3>
-          <p>
-            Để truy cập tính năng lịch hẹn Coach, vui lòng nâng cấp lên gói
-            Premium hoặc Pro.
-          </p>
-          <button
-            className="upgrade-now-button"
-            onClick={() => navigate("/membership")}
+        <h2><FaCalendarAlt /> Lịch hẹn Coach</h2>
+        <div className="filter-controls">
+          <button 
+            className={`filter-button ${filter === 'all' ? 'active' : ''}`}
+            onClick={() => setFilter('all')}
           >
-            <FaCrown /> Nâng cấp ngay
+            Tất cả
+          </button>
+          <button 
+            className={`filter-button ${filter === 'upcoming' ? 'active' : ''}`}
+            onClick={() => setFilter('upcoming')}
+          >
+            Sắp tới
+          </button>
+          <button 
+            className={`filter-button ${filter === 'past' ? 'active' : ''}`}
+            onClick={() => setFilter('past')}
+          >
+            Đã qua
           </button>
         </div>
-      ) : loading ? (
+      </div>
+
+      {loading ? (
         <div className="loading-message">
           <p>Đang tải lịch hẹn...</p>
         </div>
@@ -733,36 +683,49 @@ export default function AppointmentList() {
                       </button>
                     </>
                   )}
-                  {getStatusClass(appointment) === "completed" && (
-                    <>
-                      <button
-                        className="chat-button"
-                        onClick={() => handleOpenChat(appointment)}
-                      >
-                        <FaComments className="chat-button-icon" />
-                        Chat với Coach
-                        {hasUnreadMessages(appointment.id) && (
-                          <span className="chat-notification">!</span>
-                        )}
-                      </button>{" "}
-                      <button
-                        className="feedback-button"
-                        onClick={() => openRatingModal(appointment)}
-                      >
-                        {appointment.rating
-                          ? "Cập nhật đánh giá"
-                          : "Đánh giá Coach"}
-                      </button>
-                      <button
-                        className="rebook-button"
-                        onClick={() => openRebookModal(appointment)}
-                      >
-                        Đặt lại lịch hẹn
-                      </button>
-                    </>
-                  )}
-                  {getStatusClass(appointment) === "cancelled" && (
-                    <button
+                </div>
+              </div>
+                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
+                  <>
+                    <button 
+                      className={`chat-button ${(!user?.membership || user?.membership === 'free') ? 'premium-feature' : ''}`}
+                      onClick={() => handleOpenChat(appointment)}
+                    >
+                      <FaComments className="chat-button-icon" /> 
+                      Chat với Coach
+                      {(!user?.membership || user?.membership === 'free') && (
+                        <span className="premium-badge">Premium</span>
+                      )}
+                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
+                    </button>
+                    <button 
+                      className="reschedule-button"
+                      onClick={() => handleRescheduleAppointment(appointment)}
+                    >
+                      Thay đổi lịch
+                    </button><button 
+                      className="cancel-button"
+                      onClick={() => openCancelModal(appointment.id)}
+                    >
+                      Hủy lịch hẹn
+                    </button>
+                  </>
+                )}                {getStatusClass(appointment) === 'completed' && (
+                  <>
+                    <button 
+                      className="chat-button"
+                      onClick={() => handleOpenChat(appointment)}
+                    >
+                      <FaComments className="chat-button-icon" /> 
+                      Chat với Coach
+                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
+                    </button>                    <button 
+                      className="feedback-button"
+                      onClick={() => openRatingModal(appointment)}
+                    >
+                      {appointment.rating ? 'Cập nhật đánh giá' : 'Đánh giá Coach'}
+                    </button>
+                    <button 
                       className="rebook-button"
                       onClick={() => openRebookModal(appointment)}
                     >

@@ -29,9 +29,8 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
 
     // Tính tiền tiết kiệm (giả sử 1 gói = 25,000đ, 1 gói = 20 điếu)
     const pricePerCigarette = 25000 / 20;
-    const moneySaved = estimatedSaved * pricePerCigarette;
-    setDashboardStats({
-      daysSinceCompletion: daysSinceStart,
+    const moneySaved = estimatedSaved * pricePerCigarette;    setDashboardStats({
+      daysSincePlanCreation: daysSinceStart, // Renamed to clarify this is time since plan creation
       cigarettesSaved: estimatedSaved,
       moneySaved: moneySaved,
       planDuration: userPlan.weeks ? userPlan.weeks.length : 0,
@@ -59,7 +58,7 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
 
     const updatedMilestones = healthMilestones.map(milestone => ({
       ...milestone,
-      achieved: dashboardStats.daysSinceCompletion >= milestone.days
+      achieved: dashboardStats.daysSincePlanCreation >= milestone.days
     }));
     setMilestones(updatedMilestones);
   }, [userPlan, completionDate, dashboardStats]);
@@ -109,30 +108,14 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
   const achievementProgress = getAchievementProgress();
 
   return (
-    <div className="progress-dashboard">
-      {/* Header Celebration */}
-      <div className="dashboard-header">
-        <div className="celebration-badge">
-          <FaTrophy className="trophy-icon" />
-          <div className="celebration-text">
-            <h1>Chúc mừng! Bạn đã hoàn thành kế hoạch!</h1>
-            <p>Hãy tiếp tục duy trì thành quả này</p>
-          </div>
-        </div>
-        <div className="completion-date">
-          <FaCalendarCheck className="date-icon" />
-          <span>Hoàn thành: {new Date(completionDate).toLocaleDateString('vi-VN')}</span>
-        </div>
-      </div>
-
-      {/* Key Statistics */}
+    <div className="progress-dashboard">      {/* Key Statistics */}
       <div className="dashboard-stats">
         <div className="stat-card primary">
           <div className="stat-icon">
             <FaCalendarCheck />
           </div>
           <div className="stat-content">
-            <h3>{dashboardStats.daysSinceCompletion}</h3>
+            <h3>{dashboardStats.daysSincePlanCreation}</h3>
             <p>Ngày không hút thuốc</p>
           </div>
         </div>
@@ -199,7 +182,7 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
                 <p>{milestone.description}</p>
                 {!milestone.achieved && (
                   <span className="days-remaining">
-                    Còn {milestone.days - dashboardStats.daysSinceCompletion} ngày
+                    Còn {milestone.days - dashboardStats.daysSincePlanCreation} ngày
                   </span>
                 )}
               </div>
@@ -218,15 +201,15 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             <p>{nextMilestone.description}</p>
             <div className="milestone-progress">
               <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{
-                    width: `${(dashboardStats.daysSinceCompletion / nextMilestone.days) * 100}%`
+                <div 
+                  className="progress-fill" 
+                  style={{ 
+                    width: `${(dashboardStats.daysSincePlanCreation / nextMilestone.days) * 100}%` 
                   }}
                 ></div>
               </div>
               <span className="progress-text">
-                {dashboardStats.daysSinceCompletion}/{nextMilestone.days} ngày
+                {dashboardStats.daysSincePlanCreation}/{nextMilestone.days} ngày
               </span>
             </div>
           </div>
@@ -256,10 +239,9 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
 
       {/* Success Story */}
       <div className="success-story">
-        <h2>🎉 Câu chuyện thành công của bạn</h2>        <div className="story-content">
-          <p>
-            Bạn đã hoàn thành <strong>{userPlan?.name || 'Kế hoạch cá nhân'}</strong> và duy trì được{' '}
-            <strong>{dashboardStats.daysSinceCompletion} ngày</strong> không hút thuốc.
+        <h2>🎉 Câu chuyện thành công của bạn</h2>        <div className="story-content">          <p>
+            Bạn đã lập thành công <strong>{userPlan?.name || 'Kế hoạch cá nhân'}</strong> và duy trì được{' '}
+            <strong>{dashboardStats.daysSincePlanCreation} ngày</strong> không hút thuốc.
           </p>
           <p>
             Trong thời gian này, bạn đã tiết kiệm được{' '}

@@ -268,7 +268,7 @@ export default function JourneyStepper() {
 - Lý do cai thuốc: ${formData.reasonToQuit}
 
 📋 Kế hoạch: ${formData.selectedPlan?.name || "Kế hoạch cai thuốc"}
-- Thời gian hoàn thành: ${formData.selectedPlan?.totalWeeks || 0} tuần
+- Thời gian dự kiến: ${formData.selectedPlan?.totalWeeks || 0} tuần
 - Mô tả: ${formData.selectedPlan?.description || ""}
 
 💪 Hãy ủng hộ hành trình cai thuốc của tôi!
@@ -644,9 +644,7 @@ export default function JourneyStepper() {
             <div className="completion-screen">
               <div className="completion-checkmark-container">
                 <div className="completion-checkmark">✓</div>
-              </div>
-
-              <h2 className="completion-title">Chúc mừng bạn đã hoàn thành kế hoạch cai thuốc!</h2>
+              </div>              <h2 className="completion-title">Chúc mừng bạn đã tạo kế hoạch cai thuốc!</h2>
               <p className="completion-subtitle">Hành trình mới của bạn bắt đầu từ hôm nay</p>
 
               {/* Tóm tắt kế hoạch */}
@@ -673,9 +671,8 @@ export default function JourneyStepper() {
                     <div className="plan-summary-item">
                       <span className="summary-label">Lý do cai thuốc:</span>
                       <span className="summary-value">{formData.reasonToQuit}</span>
-                    </div>
-                    <div className="plan-summary-item">
-                      <span className="summary-label">Thời gian hoàn thành:</span>
+                    </div>                    <div className="plan-summary-item">
+                      <span className="summary-label">Thời gian dự kiến:</span>
                       <span className="summary-value">{formData.selectedPlan?.totalWeeks || 0} tuần</span>
                     </div>
                     <div className="plan-summary-item">
@@ -745,9 +742,8 @@ export default function JourneyStepper() {
                   <div className="stat-label">Điếu thuốc không hút mỗi năm</div>
                 </div>
                 <div className="completion-stat-card">
-                  <div className="stat-icon">⏱️</div>
-                  <div className="stat-value">{formData.selectedPlan?.totalWeeks / 4 || 0}</div>
-                  <div className="stat-label">Tháng để hoàn thành</div>
+                  <div className="stat-icon">⏱️</div>                  <div className="stat-value">{formData.selectedPlan?.totalWeeks / 4 || 0}</div>
+                  <div className="stat-label">Tháng thực hiện dự kiến</div>
                 </div>
               </div>
               <div className="completion-timeline">
@@ -916,7 +912,7 @@ export default function JourneyStepper() {
 
                   <div className="form-actions">                {isCompleted ? (
                     <button className="btn-back-to-summary" onClick={handleBackToSummary}>
-                      Xem màn hình hoàn thành
+                      Xem tổng quan kế hoạch
                     </button>
                   ) : (
                     <button className="btn-next" onClick={handleContinue}>
@@ -1101,12 +1097,11 @@ export default function JourneyStepper() {
                             <div className="timeline-item complete">
                               <div className="timeline-week">Mục tiêu</div>
                               <div className="timeline-amount">0 điếu</div>
-                              <div className="timeline-reduction">✅</div>
-                              <div
+                              <div className="timeline-reduction">✅</div>                              <div
                                 className="timeline-phase"
                                 style={{ backgroundColor: '#28a745' }}
                               >
-                                Hoàn thành
+                                Mục tiêu đạt được
                               </div>
                             </div>
                           </div>
@@ -1341,8 +1336,7 @@ export default function JourneyStepper() {
                     </div>
                     <div className="congratulations-message">
                       <div className="congrats-icon">🎉</div>
-                      <div className="congrats-text">
-                        <h3>Chúc mừng bạn đã hoàn thành kế hoạch cai thuốc!</h3>
+                      <div className="congrats-text">                        <h3>Chúc mừng bạn đã lập kế hoạch cai thuốc!</h3>
                         <p>Hãy kiên trì thực hiện, chúng tôi sẽ luôn bên cạnh hỗ trợ bạn trong suốt hành trình này.</p>
                       </div>
                     </div>
@@ -1384,14 +1378,13 @@ export default function JourneyStepper() {
                     <>
                       <button className="btn-back" onClick={handleBack}>
                         <span className="btn-arrow">←</span> Quay lại
-                      </button>
-                      {isCompleted ? (
+                      </button>                      {isCompleted ? (
                         <button className="btn-back-to-summary" onClick={handleBackToSummary}>
-                          Xem màn hình hoàn thành
+                          Xem tổng quan kế hoạch
                         </button>
                       ) : (
                         <button className="btn-submit" onClick={handleSubmit}>
-                          Hoàn thành kế hoạch
+                          Lập kế hoạch cai thuốc
                         </button>
                       )}
                     </>
