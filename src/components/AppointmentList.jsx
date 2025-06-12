@@ -15,14 +15,28 @@
  */
 
 // Import các thư viện và dependencies cần thiết
-import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid, FaCrown, FaLock } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import {
+  FaCalendarAlt,
+  FaUserAlt,
+  FaClock,
+  FaMapMarkerAlt,
+  FaCheck,
+  FaTimes,
+  FaInfoCircle,
+  FaComments,
+  FaExclamationTriangle,
+  FaTrashAlt,
+  FaStar as FaStarSolid,
+  FaCrown,
+  FaLock,
+} from "react-icons/fa";
 import { FaRegStar as FaStarRegular } from "react-icons/fa";
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { hasAccessToFeature } from '../utils/membershipUtils';
-import './AppointmentList.css';
-import ProtectedCoachChat from './ProtectedCoachChat';
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { hasAccessToFeature } from "../utils/membershipUtils";
+import "./AppointmentList.css";
+import ProtectedCoachChat from "./ProtectedCoachChat";
 
 /**
  * Component hiển thị card cho lịch hẹn đã bị hủy
@@ -30,19 +44,24 @@ import ProtectedCoachChat from './ProtectedCoachChat';
  * @param {Function} onRebook - Hàm callback để đặt lại lịch hẹn
  * @param {Function} onDelete - Hàm callback để xóa lịch hẹn
  */
-const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {  // Hàm format ngày hiển thị theo định dạng Việt Nam
+const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {
+  // Hàm format ngày hiển thị theo định dạng Việt Nam
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString("vi-VN", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    });
   };
-    /**
+  /**
    * Hàm xử lý khi người dùng click nút "Đặt lại lịch hẹn"
    * Lưu thông tin appointment vào localStorage để tái sử dụng
    */
   const handleRebookClick = () => {
     onRebook(appointment);
   };
-  
+
   /**
    * Hàm xử lý khi người dùng click nút "Xóa lịch hẹn"
    * Gọi callback từ component cha để xử lý việc xóa
@@ -60,20 +79,25 @@ const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {  // 
           <span className="cancelled-id">#{appointment.id}</span>
         </div>
       </div>
-      
+
       {/* Body hiển thị thông tin coach và lịch hẹn */}
       <div className="cancelled-body">
-        <img src={appointment.coachAvatar} alt={appointment.coachName} className="coach-avatar" />
+        <img
+          src={appointment.coachAvatar}
+          alt={appointment.coachName}
+          className="coach-avatar"
+        />
         <div className="cancelled-info">
           <h3 className="coach-name">{appointment.coachName}</h3>
           <p className="coach-role">{appointment.coachRole}</p>
           <div className="cancelled-date">
-            <FaCalendarAlt /> 
+            <FaCalendarAlt />
             {formatDate(appointment.date)}, {appointment.time}
             <span className="online-badge">Tư vấn trực tuyến</span>
           </div>
-        </div>      </div>      
-      
+        </div>{" "}
+      </div>
+
       {/* Footer chứa các nút hành động */}
       <div className="cancelled-footer">
         <button className="delete-button" onClick={handleDeleteClick}>
@@ -94,49 +118,50 @@ const CancelledAppointmentCard = ({ appointment, onRebook, onDelete }) => {  // 
 export default function AppointmentList() {
   // States quản lý danh sách lịch hẹn và các filter
   const [appointments, setAppointments] = useState([]);
-  const [filter, setFilter] = useState('all'); // 'all', 'upcoming', 'past'
+  const [filter, setFilter] = useState("all"); // 'all', 'upcoming', 'past'
   const [loading, setLoading] = useState(true);
   const [newAppointmentId, setNewAppointmentId] = useState(null);
-  
+
   // States quản lý chức năng chat với coach
   const [showChat, setShowChat] = useState(false);
   const [selectedCoach, setSelectedCoach] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  
+
   // States quản lý modal hủy lịch hẹn
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
-  
+
   // States quản lý modal đặt lại lịch hẹn
   const [showRebookModal, setShowRebookModal] = useState(false);
   const [appointmentToRebook, setAppointmentToRebook] = useState(null);
-  
+
   // States quản lý modal xóa lịch hẹn
-  const [showDeleteModal, setShowDeleteModal] = useState(false);  
-  const [appointmentToDelete, setAppointmentToDelete] = useState(null);  
-  
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+
   // States quản lý thông báo toast
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   // States quản lý modal đánh giá coach
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [appointmentToRate, setAppointmentToRate] = useState(null);
   const [rating, setRating] = useState(0);
   const [ratingHover, setRatingHover] = useState(0);
-  const [ratingComment, setRatingComment] = useState('');
-  const [isSubmittingRating, setIsSubmittingRating] = useState(false);  
-  
+  const [ratingComment, setRatingComment] = useState("");
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+
   // Lấy thông tin user từ AuthContext và khởi tạo navigate
   const { user } = useAuth();
-  const navigate = useNavigate();    /**
+  const navigate = useNavigate();
+  /**
    * Kiểm tra quyền truy cập tính năng dựa trên membership của user
    * - Free: Không có quyền truy cập lịch hẹn coach
    * - Premium/Pro: Có quyền truy cập đầy đủ
    */
-  const userMembership = user?.membership || 'free';
-  const hasAccess = hasAccessToFeature(userMembership, 'premium');
+  const userMembership = user?.membership || "free";
+  const hasAccess = hasAccessToFeature(userMembership, "premium");
 
   // useEffect để tải danh sách lịch hẹn từ localStorage khi component mount
   useEffect(() => {
@@ -146,55 +171,59 @@ export default function AppointmentList() {
      */
     const fetchAppointments = () => {
       setLoading(true);
-      const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
-      
+      const storedAppointments =
+        JSON.parse(localStorage.getItem("appointments")) || [];
+
       // Debug: Log ngày hiện tại
-      console.log('Ngày hiện tại:', new Date().toLocaleDateString('vi-VN'));
-      
+      console.log("Ngày hiện tại:", new Date().toLocaleDateString("vi-VN"));
+
       // Sắp xếp lịch hẹn theo thời gian (mới nhất trước)
       const sortedAppointments = storedAppointments.sort((a, b) => {
-        const dateA = new Date(`${a.date.split('T')[0]}T${a.time}`);
-        const dateB = new Date(`${b.date.split('T')[0]}T${b.time}`);
+        const dateA = new Date(`${a.date.split("T")[0]}T${a.time}`);
+        const dateB = new Date(`${b.date.split("T")[0]}T${b.time}`);
         return dateB - dateA;
       });
-      
+
       // Highlight lịch hẹn mới nhất nếu có
       if (sortedAppointments.length > 0) {
         setNewAppointmentId(sortedAppointments[0].id);
-        
+
         // Tự động chuyển sang tab "Sắp tới" để hiển thị lịch hẹn mới
-        setFilter('upcoming');
-        
+        setFilter("upcoming");
+
         // Sau 5 giây thì tắt highlight
         setTimeout(() => {
           setNewAppointmentId(null);
         }, 5000);
       }
-      
+
       setAppointments(sortedAppointments);
       setLoading(false);
     };
 
     fetchAppointments();
-  }, []);  /**
+  }, []);
+  /**
    * Hàm lọc danh sách lịch hẹn dựa trên filter được chọn
    * - 'all': Hiển thị tất cả lịch hẹn
    * - 'upcoming': Hiển thị lịch hẹn sắp tới (ngày >= hôm nay, chưa hủy)
    * - 'past': Hiển thị lịch hẹn đã qua (ngày < hôm nay hoặc đã hủy)
    */
-  const filteredAppointments = appointments.filter(appointment => {
+  const filteredAppointments = appointments.filter((appointment) => {
     // Lấy ngày hiện tại và reset giờ về 00:00:00 để so sánh chính xác theo ngày
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     // Lấy ngày lịch hẹn và reset giờ về 00:00:00
-    const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
+    const appointmentDate = new Date(
+      `${appointment.date.split("T")[0]}T${appointment.time}`
+    );
     const appointmentDay = new Date(appointmentDate);
     appointmentDay.setHours(0, 0, 0, 0);
-    
+
     // Xử lý đặc biệt cho lịch hẹn đã hủy
-    if (appointment.status === 'cancelled') {
-      if (filter === 'upcoming') {
+    if (appointment.status === "cancelled") {
+      if (filter === "upcoming") {
         return false; // Lịch đã hủy không hiển thị trong "Sắp tới"
       } else {
         return true; // Hiển thị trong "Tất cả" và "Đã qua"
@@ -202,80 +231,87 @@ export default function AppointmentList() {
     }
 
     // Logic lọc dựa trên ngày và trạng thái
-    if (filter === 'upcoming') {
+    if (filter === "upcoming") {
       // Filter "Sắp tới": Lịch hẹn có ngày >= hôm nay và chưa hoàn thành/hủy
       return appointmentDay >= today;
-    } else if (filter === 'past') {
+    } else if (filter === "past") {
       // Filter "Đã qua": Lịch hẹn có ngày < hôm nay hoặc đã hủy
-      return appointmentDay < today || appointment.status === 'cancelled';
+      return appointmentDay < today || appointment.status === "cancelled";
     }
-    
+
     return true; // 'all' filter: hiển thị tất cả
-  });  /**
+  });
+  /**
    * Hàm format ngày hiển thị theo định dạng tiếng Việt
    * @param {string} dateString - Chuỗi ngày cần format
    * @returns {string} - Ngày đã được format
    */
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', { 
-      weekday: 'long', 
-      day: 'numeric', 
-      month: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString("vi-VN", {
+      weekday: "long",
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
     });
-  };  /**
+  };
+  /**
    * Hàm xác định class CSS cho trạng thái lịch hẹn
    * @param {Object} appointment - Thông tin lịch hẹn
    * @returns {string} - Class CSS tương ứng với trạng thái
    */
   const getStatusClass = (appointment) => {
-    if (appointment.status === 'cancelled') {
-      return 'cancelled';
-    } else if (appointment.status === 'confirmed') {
+    if (appointment.status === "cancelled") {
+      return "cancelled";
+    } else if (appointment.status === "confirmed") {
       // So sánh ngày để xác định lịch hẹn đã hoàn thành hay chưa
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
-      const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
+
+      const appointmentDate = new Date(
+        `${appointment.date.split("T")[0]}T${appointment.time}`
+      );
       const appointmentDay = new Date(appointmentDate);
       appointmentDay.setHours(0, 0, 0, 0);
-      
+
       // Lịch hẹn được đánh dấu hoàn thành nếu ngày hẹn < ngày hiện tại
       if (appointmentDay < today) {
-        return 'completed';
+        return "completed";
       } else {
-        return 'confirmed';
+        return "confirmed";
       }
     }
-    
-    return '';
-  };  /**
+
+    return "";
+  };
+  /**
    * Hàm lấy text hiển thị cho trạng thái lịch hẹn
    * @param {Object} appointment - Thông tin lịch hẹn
    * @returns {string} - Text trạng thái để hiển thị
    */
   const getStatusText = (appointment) => {
-    if (appointment.status === 'cancelled') {
-      return 'Đã hủy';
-    } else if (appointment.status === 'confirmed') {
+    if (appointment.status === "cancelled") {
+      return "Đã hủy";
+    } else if (appointment.status === "confirmed") {
       // So sánh ngày để xác định text phù hợp
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
-      const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
+
+      const appointmentDate = new Date(
+        `${appointment.date.split("T")[0]}T${appointment.time}`
+      );
       const appointmentDay = new Date(appointmentDate);
       appointmentDay.setHours(0, 0, 0, 0);
-      
+
       // Text thay đổi dựa trên việc lịch hẹn đã qua hay chưa
       if (appointmentDay < today) {
-        return 'Đã hoàn thành';
+        return "Đã hoàn thành";
       } else {
-        return 'Đã xác nhận';
+        return "Đã xác nhận";
       }
     }
-    
-    return 'Chờ xác nhận';
+
+    return "Chờ xác nhận";
   };
   // Open cancel confirmation modal
   const openCancelModal = (id) => {
@@ -296,18 +332,19 @@ export default function AppointmentList() {
    */
   const handleCancelAppointment = () => {
     if (appointmentToCancel) {
-      const updatedAppointments = appointments.map(appointment => {
+      const updatedAppointments = appointments.map((appointment) => {
         if (appointment.id === appointmentToCancel) {
-          return { ...appointment, status: 'cancelled' };
+          return { ...appointment, status: "cancelled" };
         }
         return appointment;
       });
-      
+
       setAppointments(updatedAppointments);
-      localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+      localStorage.setItem("appointments", JSON.stringify(updatedAppointments));
       closeCancelModal();
     }
-  };  /**
+  };
+  /**
    * Hàm xử lý thay đổi lịch hẹn (reschedule)
    * - Lưu thông tin appointment cần reschedule vào localStorage
    * - Chuyển hướng đến trang booking với flag reschedule=true
@@ -315,10 +352,13 @@ export default function AppointmentList() {
    */
   const handleRescheduleAppointment = (appointment) => {
     // Store the appointment to reschedule in localStorage
-    localStorage.setItem('appointmentToReschedule', JSON.stringify(appointment));
-    
+    localStorage.setItem(
+      "appointmentToReschedule",
+      JSON.stringify(appointment)
+    );
+
     // Navigate to the appointment booking page with query param
-    navigate('/appointment?reschedule=true');
+    navigate("/appointment?reschedule=true");
   };
   // Open rebook confirmation modal
   const openRebookModal = (appointment) => {
@@ -330,7 +370,8 @@ export default function AppointmentList() {
   const closeRebookModal = () => {
     setShowRebookModal(false);
     setAppointmentToRebook(null);
-  };  /**
+  };
+  /**
    * Hàm xử lý đặt lại lịch hẹn mới sau khi hủy hoặc hoàn thành
    * - Tạo object chứa thông tin coach để pre-fill form
    * - Lưu vào localStorage với key 'rebookCoach'
@@ -344,14 +385,14 @@ export default function AppointmentList() {
         coachId: appointmentToRebook.coachId,
         coachName: appointmentToRebook.coachName,
         coachAvatar: appointmentToRebook.coachAvatar,
-        coachRole: appointmentToRebook.coachRole
+        coachRole: appointmentToRebook.coachRole,
       };
-      
-      localStorage.setItem('rebookCoach', JSON.stringify(rebookData));
-      
+
+      localStorage.setItem("rebookCoach", JSON.stringify(rebookData));
+
       // Đóng modal và chuyển trang
       closeRebookModal();
-      navigate('/appointment?rebook=true');
+      navigate("/appointment?rebook=true");
     }
   };
   // Open delete confirmation modal
@@ -364,7 +405,8 @@ export default function AppointmentList() {
   const closeDeleteModal = () => {
     setShowDeleteModal(false);
     setAppointmentToDelete(null);
-  };  /**
+  };
+  /**
    * Hàm xử lý xóa vĩnh viễn lịch hẹn đã hủy
    * - Hiển thị loading state trong quá trình xóa
    * - Filter appointment khỏi danh sách
@@ -375,25 +417,28 @@ export default function AppointmentList() {
     if (appointmentToDelete) {
       // Set deleting state to true để hiển thị loading
       setIsDeleting(true);
-      
+
       // Simulate a short delay for better UX
       setTimeout(() => {
         // Filter out the appointment to delete
         const updatedAppointments = appointments.filter(
-          appointment => appointment.id !== appointmentToDelete.id
+          (appointment) => appointment.id !== appointmentToDelete.id
         );
-        
+
         setAppointments(updatedAppointments);
-        localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+        localStorage.setItem(
+          "appointments",
+          JSON.stringify(updatedAppointments)
+        );
         closeDeleteModal();
-        
+
         // Reset deleting state
         setIsDeleting(false);
-        
+
         // Show success toast
-        setToastMessage('Lịch hẹn đã được xóa thành công!');
+        setToastMessage("Lịch hẹn đã được xóa thành công!");
         setShowToast(true);
-        
+
         // Hide toast after 3 seconds
         setTimeout(() => {
           setShowToast(false);
@@ -411,16 +456,16 @@ export default function AppointmentList() {
     const coach = {
       name: appointment.coachName,
       avatar: appointment.coachAvatar,
-      role: appointment.coachRole
+      role: appointment.coachRole,
     };
-    
+
     setSelectedCoach(coach);
     setSelectedAppointment(appointment);
     setShowChat(true);
-    
+
     // Clear any unread messages when opening the chat
     const unreadKey = `unread_messages_${appointment.id}`;
-    localStorage.setItem(unreadKey, '0');
+    localStorage.setItem(unreadKey, "0");
   };
 
   /**
@@ -430,7 +475,7 @@ export default function AppointmentList() {
   const handleCloseChat = () => {
     setShowChat(false);
   };
-  
+
   /**
    * Kiểm tra xem appointment có tin nhắn chưa đọc không
    * @param {string} appointmentId - ID của appointment
@@ -446,16 +491,16 @@ export default function AppointmentList() {
   const openRatingModal = (appointment) => {
     setAppointmentToRate(appointment);
     setShowRatingModal(true);
-    
+
     // Check if the appointment already has a rating
     const existingRating = appointment.rating;
     if (existingRating) {
       setRating(existingRating.stars);
-      setRatingComment(existingRating.comment || '');
+      setRatingComment(existingRating.comment || "");
     } else {
       // Reset rating state if it's a new rating
       setRating(0);
-      setRatingComment('');
+      setRatingComment("");
     }
   };
 
@@ -465,8 +510,9 @@ export default function AppointmentList() {
     setAppointmentToRate(null);
     setRating(0);
     setRatingHover(0);
-    setRatingComment('');
-  };  /**
+    setRatingComment("");
+  };
+  /**
    * Hàm xử lý submit đánh giá coach
    * - Tạo object rating với stars, comment và timestamp
    * - Cập nhật appointment với rating mới
@@ -475,30 +521,30 @@ export default function AppointmentList() {
   const handleRatingSubmit = () => {
     if (appointmentToRate && rating > 0) {
       setIsSubmittingRating(true);
-      
+
       // Create rating object
       const ratingObj = {
         stars: rating,
         comment: ratingComment,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
       };
-      
+
       // Update the appointment with the rating
-      const updatedAppointments = appointments.map(appointment => {
+      const updatedAppointments = appointments.map((appointment) => {
         if (appointment.id === appointmentToRate.id) {
           return { ...appointment, rating: ratingObj };
         }
         return appointment;
       });
-      
+
       // Update localStorage and state
       setAppointments(updatedAppointments);
-      localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
-      
+      localStorage.setItem("appointments", JSON.stringify(updatedAppointments));
+
       // Show success toast
-      setToastMessage('Đánh giá của bạn đã được gửi thành công!');
+      setToastMessage("Đánh giá của bạn đã được gửi thành công!");
       setShowToast(true);
-      
+
       // Reset states
       setTimeout(() => {
         setIsSubmittingRating(false);
@@ -511,31 +557,34 @@ export default function AppointmentList() {
   return (
     <div className="appointments-container">
       <div className="appointments-header">
-        <h2><FaCalendarAlt /> Lịch hẹn Coach</h2>
+        <h2>
+          <FaCalendarAlt /> Lịch hẹn Coach
+        </h2>
         {hasAccess && (
           <div className="filter-controls">
-            <button 
-              className={`filter-button ${filter === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter('all')}
+            <button
+              className={`filter-button ${filter === "all" ? "active" : ""}`}
+              onClick={() => setFilter("all")}
             >
               Tất cả
             </button>
-            <button 
-              className={`filter-button ${filter === 'upcoming' ? 'active' : ''}`}
-              onClick={() => setFilter('upcoming')}
+            <button
+              className={`filter-button ${
+                filter === "upcoming" ? "active" : ""
+              }`}
+              onClick={() => setFilter("upcoming")}
             >
               Sắp tới
             </button>
-            <button 
-              className={`filter-button ${filter === 'past' ? 'active' : ''}`}
-              onClick={() => setFilter('past')}
+            <button
+              className={`filter-button ${filter === "past" ? "active" : ""}`}
+              onClick={() => setFilter("past")}
             >
               Đã qua
             </button>
           </div>
         )}
       </div>
-
       {/* Premium feature message for free users */}
       {!hasAccess ? (
         <div className="premium-feature-message">
@@ -544,11 +593,12 @@ export default function AppointmentList() {
           </div>
           <h3>Tính năng dành riêng cho gói Premium</h3>
           <p>
-            Để truy cập tính năng lịch hẹn Coach, vui lòng nâng cấp lên gói Premium hoặc Pro.
+            Để truy cập tính năng lịch hẹn Coach, vui lòng nâng cấp lên gói
+            Premium hoặc Pro.
           </p>
-          <button 
+          <button
             className="upgrade-now-button"
-            onClick={() => navigate('/membership')}
+            onClick={() => navigate("/membership")}
           >
             <FaCrown /> Nâng cấp ngay
           </button>
@@ -560,128 +610,172 @@ export default function AppointmentList() {
       ) : filteredAppointments.length === 0 ? (
         <div className="empty-appointments">
           <FaInfoCircle />
-          <p>Bạn chưa có lịch hẹn {filter === 'upcoming' ? 'sắp tới' : filter === 'past' ? 'đã qua' : 'nào'}.</p>
-          {filter !== 'upcoming' && (
-            <a href="/appointment" className="book-button">Đặt lịch hẹn ngay</a>
+          <p>
+            Bạn chưa có lịch hẹn{" "}
+            {filter === "upcoming"
+              ? "sắp tới"
+              : filter === "past"
+              ? "đã qua"
+              : "nào"}
+            .
+          </p>
+          {filter !== "upcoming" && (
+            <a href="/appointment" className="book-button">
+              Đặt lịch hẹn ngay
+            </a>
           )}
         </div>
-      ) : (        <div className="appointments-list">          {filteredAppointments.map(appointment => (
-            appointment.status === 'cancelled' ? (              <CancelledAppointmentCard 
+      ) : (
+        <div className="appointments-list">
+          {" "}
+          {filteredAppointments.map((appointment) =>
+            appointment.status === "cancelled" ? (
+              <CancelledAppointmentCard
                 key={appointment.id}
                 appointment={appointment}
                 onRebook={openRebookModal}
                 onDelete={openDeleteModal}
               />
             ) : (
-            <div 
-              key={appointment.id} 
-              className={`appointment-card ${getStatusClass(appointment)} ${newAppointmentId === appointment.id ? 'new-appointment' : ''}`}
-            ><div className="appointment-header">
-                <div className={`appointment-status ${getStatusClass(appointment)}`}>
-                  {getStatusClass(appointment) === 'confirmed' && <FaCheck />}
-                  {getStatusClass(appointment) === 'cancelled' && <FaTimes />}
-                  {getStatusClass(appointment) === 'completed' && <FaCheck />}
-                  <span>{getStatusText(appointment)}</span>
-                </div>
-                <div className="appointment-id">
-                  #{appointment.id} 
-                  {newAppointmentId === appointment.id && <span className="new-badge">Mới</span>}
-                </div>
-              </div>
-              
-              <div className="appointment-body">
-                <div className="coach-info">
-                  <img src={appointment.coachAvatar} alt={appointment.coachName} className="coach-avatar" />
-                  <div className="coach-details">
-                    <h3>{appointment.coachName}</h3>
-                    <p>{appointment.coachRole}</p>
+              <div
+                key={appointment.id}
+                className={`appointment-card ${getStatusClass(appointment)} ${
+                  newAppointmentId === appointment.id ? "new-appointment" : ""
+                }`}
+              >
+                <div className="appointment-header">
+                  <div
+                    className={`appointment-status ${getStatusClass(
+                      appointment
+                    )}`}
+                  >
+                    {getStatusClass(appointment) === "confirmed" && <FaCheck />}
+                    {getStatusClass(appointment) === "cancelled" && <FaTimes />}
+                    {getStatusClass(appointment) === "completed" && <FaCheck />}
+                    <span>{getStatusText(appointment)}</span>
+                  </div>
+                  <div className="appointment-id">
+                    #{appointment.id}
+                    {newAppointmentId === appointment.id && (
+                      <span className="new-badge">Mới</span>
+                    )}
                   </div>
                 </div>
-                
-                <div className="appointment-details">
-                  <div className="detail-item">
-                    <FaCalendarAlt />
-                    <span>{formatDate(appointment.date)}</span>
-                  </div>
-                  <div className="detail-item">
-                    <FaClock />
-                    <span>{appointment.time}</span>
-                  </div>
-                  <div className="detail-item">
-                    <FaMapMarkerAlt />
-                    <span>Tư vấn trực tuyến</span>
-                  </div>
-                  {appointment.rating && (
-                    <div className="detail-item rating-display">
-                      <div className="stars-display">
-                        {[...Array(5)].map((_, i) => (
-                          <span key={i}>
-                            {i < appointment.rating.stars ? 
-                              <FaStarSolid className="star-small filled" /> : 
-                              <FaStarRegular className="star-small" />}
-                          </span>
-                        ))}
-                      </div>
-                      <span className="rating-date">Đã đánh giá</span>
+                <div className="appointment-body">
+                  <div className="coach-info">
+                    <img
+                      src={appointment.coachAvatar}
+                      alt={appointment.coachName}
+                      className="coach-avatar"
+                    />
+                    <div className="coach-details">
+                      <h3>{appointment.coachName}</h3>
+                      <p>{appointment.coachRole}</p>
                     </div>
+                  </div>
+
+                  <div className="appointment-details">
+                    <div className="detail-item">
+                      <FaCalendarAlt />
+                      <span>{formatDate(appointment.date)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <FaClock />
+                      <span>{appointment.time}</span>
+                    </div>
+                    <div className="detail-item">
+                      <FaMapMarkerAlt />
+                      <span>Tư vấn trực tuyến</span>
+                    </div>
+                    {appointment.rating && (
+                      <div className="detail-item rating-display">
+                        <div className="stars-display">
+                          {[...Array(5)].map((_, i) => (
+                            <span key={i}>
+                              {i < appointment.rating.stars ? (
+                                <FaStarSolid className="star-small filled" />
+                              ) : (
+                                <FaStarRegular className="star-small" />
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                        <span className="rating-date">Đã đánh giá</span>
+                      </div>
+                    )}
+                  </div>
+                </div>{" "}
+                <div className="appointment-footer">
+                  {" "}
+                  {getStatusClass(appointment) === "confirmed" && (
+                    <>
+                      <button
+                        className="chat-button"
+                        onClick={() => handleOpenChat(appointment)}
+                      >
+                        <FaComments className="chat-button-icon" />
+                        Chat với Coach
+                        {hasUnreadMessages(appointment.id) && (
+                          <span className="chat-notification">!</span>
+                        )}
+                      </button>
+                      <button
+                        className="reschedule-button"
+                        onClick={() => handleRescheduleAppointment(appointment)}
+                      >
+                        Thay đổi lịch
+                      </button>
+                      <button
+                        className="cancel-button"
+                        onClick={() => openCancelModal(appointment.id)}
+                      >
+                        Hủy lịch hẹn
+                      </button>
+                    </>
                   )}
-                </div>
-              </div>                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
-                  <>
-                    <button 
-                      className="chat-button"
-                      onClick={() => handleOpenChat(appointment)}
-                    >
-                      <FaComments className="chat-button-icon" /> 
-                      Chat với Coach
-                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
-                    </button>
-                    <button 
-                      className="reschedule-button"
-                      onClick={() => handleRescheduleAppointment(appointment)}
-                    >
-                      Thay đổi lịch
-                    </button><button 
-                      className="cancel-button"
-                      onClick={() => openCancelModal(appointment.id)}
-                    >
-                      Hủy lịch hẹn
-                    </button>
-                  </>
-                )}{getStatusClass(appointment) === 'completed' && (
-                  <>
-                    <button 
-                      className="chat-button"
-                      onClick={() => handleOpenChat(appointment)}
-                    >
-                      <FaComments className="chat-button-icon" /> 
-                      Chat với Coach
-                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
-                    </button>                    <button 
-                      className="feedback-button"
-                      onClick={() => openRatingModal(appointment)}
-                    >
-                      {appointment.rating ? 'Cập nhật đánh giá' : 'Đánh giá Coach'}
-                    </button>
-                    <button 
+                  {getStatusClass(appointment) === "completed" && (
+                    <>
+                      <button
+                        className="chat-button"
+                        onClick={() => handleOpenChat(appointment)}
+                      >
+                        <FaComments className="chat-button-icon" />
+                        Chat với Coach
+                        {hasUnreadMessages(appointment.id) && (
+                          <span className="chat-notification">!</span>
+                        )}
+                      </button>{" "}
+                      <button
+                        className="feedback-button"
+                        onClick={() => openRatingModal(appointment)}
+                      >
+                        {appointment.rating
+                          ? "Cập nhật đánh giá"
+                          : "Đánh giá Coach"}
+                      </button>
+                      <button
+                        className="rebook-button"
+                        onClick={() => openRebookModal(appointment)}
+                      >
+                        Đặt lại lịch hẹn
+                      </button>
+                    </>
+                  )}
+                  {getStatusClass(appointment) === "cancelled" && (
+                    <button
                       className="rebook-button"
                       onClick={() => openRebookModal(appointment)}
                     >
                       Đặt lại lịch hẹn
                     </button>
-                  </>
-                )}{getStatusClass(appointment) === 'cancelled' && (
-                  <button 
-                    className="rebook-button"
-                    onClick={() => openRebookModal(appointment)}
-                  >
-                    Đặt lại lịch hẹn
-                  </button>
-                )}</div>
-            </div>
+                  )}
+                </div>
+              </div>
             )
-          ))}
-        </div>      )}        {/* Coach Chat Modal */}
+          )}
+        </div>
+      )}{" "}
+      {/* Coach Chat Modal */}
       {showChat && selectedCoach && selectedAppointment && (
         <ProtectedCoachChat
           coach={selectedCoach}
@@ -689,7 +783,8 @@ export default function AppointmentList() {
           isOpen={showChat}
           onClose={handleCloseChat}
         />
-      )}{/* Cancel Confirmation Modal */}
+      )}
+      {/* Cancel Confirmation Modal */}
       {showCancelModal && (
         <div className="modal-overlay">
           <div className="confirmation-modal">
@@ -699,10 +794,13 @@ export default function AppointmentList() {
             <h3>Xác nhận hủy lịch hẹn</h3>
             {appointmentToCancel && (
               <p>
-                Bạn có chắc chắn muốn hủy lịch hẹn vào
-                {' '}
+                Bạn có chắc chắn muốn hủy lịch hẹn vào{" "}
                 <strong>
-                  {appointments.find(a => a.id === appointmentToCancel)?.time} - {formatDate(appointments.find(a => a.id === appointmentToCancel)?.date)}
+                  {appointments.find((a) => a.id === appointmentToCancel)?.time}{" "}
+                  -{" "}
+                  {formatDate(
+                    appointments.find((a) => a.id === appointmentToCancel)?.date
+                  )}
                 </strong>
                 ?
                 <br />
@@ -713,14 +811,16 @@ export default function AppointmentList() {
               <button className="cancel-action" onClick={closeCancelModal}>
                 Giữ lại
               </button>
-              <button className="confirm-action" onClick={handleCancelAppointment}>
+              <button
+                className="confirm-action"
+                onClick={handleCancelAppointment}
+              >
                 Hủy lịch
               </button>
             </div>
           </div>
         </div>
       )}
-      
       {/* Rebook Confirmation Modal */}
       {showRebookModal && (
         <div className="modal-overlay">
@@ -731,11 +831,8 @@ export default function AppointmentList() {
             <h3>Đặt lại lịch hẹn</h3>
             {appointmentToRebook && (
               <p>
-                Bạn muốn đặt lại lịch hẹn với coach
-                {' '}
-                <strong>
-                  {appointmentToRebook.coachName}
-                </strong>
+                Bạn muốn đặt lại lịch hẹn với coach{" "}
+                <strong>{appointmentToRebook.coachName}</strong>
                 ?
                 <br />
                 <span>Bạn sẽ được chuyển đến trang đặt lịch.</span>
@@ -745,14 +842,16 @@ export default function AppointmentList() {
               <button className="cancel-action" onClick={closeRebookModal}>
                 Hủy bỏ
               </button>
-              <button className="confirm-action rebook" onClick={handleRebookAppointment}>
+              <button
+                className="confirm-action rebook"
+                onClick={handleRebookAppointment}
+              >
                 Đặt lịch
               </button>
             </div>
           </div>
         </div>
       )}
-      
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="modal-overlay">
@@ -763,22 +862,35 @@ export default function AppointmentList() {
             <h3>Xác nhận xóa lịch hẹn</h3>
             {appointmentToDelete && (
               <p>
-                Bạn có chắc chắn muốn xóa lịch hẹn với coach 
+                Bạn có chắc chắn muốn xóa lịch hẹn với coach
                 <strong> {appointmentToDelete.coachName} </strong>
-                vào ngày
-                {' '}
+                vào ngày{" "}
                 <strong>
-                  {appointmentToDelete.time} - {formatDate(appointmentToDelete.date)}
+                  {appointmentToDelete.time} -{" "}
+                  {formatDate(appointmentToDelete.date)}
                 </strong>
                 ?
                 <br />
-                <span>Hành động này sẽ xóa vĩnh viễn lịch hẹn và không thể khôi phục.</span>
+                <span>
+                  Hành động này sẽ xóa vĩnh viễn lịch hẹn và không thể khôi
+                  phục.
+                </span>
               </p>
             )}
-            <div className="confirmation-actions">              <button className="cancel-action" onClick={closeDeleteModal} disabled={isDeleting}>
+            <div className="confirmation-actions">
+              {" "}
+              <button
+                className="cancel-action"
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+              >
                 Quay lại
               </button>
-              <button className="confirm-action delete" onClick={handleDeleteAppointment} disabled={isDeleting}>
+              <button
+                className="confirm-action delete"
+                onClick={handleDeleteAppointment}
+                disabled={isDeleting}
+              >
                 {isDeleting ? (
                   <span className="deleting-text">Đang xóa...</span>
                 ) : (
@@ -791,40 +903,39 @@ export default function AppointmentList() {
           </div>
         </div>
       )}
-        {/* Success Toast Notification */}
+      {/* Success Toast Notification */}
       {showToast && (
         <div className="toast-notification success">
           <div className="toast-icon">
             <FaCheck />
           </div>
-          <div className="toast-message">
-            {toastMessage}
-          </div>
+          <div className="toast-message">{toastMessage}</div>
         </div>
       )}
-
       {/* Rating Modal */}
       {showRatingModal && appointmentToRate && (
         <div className="modal-overlay">
           <div className="confirmation-modal rating-modal">
             <h3>Đánh giá Coach</h3>
             <div className="coach-rating-info">
-              <img 
-                src={appointmentToRate.coachAvatar} 
-                alt={appointmentToRate.coachName} 
-                className="coach-avatar-rating" 
+              <img
+                src={appointmentToRate.coachAvatar}
+                alt={appointmentToRate.coachName}
+                className="coach-avatar-rating"
               />
               <div>
                 <h4>{appointmentToRate.coachName}</h4>
-                <p>{formatDate(appointmentToRate.date)}, {appointmentToRate.time}</p>
+                <p>
+                  {formatDate(appointmentToRate.date)}, {appointmentToRate.time}
+                </p>
               </div>
             </div>
-            
+
             <div className="star-rating">
               {[...Array(5)].map((_, i) => {
                 const ratingValue = i + 1;
                 return (
-                  <span 
+                  <span
                     key={i}
                     className="star-wrapper"
                     onClick={() => setRating(ratingValue)}
@@ -841,36 +952,40 @@ export default function AppointmentList() {
               })}
               {rating > 0 && (
                 <span className="rating-label">
-                  {rating === 1 && 'Không hài lòng'}
-                  {rating === 2 && 'Tạm được'}
-                  {rating === 3 && 'Hài lòng'}
-                  {rating === 4 && 'Rất hài lòng'}
-                  {rating === 5 && 'Tuyệt vời'}
+                  {rating === 1 && "Không hài lòng"}
+                  {rating === 2 && "Tạm được"}
+                  {rating === 3 && "Hài lòng"}
+                  {rating === 4 && "Rất hài lòng"}
+                  {rating === 5 && "Tuyệt vời"}
                 </span>
               )}
             </div>
-            
+
             <div className="rating-comment">
               <label htmlFor="comment">Ghi chú (tùy chọn):</label>
-              <textarea 
+              <textarea
                 id="comment"
-                rows="4" 
+                rows="4"
                 placeholder="Chia sẻ trải nghiệm của bạn về buổi tư vấn này..."
                 value={ratingComment}
                 onChange={(e) => setRatingComment(e.target.value)}
               />
             </div>
-            
+
             <div className="confirmation-actions">
-              <button className="cancel-action" onClick={closeRatingModal} disabled={isSubmittingRating}>
+              <button
+                className="cancel-action"
+                onClick={closeRatingModal}
+                disabled={isSubmittingRating}
+              >
                 Hủy bỏ
               </button>
-              <button 
-                className="confirm-action rating-submit" 
-                onClick={handleRatingSubmit} 
+              <button
+                className="confirm-action rating-submit"
+                onClick={handleRatingSubmit}
                 disabled={rating === 0 || isSubmittingRating}
               >
-                {isSubmittingRating ? 'Đang gửi...' : 'Gửi đánh giá'}
+                {isSubmittingRating ? "Đang gửi..." : "Gửi đánh giá"}
               </button>
             </div>
           </div>
