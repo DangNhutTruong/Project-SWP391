@@ -92,8 +92,7 @@ const UserProfile = ({ isStandalone = false }) => {
   // If no user data is available, show loading state
   if (!user) {
     return <div className="loading-container">Đang tải...</div>;
-  }
-  return (
+  }  return (
     <div className="user-profile-container">
       <div className="user-profile-header">
         <h1>Thông tin cá nhân</h1>
@@ -112,11 +111,10 @@ const UserProfile = ({ isStandalone = false }) => {
           </div>
         )}
       </div>
-      
 
       {successMessage && (
         <div className="success-message">
-          <FaUserAlt /> {successMessage}
+          <FaCheckCircle /> {successMessage}
         </div>
       )}
 
@@ -125,9 +123,9 @@ const UserProfile = ({ isStandalone = false }) => {
           <FaTimes /> {errorMessage}
         </div>
       )}
-
-      <div className="user-profile-content">
-        <div className="profile-section avatar-section">
+      
+      <div className="avatar-info-layout">
+        <div className="avatar-section">
           <div className="avatar-container">
             {userData.avatar ? (
               <img 
@@ -144,7 +142,7 @@ const UserProfile = ({ isStandalone = false }) => {
             {isEditing && (
               <div className="avatar-edit">
                 <label htmlFor="avatar-input" className="avatar-edit-button">
-                  <FaImage /> Thay đổi
+                  <FaImage />
                 </label>
                 <input
                   type="file"
@@ -156,146 +154,139 @@ const UserProfile = ({ isStandalone = false }) => {
               </div>
             )}
           </div>
-          
-        </div>
+        </div>        <div className="info-section">
+          <div className="profile-section basic-info">
+            <h2>Thông tin cơ bản</h2>
+            <div className="info-field">
+              <label><FaUserAlt /> Họ và tên</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="name"
+                  value={userData.name || ""}
+                  onChange={handleChange}
+                  placeholder="Nhập họ tên"
+                />
+              ) : (
+                <p>{userData.name || "Chưa cập nhật"}</p>
+              )}
+            </div>
 
-        <div className="profile-section personal-info-section">
-          <h2>Thông tin cơ bản</h2>
-          
-          <div className="info-field">
-            <label><FaUserAlt /> Họ và tên</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="name"
-                value={userData.name || ""}
-                onChange={handleChange}
-                placeholder="Nhập họ tên"
-              />
-            ) : (
-              <p>{userData.name || "Chưa cập nhật"}</p>
-            )}
+            <div className="info-field">
+              <label><FaCalendarAlt /> Tuổi</label>
+              {isEditing ? (
+                <input
+                  type="number"
+                  name="age"
+                  value={userData.age || ""}
+                  onChange={handleChange}
+                  placeholder="Nhập tuổi"
+                />
+              ) : (
+                <p>{userData.age || "Chưa cập nhật"}</p>
+              )}
+            </div>
+
+            <div className="info-field">
+              <label><FaTransgender /> Giới tính</label>
+              {isEditing ? (
+                <select 
+                  name="gender" 
+                  value={userData.gender || ""} 
+                  onChange={handleChange}
+                >
+                  <option value="">-- Chọn giới tính --</option>
+                  <option value="male">Nam</option>
+                  <option value="female">Nữ</option>
+                  <option value="other">Khác</option>
+                </select>
+              ) : (
+                <p>
+                  {userData.gender === "male" ? "Nam" : 
+                   userData.gender === "female" ? "Nữ" : 
+                   userData.gender === "other" ? "Khác" : "Chưa cập nhật"}
+                </p>
+              )}
+            </div>
+
+            <div className="info-field">
+              <label><FaMapMarkerAlt /> Địa chỉ</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="address"
+                  value={userData.address || ""}
+                  onChange={handleChange}
+                  placeholder="Nhập địa chỉ"
+                />
+              ) : (
+                <p>{userData.address || "Chưa cập nhật"}</p>
+              )}
+            </div>
           </div>
 
-          <div className="info-field">
-            <label><FaCalendarAlt /> Tuổi</label>
-            {isEditing ? (
-              <input
-                type="number"
-                name="age"
-                value={userData.age || ""}
-                onChange={handleChange}
-                placeholder="Nhập tuổi"
-              />
-            ) : (
-              <p>{userData.age || "Chưa cập nhật"}</p>
-            )}
-          </div>
-
-          <div className="info-field">
-            <label><FaTransgender /> Giới tính</label>
-            {isEditing ? (
-              <select 
-                name="gender" 
-                value={userData.gender || ""} 
-                onChange={handleChange}
-              >
-                <option value="">-- Chọn giới tính --</option>
-                <option value="male">Nam</option>
-                <option value="female">Nữ</option>
-                <option value="other">Khác</option>
-              </select>
-            ) : (
-              <p>
-                {userData.gender === "male" ? "Nam" : 
-                 userData.gender === "female" ? "Nữ" : 
-                 userData.gender === "other" ? "Khác" : "Chưa cập nhật"}
-              </p>
-            )}
-          </div>
-
-          <div className="info-field">
-            <label><FaMapMarkerAlt /> Địa chỉ</label>
-            {isEditing ? (
-              <input
-                type="text"
-                name="address"
-                value={userData.address || ""}
-                onChange={handleChange}
-                placeholder="Nhập địa chỉ"
-              />
-            ) : (
-              <p>{userData.address || "Chưa cập nhật"}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="profile-section contact-section">
-          <h2>Thông tin liên hệ</h2>
-          
-          <div className="info-field">
-            <label><FaEnvelope /> Email</label>
-            <p>{userData.email}</p>
+          <div className="profile-section contact-section">
+            <h2>Thông tin liên hệ</h2>
+            
+            <div className="info-field">
+              <label><FaEnvelope /> Email</label>            <p><strong>{userData.email}</strong></p>
             <small className="field-note">Email không thể thay đổi</small>
+            </div>
+
+            <div className="info-field">
+              <label><FaPhone /> Số điện thoại</label>
+              {isEditing ? (
+                <input
+                  type="tel"
+                  name="phone"
+                  value={userData.phone || ""}
+                  onChange={handleChange}
+                  placeholder="Nhập số điện thoại"
+                />
+              ) : (
+                <p>{userData.phone || "Chưa cập nhật"}</p>
+              )}
+            </div>
           </div>
 
-          <div className="info-field">
-            <label><FaPhone /> Số điện thoại</label>
-            {isEditing ? (
-              <input
-                type="tel"
-                name="phone"
-                value={userData.phone || ""}
-                onChange={handleChange}
-                placeholder="Nhập số điện thoại"
-              />
-            ) : (
-              <p>{userData.phone || "Chưa cập nhật"}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="profile-section security-section">
-          <h2>Bảo mật</h2>
+          <div className="profile-section security-section">
+            <h2>Bảo mật</h2>
+            
+            <div className="info-field">
+              <label><FaLock /> Mật khẩu</label>
+              {isEditing ? (
+                <input
+                  type="password"
+                  name="password"
+                  value={userData.password || ""}
+                  onChange={handleChange}
+                  placeholder="Nhập mật khẩu mới"
+                />
+              ) : (
+                <p className="censored-field">••••••••</p>
+              )}
+            </div>          </div>
           
-          <div className="info-field">
-            <label><FaLock /> Mật khẩu</label>
-            {isEditing ? (
-              <input
-                type="password"
-                name="password"
-                value={userData.password || ""}
-                onChange={handleChange}
-                placeholder="Nhập mật khẩu mới"
-              />
-            ) : (
-              <p>••••••••</p>
-            )}
+          {/* Đưa phần lý do cai thuốc vào bên trong info-section */}
+          <div className="profile-section quit-reason-section">
+            <h2>Lý do cai thuốc</h2>
+            
+            <div className="info-field">
+              <label>Lý do bạn muốn cai thuốc lá</label>
+              {isEditing ? (
+                <textarea
+                  name="quitReason"
+                  value={userData.quitReason || ""}
+                  onChange={handleChange}
+                  placeholder="Nhập lý do bạn muốn cai thuốc lá"
+                  rows={4}
+                />
+              ) : (
+                <p className="quit-reason-text">{userData.quitReason || "Chưa cập nhật"}</p>
+              )}
+            </div>
           </div>
         </div>
-
-        <div className="profile-section quit-reason-section">
-          <h2>Lý do cai thuốc</h2>
-          
-          <div className="info-field">
-            <label>Lý do bạn muốn cai thuốc lá</label>
-            {isEditing ? (
-              <textarea
-                name="quitReason"
-                value={userData.quitReason || ""}
-                onChange={handleChange}
-                placeholder="Nhập lý do bạn muốn cai thuốc lá"
-                rows={4}
-              />
-            ) : (
-              <p className="quit-reason-text">{userData.quitReason || "Chưa cập nhật"}</p>
-            )}
-          </div>
-        </div>
-      </div>      <div className="back-to-profile">
-        <Link to="/profile" className="back-button">
-          <FaUserAlt /> Quay lại trang Hồ sơ cá nhân
-        </Link>
       </div>
     </div>
   );

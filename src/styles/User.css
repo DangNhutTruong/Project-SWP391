@@ -1,37 +1,159 @@
-/* User Profile Styles */
+/* User Profile Styles - Updated Layout */
 .user-profile-container {
   max-width: 1000px;
   margin: 30px auto;
-  padding: 20px;
+  padding: 25px;
   background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  position: relative;
+  border: 1px solid #eaeef3;
 }
 
 .user-profile-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   padding-bottom: 15px;
   border-bottom: 1px solid #e0e4e8;
 }
 
 .user-profile-header h1 {
   font-size: 24px;
+  color: #333;
+  margin: 0;
+  font-weight: 600;
+}
+
+.avatar-info-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid #eaeef3;
+}
+
+/* Thêm các quy tắc CSS để thống nhất giao diện */
+.info-section .profile-section {
+  margin-bottom: 20px;
+  border-bottom: 1px dashed rgba(37, 112, 232, 0.1);
+  padding-bottom: 15px;
+}
+
+.info-section .profile-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.avatar-section {
+  flex: 0 0 100px; /* Giảm kích thước phần avatar */
+  text-align: center;
+  position: relative;
+  margin-right: 15px; /* Giảm khoảng cách giữa avatar và thông tin */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 5px 0;
+}
+
+.user-avatar,
+.user-avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #2570e8;
+  box-shadow: 0 2px 5px rgba(37, 112, 232, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+/* Loại bỏ hiệu ứng animation gây phân tâm */
+@keyframes avatarPulse {
+  from {
+    box-shadow: 0 3px 8px rgba(37, 112, 232, 0.1);
+  }
+  to {
+    box-shadow: 0 5px 12px rgba(37, 112, 232, 0.15);
+  }
+}
+
+.user-avatar:hover,
+.user-avatar-placeholder:hover {
+  transform: scale(1.02);
+  box-shadow: 0 3px 6px rgba(37, 112, 232, 0.15);
+}
+
+.info-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 5px; /* Giảm khoảng cách giữa các phần */
+  background-color: transparent;
+  border: none;
+  padding: 0 0 0 10px; /* Thêm padding trái để tạo khoảng cách từ avatar */
+  width: 100%;
+}
+
+.user-profile-header h1 {
+  font-size: 28px;
   color: #2570e8;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-weight: 700;
+  position: relative;
+  padding-left: 15px;
+}
+
+.user-profile-header h1::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 70%;
+  width: 5px;
+  background: linear-gradient(to bottom, #2570e8, #1a5dc0);
+  border-radius: 3px;
+}
+
+.user-profile-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, #2570e8, rgba(37, 112, 232, 0.2));
+  animation: expandWidth 1.5s ease-in-out;
+}
+
+@keyframes expandWidth {
+  from { width: 0; }
+  to { width: 100px; }
 }
 
 .edit-button, .save-button, .cancel-button {
   display: flex;
   align-items: center;
   padding: 8px 16px;
-  border-radius: 5px;
+  border-radius: 4px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   border: none;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .edit-button {
@@ -41,11 +163,6 @@
 
 .edit-button:hover {
   background-color: #1a5dc0;
-}
-
-.editing-buttons {
-  display: flex;
-  gap: 10px;
 }
 
 .save-button {
@@ -66,8 +183,86 @@
   background-color: #c5372b;
 }
 
+.edit-button::after, .save-button::after, .cancel-button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.edit-button:focus::after, .save-button:focus::after, .cancel-button:focus::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(40, 40);
+    opacity: 0;
+  }
+}
+
+.edit-button {
+  background: linear-gradient(135deg, #2570e8, #1a5dc0);
+  color: white;
+}
+
+.edit-button:hover {
+  background: linear-gradient(135deg, #1a5dc0, #164ca0);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(37, 112, 232, 0.4);
+}
+
+.editing-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.save-button {
+  background: linear-gradient(135deg, #34a853, #2c8c46);
+  color: white;
+}
+
+.save-button:hover {
+  background: linear-gradient(135deg, #2c8c46, #1f7a38);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(52, 168, 83, 0.4);
+}
+
+.cancel-button {
+  background: linear-gradient(135deg, #ea4335, #c5372b);
+  color: white;
+}
+
+.cancel-button:hover {
+  background: linear-gradient(135deg, #c5372b, #b22f23);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(234, 67, 53, 0.4);
+}
+
 .edit-button svg, .save-button svg, .cancel-button svg {
-  margin-right: 8px;
+  margin-right: 10px;
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.edit-button:hover svg, .save-button:hover svg, .cancel-button:hover svg {
+  transform: translateX(3px);
 }
 
 .profile-info-message {
@@ -81,29 +276,23 @@
 }
 
 .success-message, .error-message {
-  padding: 12px 20px;
+  padding: 12px 16px;
   margin-bottom: 20px;
-  border-radius: 5px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .success-message {
   background-color: #d4edda;
   color: #155724;
-  border-left: 4px solid #34a853;
+  border-left: 3px solid #28a745;
 }
 
 .error-message {
   background-color: #f8d7da;
   color: #721c24;
-  border-left: 4px solid #ea4335;
+  border-left: 3px solid #dc3545;
 }
 
 .success-message svg, .error-message svg {
@@ -111,81 +300,46 @@
   font-size: 16px;
 }
 
-.user-profile-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 30px;
+.profile-section {
+  background-color: transparent;
+  padding: 10px 0; /* Chỉ để padding top và bottom */
+  margin-bottom: 10px;
+  position: relative;
 }
 
-.profile-section {
-  background-color: #f9fafb;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+/* Loại bỏ border và box-shadow cho các profile section trong info-section */
+.avatar-info-layout > .info-section > .profile-section {
+  box-shadow: none !important;
+  border: none;
+  margin-top: 0;
+  background-color: transparent !important;
+}
+
+.profile-section:last-child {
+  margin-bottom: 0;
 }
 
 .profile-section h2 {
-  font-size: 18px;
-  color: #333;
+  font-size: 16px;
+  color: #2570e8;
   margin-top: 0;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(37, 112, 232, 0.1);
+  font-weight: 600;
+}
+
+/* Thêm quy tắc mới để tạo sự thống nhất giữa các section */
+.info-section .profile-section {
   margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e0e4e8;
+  border-bottom: 1px dashed rgba(37, 112, 232, 0.1);
+  padding-bottom: 15px;
 }
 
-.avatar-section {
-  text-align: center;
-}
-
-.avatar-container {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 15px;
-}
-
-.user-avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #2570e8;
-}
-
-.user-avatar-placeholder {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background-color: #dfe4ea;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
-  color: #a4b0be;
-  border: 3px solid #2570e8;
-}
-
-.avatar-edit {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-}
-
-.avatar-edit-button {
-  background-color: #2570e8;
-  color: white;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.avatar-edit-button:hover {
-  background-color: #1a5dc0;
-  transform: scale(1.1);
+.info-section .profile-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .membership-badge {
@@ -212,58 +366,118 @@
 }
 
 .info-field {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  background-color: #f9fafb;
+  padding: 10px 12px;
+  border-radius: 6px;
+  box-shadow: none;
+  border-left: 2px solid transparent;
 }
 
-.info-field:last-child {
-  margin-bottom: 0;
+.info-field:hover {
+  background-color: #f0f4f8;
+  border-left-color: #2570e8;
 }
 
 .info-field label {
   display: flex;
   align-items: center;
-  font-weight: 500;
-  color: #555;
+  font-weight: 600;
+  color: #333;
   margin-bottom: 8px;
+  font-size: 14px;
 }
 
 .info-field label svg {
-  margin-right: 8px;
+  margin-right: 10px;
   color: #2570e8;
+  font-size: 16px;
 }
 
 .info-field p {
   margin: 0;
   padding: 8px 0;
-  color: #333;
+  color: #444;
   font-size: 15px;
+  font-weight: normal;
 }
 
-.info-field input, .info-field select, .info-field textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 15px;
-  color: #333;
-  transition: border-color 0.3s ease;
-}
-
-.info-field input:focus, .info-field select:focus, .info-field textarea:focus {
-  border-color: #2570e8;
-  outline: none;
+/* Lọc vùng hiển thị cho những field đặc biệt */
+.info-field p.censored-field {
+  color: #666;
+  letter-spacing: 1px;
 }
 
 .field-note {
-  display: block;
   font-size: 12px;
   color: #777;
-  margin-top: 5px;
+  margin-top: 4px;
   font-style: italic;
 }
 
 .quit-reason-text {
   white-space: pre-line;
+}
+
+.profile-section.quit-reason-section {
+  clear: both;
+  margin-top: 10px; /* Thêm margin-top nhỏ để tạo khoảng cách với các section trước */
+  background-color: #f9fafb; /* Đồng bộ màu nền với các info-field */
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: none;
+  border-left: 2px solid #2570e8;
+  border-bottom: none !important;
+  background-color: transparent;
+  border-left: none;
+  padding: 10px 0;
+  box-shadow: none !important;
+}
+
+.profile-section.quit-reason-section h2 {
+  color: #2570e8;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(37, 112, 232, 0.1);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Styling cho textarea trong phần lý do cai thuốc */
+.profile-section.quit-reason-section textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  min-height: 100px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.profile-section.quit-reason-section textarea:focus {
+  border-color: #2570e8;
+  box-shadow: 0 0 0 3px rgba(37, 112, 232, 0.1);
+  outline: none;
+}
+
+/* Chung cho cả input và textarea */
+.info-field input, 
+.info-field textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.info-field input:focus,
+.info-field textarea:focus {
+  border-color: #2570e8;
+  box-shadow: 0 0 0 2px rgba(37, 112, 232, 0.1);
+  outline: none;
 }
 
 .back-to-profile {
@@ -298,36 +512,278 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
-/* Responsive styling */
-@media (min-width: 768px) {
-  .user-profile-content {
-    grid-template-columns: 1fr 1fr;
+.avatar-edit {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  z-index: 2; /* Giảm z-index xuống để không bị ảnh hưởng bởi các phần tử khác */
+}
+
+.avatar-edit-button {
+  background: #2570e8;
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(37, 112, 232, 0.2); /* Giảm đổ bóng */
+  border: 2px solid white;
+}
+
+.avatar-edit-button:hover {
+  background: #1a5dc0;
+  transform: scale(1.1);
+}
+
+/* Căn chỉnh khoảng cách và layout */
+.user-avatar-placeholder {
+  background-color: #f0f4f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px; /* Giảm kích thước icon */
+  color: #8395a7;
+}
+
+/* Cải thiện hiển thị các sections */
+.profile-section.basic-info,
+.profile-section.contact-section,
+.profile-section.security-section {
+  margin-bottom: 15px;
+  background-color: #fff;
+  border: 1px solid #eaeef3;
+  border-radius: 8px;
+  position: relative; /* Đảm bảo vị trí tương đối */
+  box-sizing: border-box; /* Đảm bảo kích thước tính cả padding và border */
+  overflow: visible; /* Cho phép nội dung hiển thị bên ngoài box nếu cần */
+}
+
+/* Đảm bảo các section không bị chồng lắp */
+.profile-section.basic-info,
+.profile-section.contact-section, 
+.profile-section.security-section {
+  position: relative;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+  margin-bottom: 15px;
+}
+
+/* Đảm bảo các trường thông tin hiển thị đồng đều */
+.info-field input, 
+.info-field select, 
+.info-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+  background-color: #fff;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.info-field input:focus, 
+.info-field select:focus, 
+.info-field textarea:focus {
+  border-color: #2570e8;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 112, 232, 0.1);
+}
+
+/* Điều chỉnh hiển thị của textarea trong phần lý do cai thuốc */
+.quit-reason-section textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Đồng nhất các section và loại bỏ box-shadow */
+.avatar-info-layout > .info-section > div {
+  box-shadow: none !important;
+  margin-top: 0;
+  margin-bottom: 15px;
+  border: none;
+  background-color: transparent;
+}
+
+.avatar-info-layout > .info-section > div:last-child {
+  margin-bottom: 0;
+}
+
+.user-profile-container * {
+  box-sizing: border-box;
+}
+
+/* Khắc phục vấn đề chồng chéo trên mobile */
+@media screen and (max-width: 768px) {
+  .avatar-info-layout {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
   }
   
-  .avatar-section {
-    grid-column: 1 / -1;
+  .profile-section {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    margin-bottom: 15px;
+  }
+  
+  .info-field {
+    box-shadow: none;
+    border: 1px solid #eaeef3;
   }
 }
 
-@media (max-width: 767px) {
-  .user-profile-container {
-    padding: 15px;
-    margin: 15px;
+/* Responsive styling */
+@media (max-width: 992px) {
+  .avatar-info-layout {
+    padding: 20px;
   }
   
-  .user-profile-header {
+  .avatar-section {
+    flex: 0 0 100px;
+    margin-right: 25px;
+  }
+  
+  .user-avatar,
+  .user-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-profile-container {
+    padding: 15px;
+    margin: 10px 0;
+  }
+
+  .user-profile-header h1 {
+    font-size: 20px;
+  }
+
+  .avatar-info-layout {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+    padding: 20px 15px;
+    align-items: center;
+    margin-bottom: 20px;
+    box-shadow: none;
+    border: none;
+  }
+  
+  .avatar-section {
+    margin: 0 0 20px 0;
+    flex: 0 0 auto;
+  }
+
+  .user-avatar,
+  .user-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .info-section {
+    width: 100%;
+    padding: 0;
+  }
+  
+  .info-field {
+    margin-bottom: 12px;
+    padding: 12px;
   }
   
   .edit-button, .save-button, .cancel-button {
     width: 100%;
     justify-content: center;
+    padding: 10px 15px;
+    font-size: 13px;
+  }
+
+  .editing-buttons {
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* Mobile-first approach */
+@media screen and (max-width: 480px) {
+  .user-profile-container {
+    padding: 15px;
+    margin: 10px;
+  }
+  
+  .avatar-info-layout {
+    padding: 15px;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .avatar-section {
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+  
+  .user-avatar,
+  .user-avatar-placeholder {
+    width: 90px;
+    height: 90px;
+  }
+    .info-section {
+    padding: 0;
+    width: 100%;
+  }
+  
+  .profile-section {
+    padding: 15px;
+  }
+  
+  .info-field {
+    padding: 10px;
+  }
+  
+  .user-profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
   
   .editing-buttons {
     width: 100%;
+  }
+  
+  /* Ẩn bớt hiệu ứng trên mobile để tránh làm chậm */
+  .info-field:hover {
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  }
+}
+
+/* Tablet */
+@media screen and (min-width: 481px) and (max-width: 768px) {
+  .user-profile-container {
+    padding: 20px;
+  }
+    .info-section {
+    padding: 0;
+  }
+}
+
+/* Larger devices */
+@media screen and (min-width: 769px) {
+  .avatar-info-layout {
+    flex-direction: row;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+  }
+  
+  .avatar-section {
+    margin-bottom: 0;
+  }
+  
+  /* Cải thiện box-shadow để tránh hiệu ứng chồng lên nhau */
+  .profile-section {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   }
 }
 
