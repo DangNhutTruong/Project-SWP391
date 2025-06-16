@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid } from 'react-icons/fa';
-import { FaRegStar as FaStarRegular } from "react-icons/fa";
+import { FaCalendarAlt, FaUserAlt, FaClock, FaMapMarkerAlt, FaCheck, FaTimes, FaInfoCircle, FaComments, FaExclamationTriangle, FaTrashAlt, FaStar as FaStarSolid, FaStar as FaStarRegular } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AppointmentList.css';
@@ -114,12 +113,17 @@ function AppointmentList() {
     fetchAppointments();
   }, []);  // Filter appointments based on the selected filter
   const filteredAppointments = appointments.filter(appointment => {
-    // Lấy ngày hiện tại và reset giờ về 00:00:00
+    // Lấy ngày giờ hiện tại
+    const now = new Date();
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00 cho việc so sánh ngày
     
-    // Lấy ngày lịch hẹn và reset giờ về 00:00:00 để so sánh theo ngày
-    const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
+    // Lấy ngày giờ lịch hẹn
+    const [hours, minutes] = appointment.time.split(':').map(Number);
+    const appointmentDate = new Date(appointment.date);
+    appointmentDate.setHours(hours, minutes, 0, 0);
+    
+    // Cũng tạo một bản sao ngày lịch hẹn với giờ reset để so sánh ngày
     const appointmentDay = new Date(appointmentDate);
     appointmentDay.setHours(0, 0, 0, 0);
     
@@ -132,13 +136,13 @@ function AppointmentList() {
       }
     }
 
-    // Logic lọc dựa trên ngày và trạng thái
+    // Logic lọc dựa trên ngày, giờ và trạng thái
     if (filter === 'upcoming') {
-      // Filter "Sắp tới": Hiển thị tất cả lịch hẹn có ngày >= ngày hiện tại và chưa hoàn thành hoặc chưa hủy
-      return appointmentDay >= today;
+      // Filter "Sắp tới": Hiển thị tất cả lịch hẹn có thời gian >= thời gian hiện tại
+      return appointmentDate >= now;
     } else if (filter === 'past') {
-      // Filter "Đã qua": Hiển thị lịch hẹn có ngày < ngày hiện tại hoặc đã hủy
-      return appointmentDay < today || appointment.status === 'cancelled';
+      // Filter "Đã qua": Hiển thị lịch hẹn có thời gian < thời gian hiện tại hoặc đã hủy
+      return appointmentDate < now || appointment.status === 'cancelled';
     }
     
     return true; // 'all' filter: hiển thị tất cả
@@ -153,7 +157,16 @@ function AppointmentList() {
       year: 'numeric' 
     });
   };
-    // Hàm so sánh ngày (chỉ so sánh ngày, tháng, năm, không tính giờ phút giây)
+    // Hàm so sánh ngày và giờ
+  const isSameOrBeforeDateTime = (dateTime1, dateTime2) => {
+    const d1 = new Date(dateTime1);
+    const d2 = new Date(dateTime2);
+    
+    // So sánh trực tiếp hai đối tượng Date (bao gồm cả giờ)
+    return d1 <= d2;
+  };
+  
+  // Hàm so sánh ngày (chỉ so sánh ngày, tháng, năm, không tính giờ phút giây)
   const isSameOrBeforeDate = (date1, date2) => {
     const d1 = new Date(date1);
     const d2 = new Date(date2);
@@ -173,17 +186,23 @@ function AppointmentList() {
     if (appointment.status === 'cancelled') {
       return 'cancelled';
     } else if (appointment.status === 'confirmed') {
-      // Lấy ngày hiện tại (chỉ lấy ngày, không lấy giờ)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // Lấy thời gian hiện tại (bao gồm giờ phút giây)
+      const now = new Date();
       
-      // Lấy ngày lịch hẹn (chỉ lấy ngày, không lấy giờ)
-      const appointmentDate = new Date(`${appointment.date.split('T')[0]}T${appointment.time}`);
-      const appointmentDay = new Date(appointmentDate);
-      appointmentDay.setHours(0, 0, 0, 0);
+      // Lấy thời gian lịch hẹn (bao gồm ngày và giờ)
+      // Chuyển đổi giờ từ định dạng "HH:mm" sang giá trị thời gian
+      const [hours, minutes] = appointment.time.split(':').map(Number);
       
-      // Lịch hẹn chỉ được đánh dấu hoàn thành nếu ngày hẹn < ngày hiện tại
-      if (appointmentDay < today) {
+      // Tạo đối tượng Date từ ngày và giờ của lịch hẹn
+      const appointmentDate = new Date(appointment.date);
+      appointmentDate.setHours(hours, minutes, 0, 0);
+      
+      console.log('Thời gian hiện tại:', now);
+      console.log('Thời gian lịch hẹn:', appointmentDate);
+      console.log('So sánh:', now > appointmentDate);
+      
+      // Lịch hẹn chỉ được đánh dấu hoàn thành nếu thời gian hiện tại đã vượt qua thời gian của cuộc hẹn
+      if (now > appointmentDate) {
         return 'completed';
       } else {
         return 'confirmed';
@@ -243,11 +262,16 @@ function AppointmentList() {
     }
   };  // Handle reschedule or rebook appointment
   const handleRescheduleAppointment = (appointment) => {
-    // Store the appointment to reschedule in localStorage
+    // Lưu thông tin lịch hẹn cần thay đổi vào localStorage
     localStorage.setItem('appointmentToReschedule', JSON.stringify(appointment));
     
-    // Navigate to the appointment booking page with query param
+    // Chuyển hướng đến trang đặt lịch với tham số reschedule=true
     navigate('/appointment?reschedule=true');
+    
+    // Khi đặt lịch mới thành công, xóa lịch hẹn cũ
+    const existingAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
+    const updatedAppointments = existingAppointments.filter(app => app.id !== appointment.id);
+    localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
   };
   // Open rebook confirmation modal
   const openRebookModal = (appointment) => {
