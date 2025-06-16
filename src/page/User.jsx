@@ -123,8 +123,7 @@ const UserProfile = ({ isStandalone = false }) => {
           <FaTimes /> {errorMessage}
         </div>
       )}
-      
-      <div className="avatar-info-layout">
+        <div className="avatar-info-layout">
         <div className="avatar-section">
           <div className="avatar-container">
             {userData.avatar ? (
@@ -153,8 +152,17 @@ const UserProfile = ({ isStandalone = false }) => {
                 />
               </div>
             )}
+            
+            {userData.membershipType && userData.membershipType !== 'free' && (
+              <div className={`membership-badge ${userData.membershipType}`}>
+                <FaCrown /> {userData.membershipType === 'premium' ? 'Premium' : 'Pro'}
+              </div>
+            )}
           </div>
-        </div>        <div className="info-section">
+        </div>
+        
+        <div className="info-section">
+          {/* Thông tin cơ bản */}
           <div className="profile-section basic-info">
             <h2>Thông tin cơ bản</h2>
             <div className="info-field">
@@ -185,9 +193,7 @@ const UserProfile = ({ isStandalone = false }) => {
               ) : (
                 <p>{userData.age || "Chưa cập nhật"}</p>
               )}
-            </div>
-
-            <div className="info-field">
+            </div>            <div className="info-field">
               <label><FaTransgender /> Giới tính</label>
               {isEditing ? (
                 <select 
@@ -208,7 +214,12 @@ const UserProfile = ({ isStandalone = false }) => {
                 </p>
               )}
             </div>
+          </div>
 
+          {/* Thông tin liên hệ */}
+          <div className="profile-section contact-section">
+            <h2>Thông tin liên hệ</h2>
+            
             <div className="info-field">
               <label><FaMapMarkerAlt /> Địa chỉ</label>
               {isEditing ? (
@@ -223,14 +234,11 @@ const UserProfile = ({ isStandalone = false }) => {
                 <p>{userData.address || "Chưa cập nhật"}</p>
               )}
             </div>
-          </div>
-
-          <div className="profile-section contact-section">
-            <h2>Thông tin liên hệ</h2>
             
             <div className="info-field">
-              <label><FaEnvelope /> Email</label>            <p><strong>{userData.email}</strong></p>
-            <small className="field-note">Email không thể thay đổi</small>
+              <label><FaEnvelope /> Email</label>
+              <p><strong>{userData.email}</strong></p>
+              <small className="field-note">Email không thể thay đổi</small>
             </div>
 
             <div className="info-field">
@@ -249,6 +257,7 @@ const UserProfile = ({ isStandalone = false }) => {
             </div>
           </div>
 
+          {/* Bảo mật */}
           <div className="profile-section security-section">
             <h2>Bảo mật</h2>
             
@@ -265,21 +274,21 @@ const UserProfile = ({ isStandalone = false }) => {
               ) : (
                 <p className="censored-field">••••••••</p>
               )}
-            </div>          </div>
+            </div>
+          </div>
           
-          {/* Đưa phần lý do cai thuốc vào bên trong info-section */}
+          {/* Lý do cai thuốc */}
           <div className="profile-section quit-reason-section">
             <h2>Lý do cai thuốc</h2>
             
-            <div className="info-field">
-              <label>Lý do bạn muốn cai thuốc lá</label>
+            <div className="info-field quit-reason-field">
               {isEditing ? (
                 <textarea
                   name="quitReason"
                   value={userData.quitReason || ""}
                   onChange={handleChange}
                   placeholder="Nhập lý do bạn muốn cai thuốc lá"
-                  rows={4}
+                  rows={3}
                 />
               ) : (
                 <p className="quit-reason-text">{userData.quitReason || "Chưa cập nhật"}</p>

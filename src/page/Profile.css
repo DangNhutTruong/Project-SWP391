@@ -3,6 +3,9 @@
   display: flex;
   min-height: calc(100vh - 200px);
   background-color: #f5f7fa;
+  margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Sidebar Styles */
@@ -16,6 +19,11 @@
   z-index: 10;
   background-image: linear-gradient(to bottom, #ffffff, #f9fbff);
   margin-right: 20px;
+  height: fit-content;
+  max-height: 100%;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
 }
 
 .user-info {
@@ -176,6 +184,9 @@
   flex-direction: column;
   gap: 4px;
   position: relative;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 /* Hiệu ứng đổ bóng dọc theo thanh điều hướng */
@@ -272,14 +283,15 @@
 
 /* Nút đăng xuất đặc biệt */
 .logout-btn {
-  margin-top: 40px;
+  margin-top: 20px;
+  margin-bottom: 10px;
   background-color: transparent;
   border: 1px solid #e0e4e8;
   color: #ea4335;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  width: 100%;
+  width: calc(100% - 10px);
   position: relative;
 }
 
@@ -646,16 +658,30 @@ aaaaaaaaaa*/
     border-bottom: 1px solid #e0e4e8;
     padding: 15px;
   }
-  
-  .profile-nav {
+    .profile-nav {
     display: flex;
+    flex-direction: row;
     overflow-x: auto;
     padding: 10px 0;
+    max-height: none;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .profile-nav::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
   }
   
   .nav-item {
     padding: 10px 15px;
     white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  
+  .logout-btn {
+    margin-top: 0;
+    margin-left: 5px;
+    margin-right: 5px;
   }
   
   .overview-stats {
@@ -888,5 +914,58 @@ aaaaaaaaaa*/
   
   .collapsible-header {
     padding: 14px 16px;
+  }
+}
+
+/* Action Buttons Styles */
+.action-buttons-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px; /* Giảm margin-top */
+  padding: 12px; /* Giảm padding */
+  background-color: #f9fafb;
+  border-radius: 6px; /* Giảm border-radius */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.update-plan-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #2570e8, #1a5dc0);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(37, 112, 232, 0.2);
+}
+
+.update-plan-btn:hover {
+  background: linear-gradient(135deg, #1a5dc0, #164ca0);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(37, 112, 232, 0.3);
+}
+
+.update-plan-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.update-plan-btn:hover svg {
+  transform: translateX(3px);
+}
+
+/* Responsive adjustments for action buttons */
+@media (max-width: 768px) {
+  .action-buttons-container {
+    justify-content: center;
+    padding: 12px;
+  }
+  
+  .update-plan-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
