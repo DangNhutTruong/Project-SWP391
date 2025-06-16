@@ -11,9 +11,10 @@ import { hasAccessToFeature, getMinimumRequiredMembership, formatMembershipName 
  * @param {Object} props
  * @param {Array} props.allowedMemberships - Mảng các loại membership được phép truy cập (ví dụ: ['free', 'premium', 'pro'])
  * @param {boolean} props.showModal - Nếu true, hiển thị modal thay vì chuyển hướng
+ * @param {string} props.featureName - Tên của tính năng cần bảo vệ (ví dụ: 'chat', 'huy hiệu', v.v.)
  * @param {ReactNode} props.children - Component con được bảo vệ
  */
-const RequireMembership = ({ allowedMemberships = [], showModal = false, children }) => {
+const RequireMembership = ({ allowedMemberships = [], showModal = false, featureName = '', children }) => {
   const { user } = useAuth();
   const { checkFeatureAccess } = useMembership();
   const navigate = useNavigate();
@@ -55,8 +56,17 @@ const RequireMembership = ({ allowedMemberships = [], showModal = false, childre
             <p>
               {userMembership === 'free' ? (
                 <>
-                  Chức năng chat với Coach yêu cầu gói thành viên <strong>{requiredMembershipName}</strong> trở lên.
-                  Vui lòng nâng cấp để sử dụng tính năng này.
+                  {featureName === 'huy hiệu' ? (
+                    <>
+                      Tính năng huy hiệu yêu cầu gói thành viên <strong>{requiredMembershipName}</strong> trở lên.
+                      Vui lòng nâng cấp để xem các huy hiệu và theo dõi thành tựu của bạn.
+                    </>
+                  ) : (
+                    <>
+                      Tính năng này yêu cầu gói thành viên <strong>{requiredMembershipName}</strong> trở lên.
+                      Vui lòng nâng cấp để sử dụng tính năng này.
+                    </>
+                  )}
                 </>
               ) : (
                 <>
