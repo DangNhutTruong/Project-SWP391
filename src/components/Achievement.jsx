@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaTrophy, FaShare, FaFacebook, FaTwitter, FaCopy, FaTimes } from "react-icons/fa";
 import "../styles/Achievement.css";
+import { useMembership } from "../context/MembershipContext";
+import RequireMembership from "./RequireMembership";
 
 const Achievement = ({ achievements, title = "Huy hiệu đã đạt", showViewAll = true }) => {
   const [showShareMenu, setShowShareMenu] = useState(null);
   const [shareStatus, setShareStatus] = useState({ show: false, message: '' });
   const [showAllAchievements, setShowAllAchievements] = useState(false);
   const [displayedAchievements, setDisplayedAchievements] = useState(achievements);
+  const { membershipTiers, currentMembership } = useMembership();
   
   const shareMenuRef = useRef(null);
   
@@ -111,7 +114,8 @@ const Achievement = ({ achievements, title = "Huy hiệu đã đạt", showViewA
     setShowAllAchievements(true);
   };
 
-  return (    
+  // Content component
+  const AchievementContent = () => (
     <div className="achievements-section">
       <h1 style={{ color: "#333", fontWeight: "700" }}>{title}</h1>
 
@@ -308,6 +312,17 @@ const Achievement = ({ achievements, title = "Huy hiệu đã đạt", showViewA
         </div>
       )}
     </div>
+  );
+
+  // Return the component with RequireMembership
+  return (
+    <RequireMembership
+      allowedMemberships={['premium', 'pro']}
+      showModal={true}
+      featureName="huy hiệu"
+    >
+      <AchievementContent />
+    </RequireMembership>
   );
 };
 
