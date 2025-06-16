@@ -19,11 +19,11 @@ import {
   FaMapMarkerAlt,
   FaTransgender,
   FaLock,
-  FaEdit,
-  FaSave,
+  FaEdit,  FaSave,
   FaImage,
   FaCheck,
   FaClipboardList,
+  FaArrowRight,
 } from "react-icons/fa";
 
 import "./Profile.css";
@@ -46,7 +46,22 @@ import "../styles/JournalEntry.css";
 import "../styles/ProgressTracker.css";
 
 // Component Modal chỉnh sửa kế hoạch
-function PlanEditModal({ isOpen, onClose, currentPlan, activePlan, onSave }) {  const [planData, setPlanData] = useState({
+function PlanEditModal({ isOpen, onClose, currentPlan, activePlan, onSave }) {
+  // Khi modal mở, thêm class vào body
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    
+    // Cleanup khi component unmount
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [isOpen]);
+  
+  const [planData, setPlanData] = useState({
     strategy: activePlan?.strategy || currentPlan.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
     startDate: (() => {
       try {
@@ -97,11 +112,17 @@ function PlanEditModal({ isOpen, onClose, currentPlan, activePlan, onSave }) {  
     onSave(planData);
     onClose();
   };
-
   if (!isOpen) return null;
+  // Bắt sự kiện click trên overlay để đóng modal
+  const handleOverlayClick = (e) => {
+    // Check if the click was directly on the overlay (not on its children)
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal-content">
         <div className="modal-header">
           <h2>Điều chỉnh kế hoạch cai thuốc</h2>
@@ -586,23 +607,18 @@ export default function ProfilePage() {
         </nav>
       </div>
 
-      {/* Main content */}
-      <div className="profile-content">        {activeTab === "profile" && (
+      {/* Main content */}      <div className="profile-content">        {activeTab === "profile" && (
           <div className="profile-overview">
             <div className="section-header">
-              <h1>Hồ sơ </h1>
-              <button
-                className="update-btn"
-                onClick={() => setIsPlanEditOpen(true)}
-              >
-                Cập nhật kế hoạch
-              </button>
+              <h1>Hồ sơ</h1>
             </div>
             
             <div className="profile-sections">
               {/* Thông tin cá nhân - sử dụng component UserProfile */}
               <div className="profile-main-content">
                 <UserProfile isStandalone={false} />
+                <div className="action-buttons-container">
+                </div>
               </div>
               
               <div className="profile-collapsible-sections">
