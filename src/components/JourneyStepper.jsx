@@ -127,15 +127,30 @@ export default function JourneyStepper() {
       return;
     }
     
+    // Lấy dữ liệu hiện tại từ localStorage để giữ nguyên thời gian tạo ban đầu
+    let originalCompletionDate = new Date().toISOString();
+    try {
+      const savedData = localStorage.getItem('quitPlanCompletion');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        if (parsedData && parsedData.completionDate) {
+          originalCompletionDate = parsedData.completionDate;
+          console.log('Giữ nguyên thời gian tạo ban đầu:', originalCompletionDate);
+        }
+      }
+    } catch (error) {
+      console.error('Lỗi khi đọc dữ liệu cũ:', error);
+    }
+    
     // Lưu thông tin đã chỉnh sửa vào localStorage
     const completionData = {
-      completionDate: new Date().toISOString(),
+      completionDate: originalCompletionDate, // Giữ nguyên thời gian tạo ban đầu
       userPlan: completeSelectedPlan,
       formData: {
         ...formData,
         selectedPlan: completeSelectedPlan // Lưu object kế hoạch đầy đủ thay vì chỉ ID
       },
-      lastEdited: new Date().toISOString()
+      lastEdited: new Date().toISOString() // Cập nhật thời gian chỉnh sửa
     };
     localStorage.setItem('quitPlanCompletion', JSON.stringify(completionData));
     
@@ -189,6 +204,21 @@ export default function JourneyStepper() {
       // Lấy thời gian hiện tại
       const now = new Date().toISOString();
       
+      // Kiểm tra xem đã có kế hoạch từ trước chưa để giữ nguyên thời gian tạo ban đầu
+      let originalCompletionDate = now;
+      try {
+        const savedData = localStorage.getItem('quitPlanCompletion');
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          if (parsedData && parsedData.completionDate) {
+            originalCompletionDate = parsedData.completionDate;
+            console.log('Giữ nguyên thời gian tạo ban đầu:', originalCompletionDate);
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi đọc dữ liệu cũ:', error);
+      }
+      
       // Lấy kế hoạch đầy đủ dựa vào ID đã chọn
       let completeSelectedPlan = null;
       
@@ -218,13 +248,13 @@ export default function JourneyStepper() {
       
       // Lưu thông tin hoàn thành vào localStorage
       const completionData = {
-        completionDate: now,
+        completionDate: originalCompletionDate, // Sử dụng thời gian tạo ban đầu hoặc thời gian hiện tại nếu là lần đầu
         userPlan: completeSelectedPlan || formData.selectedPlan,
         formData: {
           ...formData,
           selectedPlan: completeSelectedPlan // Lưu object kế hoạch đầy đủ thay vì chỉ ID
         },
-        lastEdited: now
+        lastEdited: now // Cập nhật thời gian chỉnh sửa gần nhất
       };
       localStorage.setItem('quitPlanCompletion', JSON.stringify(completionData));
       
@@ -854,8 +884,9 @@ export default function JourneyStepper() {
                     {(() => {
                       const savedPlan = localStorage.getItem('quitPlanCompletion');
                       if (savedPlan) {
-                        const { lastEdited } = JSON.parse(savedPlan);
-                        if (lastEdited) {
+                        const { lastEdited, completionDate } = JSON.parse(savedPlan);
+                        // Chỉ hiển thị thời gian cập nhật nếu khác với thời gian tạo
+                        if (lastEdited && lastEdited !== completionDate) {
                           const date = new Date(lastEdited);
                           return (
                             <div className="plan-summary-item">

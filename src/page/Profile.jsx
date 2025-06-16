@@ -13,6 +13,17 @@ import {
   FaBell,
   FaCrown,
   FaTimes,
+  FaSignOutAlt,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaTransgender,
+  FaLock,
+  FaEdit,
+  FaSave,
+  FaImage,
+  FaCheck,
+  FaClipboardList,
 } from "react-icons/fa";
 
 import "./Profile.css";
@@ -22,6 +33,17 @@ import { Link, useNavigate } from "react-router-dom";
 import AppointmentList from "../components/AppointmentList";
 import QuitPlanDisplay from "../components/QuitPlanDisplay";
 import DailyCheckin from "../components/DailyCheckin";
+import UserProfile from "./User.jsx";
+import Achievement from "../components/Achievement.jsx";
+import CollapsibleSection from "../components/CollapsibleSection.jsx";
+import HealthProfile from "../components/HealthProfile.jsx";
+import ProfilePlan from "../components/ProfilePlan.jsx";
+import "../styles/CollapsibleSection.css";
+import "../styles/HealthProfile.css";
+import "../styles/ProfilePlan.css";
+import "../styles/ModalStyles.css";
+import "../styles/JournalEntry.css";
+import "../styles/ProgressTracker.css";
 
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, activePlan, onSave }) {  const [planData, setPlanData] = useState({
@@ -191,12 +213,10 @@ export default function ProfilePage() {
           }
         }, 100);
       }
-    }
-  }, []);
-  // Tải kế hoạch cai thuốc từ localStorage
-  const [activePlan, setActivePlan] = useState(null);
+    }  }, []);
   
-  useEffect(() => {
+  const [activePlan, setActivePlan] = useState(null);
+    useEffect(() => {
     // Tải kế hoạch cai thuốc từ localStorage
     try {
       // Kiểm tra kế hoạch đã hoàn thành
@@ -212,19 +232,20 @@ export default function ProfilePage() {
       if (savedPlan) {
         const parsedPlan = JSON.parse(savedPlan);
         setActivePlan(parsedPlan);
-      }
-    } catch (error) {
+      }    } catch (error) {
       console.error('Lỗi khi đọc kế hoạch cai thuốc:', error);
     }
   }, []);
-  // Tính toán các giá trị
+  
+  // Tính toán các giá trị - chuyển xuống dưới useEffect để đảm bảo activePlan đã được cập nhật
   const calculateSavings = () => {
     if (!user) return { days: 0, money: 0, cigarettes: 0 };
 
     // Sử dụng ngày bắt đầu từ kế hoạch cai thuốc nếu có
     let startDate;
     try {
-      if (activePlan && activePlan.startDate) {
+      // Dùng optional chaining để tránh lỗi khi activePlan là null
+      if (activePlan?.startDate) {
         startDate = new Date(activePlan.startDate);
         
         // Kiểm tra ngày có hợp lệ không
@@ -252,9 +273,9 @@ export default function ProfilePage() {
     // Số điếu thuốc mỗi ngày từ kế hoạch hoặc từ thông tin người dùng
     const cigarettesPerDay = activePlan?.initialCigarettes || 
                             (activePlan?.weeks && activePlan.weeks[0]?.amount) || 
-                            user.cigarettesPerDay || 20;
+                            user?.cigarettesPerDay || 20;
     
-    const costPerDay = user.costPerPack && user.cigarettesPerPack ? 
+    const costPerDay = user?.costPerPack && user?.cigarettesPerPack ? 
       (user.costPerPack / user.cigarettesPerPack) * cigarettesPerDay : 30000;
     
     const moneySaved = days * costPerDay;
@@ -267,6 +288,7 @@ export default function ProfilePage() {
     };
   };
 
+  // Đảm bảo giá trị savings được tính sau khi activePlan đã được cập nhật
   const savings = calculateSavings();
   // Hàm định dạng ngày tháng
   const formatDate = (dateString) => {
@@ -423,12 +445,12 @@ export default function ProfilePage() {
       },
     ],
   };
-
   // Xử lý cập nhật hôm nay
   const handleUpdateToday = (updateData) => {
     console.log("Cập nhật mới:", updateData);
     alert("Đã lưu cập nhật của bạn!");
-  };  // Xử lý lưu kế hoạch
+  };
+  // Xử lý lưu kế hoạch
   const handleSavePlan = (planData) => {
     try {
       // Lấy kế hoạch cài đặt hiện tại từ localStorage
@@ -495,10 +517,9 @@ export default function ProfilePage() {
     <div className="profile-container">
       {/* Sidebar */}
       <div className="profile-sidebar">
-        <div className="user-info">
-          <div className="user-avatar">
-            <span className="user-initial">NT</span>
-          </div>          <div className="user-details">
+        <div className="user-info">          <div className="user-avatar">
+            <span className="user-initial">{userData.name ? userData.name.charAt(0) : 'U'}</span>
+          </div><div className="user-details">
             <h3>
               {userData.name}
               {userData.membershipType && userData.membershipType !== 'free' && (
@@ -507,7 +528,7 @@ export default function ProfilePage() {
                 </span>
               )}
             </h3>
-            <p>Đang cai thuốc: {userData.daysWithoutSmoking} ngày</p>
+            <p><span className="status-dot"></span> Đang cai thuốc: <span className="day-count">{userData.daysWithoutSmoking}</span> ngày</p>
           </div>
         </div>        <nav className="profile-nav">          <Link
             to="#"
@@ -525,7 +546,7 @@ export default function ProfilePage() {
           >
             <FaUserAlt /> Hồ sơ cá nhân
           </Link>
-          
+
           <Link
             to="#"
             className={`nav-item ${activeTab === "appointments" ? "active" : ""}`}
@@ -542,8 +563,7 @@ export default function ProfilePage() {
           >
             <FaCalendarAlt /> Lịch hẹn Coach
           </Link>
-          
-          <Link
+            <Link
             to="#"
             className={`nav-item ${
               activeTab === "achievements" ? "active" : ""
@@ -560,21 +580,17 @@ export default function ProfilePage() {
             }}
           >
             <FaTrophy /> Huy hiệu
-          </Link>
-          
-          
-          
-          <button onClick={logout} className="nav-item logout-btn">
-            <i className="fas fa-sign-out-alt"></i> Đăng xuất
+          </Link><button onClick={logout} className="nav-item logout-btn">
+            <FaSignOutAlt /> Đăng xuất
           </button>
         </nav>
       </div>
 
       {/* Main content */}
-      <div className="profile-content">
-        {activeTab === "profile" && (
-          <div className="profile-overview">              <div className="section-header">
-              <h1>Hồ sơ cá nhân</h1>
+      <div className="profile-content">        {activeTab === "profile" && (
+          <div className="profile-overview">
+            <div className="section-header">
+              <h1>Hồ sơ </h1>
               <button
                 className="update-btn"
                 onClick={() => setIsPlanEditOpen(true)}
@@ -582,74 +598,54 @@ export default function ProfilePage() {
                 Cập nhật kế hoạch
               </button>
             </div>
-
-            <div className="profile-sections">              <div className="health-section">
-                <h2>Hồ sơ sức khỏe</h2>
-
-                <div className="health-stats">
-                  <div className="health-stat-row">
-                    <div className="health-stat">
-                      <h4>Tình trạng hút thuốc ban đầu</h4>
-                      <p>Cập nhật lần cuối: {userData.daysWithoutSmoking} ngày trước</p>
-                    </div>
-                  </div>
-
-                  <div className="health-stat-row two-col">
-                    <div className="health-stat-item">
-                      <label>Số điếu mỗi ngày ban đầu</label>
-                      <p>{activePlan?.initialCigarettes || 
-                          (activePlan?.weeks && activePlan.weeks[0]?.amount) || 
-                          userData.cigarettesPerDay} điếu/ngày</p>
-                    </div>
-
-                    <div className="health-stat-item">
-                      <label>Chi phí mỗi ngày</label>
-                      <p>{userData.costPerDay.toLocaleString()} đ/ngày</p>
-                    </div>
-                  </div>
-
-                  <div className="health-stat-row two-col">
-                    <div className="health-stat-item">
-                      <label>Thời gian hút thuốc</label>
-                      <p>{userData.yearsOfSmoking} năm</p>
-                    </div>
-
-                    <div className="health-stat-item">
-                      <label>Kế hoạch cai thuốc</label>
-                      <p>{activePlan?.name || "Kế hoạch 8 tuần"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="health-improvements">
-                  <h3>Cải thiện sức khỏe</h3>
-                  <div className="improvements-list">
-                    {userData.healthImprovements.map((improvement, index) => (
-                      <div key={index} className="improvement-item">
-                        <span className="improvement-time">{improvement.time}</span>
-                        <span className="improvement-description">{improvement.description}</span>
-                        {improvement.completed ? (
-                          <FaCheckCircle className="completed-icon" />
-                        ) : (
-                          <span className="pending-icon">○</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>              <div className="plan-section">
-                <h2>Kế hoạch cai thuốc</h2>
-                {/* Hiển thị kế hoạch cai thuốc từ localStorage - QuitPlanDisplay đã tự tải kế hoạch */}
-                <QuitPlanDisplay />
-                
-                {/* Không hiển thị phần "Kế hoạch hiện tại" trùng lặp nữa vì QuitPlanDisplay đã hiển thị đầy đủ */}
-                <button
-                  className="edit-plan-btn"
-                  onClick={() => setIsPlanEditOpen(true)}
-                  style={{ marginTop: '20px' }}
+            
+            <div className="profile-sections">
+              {/* Thông tin cá nhân - sử dụng component UserProfile */}
+              <div className="profile-main-content">
+                <UserProfile isStandalone={false} />
+              </div>
+              
+              <div className="profile-collapsible-sections">
+                {/* Sử dụng CollapsibleSection cho Hồ sơ sức khỏe */}
+                <CollapsibleSection 
+                  title="Hồ sơ sức khỏe" 
+                  icon={<FaHeartbeat />}
+                  defaultOpen={false}
+                  className="health-collapsible"
                 >
-                  Điều chỉnh kế hoạch
-                </button>
+                  <HealthProfile 
+                    healthData={{
+                      stats: {
+                        smokingHistory: `${userData.yearsOfSmoking} năm`,
+                        dailyConsumption: `${activePlan?.initialCigarettes || userData.cigarettesPerDay} điếu/ngày`,
+                        quitAttempts: "2 lần",
+                        healthIssues: "Tình trạng sức khỏe ban đầu",
+                        bloodPressure: "Chưa cập nhật",
+                        heartRate: "Chưa cập nhật",
+                        oxygenLevel: "Chưa cập nhật",
+                        respiratoryRate: "Chưa cập nhật"
+                      },
+                      improvements: userData.healthImprovements
+                    }}
+                  />
+                </CollapsibleSection>
+                
+                {/* Sử dụng CollapsibleSection cho Kế hoạch cai thuốc */}
+                <CollapsibleSection 
+                  title="Kế hoạch cai thuốc" 
+                  icon={<FaClipboardList />}
+                  defaultOpen={false}
+                  className="plan-collapsible"
+                >                  <ProfilePlan 
+                    planData={{
+                      strategy: activePlan?.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
+                      startDate: userData.startDate || new Date().toLocaleDateString('vi-VN'),
+                      goal: activePlan?.goal || "Cải thiện sức khỏe và tiết kiệm chi phí",
+                      milestones: userData.milestones
+                    }}
+                    onEditClick={() => setIsPlanEditOpen(true)}
+                  />
+                </CollapsibleSection>
               </div>
             </div>
           </div>
@@ -766,29 +762,8 @@ export default function ProfilePage() {
               ) : null}
             </div>
           </div>
-        )}
-
-        {activeTab === "achievements" && (
-          <div className="achievements-section">
-            <h1>Huy hiệu đã đạt</h1>
-
-            <div className="achievements-grid">
-              {userData.achievements.map((achievement) => (
-                <div
-                  key={achievement.id}
-                  className={`achievement-card ${
-                    !achievement.date ? "locked" : ""
-                  }`}
-                >
-                  <div className="achievement-icon">{achievement.icon}</div>
-                  <h3>{achievement.name}</h3>
-                  <p>{achievement.date || "Đạt khi đủ điều kiện"}</p>
-                </div>
-              ))}
-            </div>
-
-            <h2>Xem tất cả huy hiệu</h2>
-          </div>
+        )}        {activeTab === "achievements" && (
+          <Achievement achievements={userData.achievements} />
         )}
 
         {activeTab === "appointments" && (
@@ -807,8 +782,7 @@ export default function ProfilePage() {
               }}
               currentPlan={activePlan}
             />
-          </div>
-        )}
+          </div>        )}
         
         {/* Modal chỉnh sửa kế hoạch */}
         <PlanEditModal
