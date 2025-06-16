@@ -113,10 +113,10 @@ function PlanEditModal({ isOpen, onClose, currentPlan, activePlan, onSave }) {
     onClose();
   };
   if (!isOpen) return null;
-
   // Bắt sự kiện click trên overlay để đóng modal
   const handleOverlayClick = (e) => {
-    if (e.target.className === 'modal-overlay') {
+    // Check if the click was directly on the overlay (not on its children)
+    if (e.target === e.currentTarget) {
       onClose();
     }
   };

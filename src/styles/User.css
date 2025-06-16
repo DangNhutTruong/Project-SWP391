@@ -30,14 +30,15 @@
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  margin-bottom: 15px; /* Giảm margin-bottom */
+  margin-bottom: 15px;
   background-color: #fff;
-  border-radius: 8px; /* Giảm border-radius */
-  padding: 15px; /* Giảm padding */
+  border-radius: 8px;
+  padding: 15px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   border: 1px solid #eaeef3;
   width: 100%;
-  max-width: 900px; /* Giữ max-width */
+  max-width: 900px;
+  overflow: hidden; /* Prevent content from overflowing */
 }
 
 /* Thêm các quy tắc CSS để thống nhất giao diện */
@@ -54,7 +55,7 @@
 }
 
 .avatar-section {
-  flex: 0 0 120px;
+  flex: 0 0 140px; /* Increased width to accommodate content */
   text-align: center;
   position: relative;
   margin-right: 20px;
@@ -65,6 +66,8 @@
   padding: 10px 0;
   border-right: 1px solid #eaeef3;
   padding-right: 20px;
+  min-height: 240px; /* Ensure consistent height */
+  overflow: visible; /* Allow badges to overflow if needed */
 }
 
 .user-avatar,
@@ -82,11 +85,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto;
 }
 
 .user-avatar-placeholder svg {
   font-size: 50px;
   color: #8395a7;
+}
+
+/* Style cho ID người dùng */
+.user-id {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  background-color: #f0f4f8;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid #e0e4e8;
+  width: fit-content;
+  margin: 8px auto 5px;
+  white-space: nowrap; /* Prevent ID from wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px; /* Ensure it doesn't overflow container */
 }
 
 /* Loại bỏ hiệu ứng animation gây phân tâm */
@@ -110,11 +134,12 @@
   flex-direction: row;
   flex-wrap: wrap;
   flex: 1;
-  gap: 8px; /* Giảm khoảng cách giữa các cột để gần nhau hơn */
+  gap: 8px;
   background-color: transparent;
   border: none;
-  padding: 0 0 0 10px; /* Giảm padding trái thêm nữa */
+  padding: 0 0 0 10px;
   width: 100%;
+  overflow: hidden; /* Prevent content from overflowing */
 }
 
 .user-profile-header h1 {
@@ -360,12 +385,17 @@
 .membership-badge {
   display: inline-flex;
   align-items: center;
-  padding: 5px 15px;
+  padding: 3px 10px;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: white;
-  margin-top: 10px;
+  margin-top: 8px;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .membership-badge svg {
@@ -700,67 +730,72 @@
   }
 }
 
-@media (max-width: 768px) {
-  .user-profile-container {
-    padding: 12px;
-    margin: 10px 0;
-  }
-
-  .user-profile-header h1 {
-    font-size: 20px;
-  }
-
+@media screen and (max-width: 768px) {
   .avatar-info-layout {
     flex-direction: column;
-    padding: 12px; /* Giảm padding */
     align-items: center;
-    margin-bottom: 15px; /* Giảm margin-bottom */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-    border: 1px solid #eaeef3;
-    max-width: 100%;
+    padding: 12px;
   }
   
-  .avatar-info-layout .avatar-section {
-    margin: 0 0 15px 0; /* Giảm margin-bottom */
+  .avatar-section {
     flex: 0 0 auto;
+    width: 100%;
+    max-width: 180px;
     border-right: none;
     border-bottom: 1px solid #eaeef3;
-    padding-bottom: 15px; /* Giảm padding-bottom */
-    width: 100%;
-    align-items: center;
+    padding-right: 0;
+    padding-bottom: 15px;
+    margin-right: 0;
+    margin-bottom: 15px;
+    min-height: auto;
   }
+  
+  .info-section {
+    padding: 0;
+  }
+  
+  .profile-section {
+    width: 100%;
+  }
+  
+  .info-field {
+    margin-bottom: 8px;
+    padding: 8px 10px;
+  }
+  
+  .info-field label {
+    font-size: 13px;
+  }
+  
+  .info-field p {
+    font-size: 14px;
+  }
+}
 
+@media screen and (max-width: 480px) {
+  .user-profile-container {
+    padding: 15px;
+    margin: 15px auto;
+  }
+  
   .user-avatar,
   .user-avatar-placeholder {
     width: 100px;
     height: 100px;
   }
   
-  .info-section {
-    width: 100%;
-    padding: 0;
-    flex-direction: column;
-    gap: 8px; /* Giảm gap */
+  .user-id {
+    max-width: 100px;
   }
   
-  .profile-section {
-    flex: 1 1 100% !important;
-    width: 100%;
-    min-width: 100%;
-    margin-bottom: 8px; /* Đồng nhất margin-bottom */
-    padding: 10px; /* Giảm padding */
+  .membership-badge {
+    padding: 2px 8px;
+    font-size: 11px;
   }
   
-  .profile-section.basic-info,
-  .profile-section.contact-section,
-  .profile-section.security-section,
-  .profile-section.quit-reason-section {
-    order: initial; /* Reset the order on mobile */
-  }
-  
-  .info-field {
-    margin-bottom: 8px; /* Giảm margin-bottom */
-    padding: 8px; /* Giảm padding */
+  .edit-button, .save-button, .cancel-button {
+    padding: 6px 12px;
+    font-size: 13px;
   }
 }
 
@@ -932,4 +967,13 @@
   background-color: #f9fafb;
   border-radius: 6px;
   line-height: 1.5;
+}
+
+/* CSS cho trạng thái cai thuốc đã được gỡ bỏ */
+
+.avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }

@@ -122,9 +122,7 @@ const UserProfile = ({ isStandalone = false }) => {
         <div className="error-message">
           <FaTimes /> {errorMessage}
         </div>
-      )}
-        <div className="avatar-info-layout">
-        <div className="avatar-section">
+      )}        <div className="avatar-info-layout">        <div className="avatar-section">
           <div className="avatar-container">
             {userData.avatar ? (
               <img 
@@ -152,6 +150,10 @@ const UserProfile = ({ isStandalone = false }) => {
                 />
               </div>
             )}
+              {/* Hiển thị ID người dùng dưới avatar */}
+            <div className="user-id">
+              ID: {userData._id || userData.id || "N/A"}
+            </div>
             
             {userData.membershipType && userData.membershipType !== 'free' && (
               <div className={`membership-badge ${userData.membershipType}`}>
