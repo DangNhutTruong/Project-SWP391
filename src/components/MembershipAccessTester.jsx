@@ -117,49 +117,48 @@ const MembershipAccessTester = () => {
 
   return (
     <div style={styles.container}>
-      <button 
+      <button
         style={styles.closeButton}
         onClick={() => document.body.removeChild(document.getElementById('membership-tester'))}
       >
         ✕
       </button>
       <h3 style={styles.title}>Membership Access Tester</h3>
-      
       <div style={styles.userInfo}>
-        <div><strong>User:</strong> {user ? user.name : 'Not logged in'}</div>
+        <div><strong>User:</strong> {user ? (user.fullName || user.name || 'User') : 'Not logged in'}</div>
         <div><strong>Current Membership:</strong> {user?.membership || 'free'}</div>
       </div>
-      
+
       <div style={styles.buttonContainer}>
-        <button 
-          style={{...styles.button, ...styles.freeButton}} 
+        <button
+          style={{ ...styles.button, ...styles.freeButton }}
           onClick={() => handleMembershipChange('free')}
         >
           Free
         </button>
-        <button 
-          style={{...styles.button, ...styles.premiumButton}} 
+        <button
+          style={{ ...styles.button, ...styles.premiumButton }}
           onClick={() => handleMembershipChange('premium')}
         >
           Premium
         </button>
-        <button 
-          style={{...styles.button, ...styles.proButton}} 
+        <button
+          style={{ ...styles.button, ...styles.proButton }}
           onClick={() => handleMembershipChange('pro')}
         >
           Pro
         </button>
       </div>
-      
+
       {message && <div style={styles.message}>{message}</div>}
-      
+
       <button style={styles.checkButton} onClick={checkAccess}>
         Check Access Status
       </button>
-      
+
       {accessStatus && (
         <div style={{
-          ...styles.accessStatus, 
+          ...styles.accessStatus,
           backgroundColor: accessStatus.hasAccess ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)'
         }}>
           <div><strong>Has Access:</strong> {accessStatus.hasAccess ? 'Yes ✓' : 'No ✗'}</div>
@@ -168,7 +167,7 @@ const MembershipAccessTester = () => {
         </div>
       )}
 
-      <div style={{fontSize: '10px', marginTop: '10px', opacity: 0.7}}>
+      <div style={{ fontSize: '10px', marginTop: '10px', opacity: 0.7 }}>
         Dev tool - Only visible in development mode
       </div>
     </div>
@@ -184,7 +183,7 @@ export const initMembershipTester = () => {
     const testerRoot = document.createElement('div');
     testerRoot.id = 'membership-tester';
     document.body.appendChild(testerRoot);
-    
+
     // Use ReactDOM to render the component
     // This would normally be done with ReactDOM.render() but we'll leave
     // implementation to the application
