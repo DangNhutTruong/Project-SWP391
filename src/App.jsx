@@ -7,7 +7,6 @@ import BackToTop from "./components/BackToTop.jsx";
 import Home from "./page/Home.jsx";
 import ProfilePage from "./page/Profile.jsx"; // Đổi tên từ Tools sang ProfilePage
 import ProgressPage from "./page/Progress.jsx"; // Import component Progress
-import MembershipDebugger from "./components/MembershipDebugger.jsx"; // Import component để debug membership
 import TestPage from "./page/TestPage.jsx"; // Thêm trang test đơn giản
 import Blog from "./page/Blog.jsx"; // Import component Blog
 import Login from "./page/Login.jsx"; // Import component Login
@@ -25,7 +24,6 @@ import Notification from "./page/Notification.jsx"; // Import component Notifica
 import SettingsPage from "./page/Settings.jsx"; // Import component Settings
 import Pay from "./page/Pay.jsx";
 import PaymentSuccess from "./page/PaymentSuccess.jsx";
-import MembershipTest from "./components/MembershipTest.jsx";
 /**
  * App - Component chính của ứng dụng
  *
@@ -341,18 +339,7 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <AccessDenied />
-      </Layout>
-    ),
-  },
-  {
-    path: "/membership-test",
-    element: (
-      <Layout>
-        <ProtectedRoute>
-          <MembershipTest />
-        </ProtectedRoute>
-      </Layout>
-    ),
+      </Layout>),
   },
   {
     path: "*",
@@ -395,7 +382,6 @@ export default function App() {
     <AuthProvider>
       <MembershipProvider>
         <RouterProvider router={router} />
-        <MembershipDebugger />
       </MembershipProvider>
     </AuthProvider>
   );

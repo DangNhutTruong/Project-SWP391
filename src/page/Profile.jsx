@@ -6,14 +6,12 @@ import {
   FaHeartbeat,
   FaTrophy,
   FaComment,
-  FaHeart,
-  FaCheckCircle,
+  FaHeart, FaCheckCircle,
   FaExclamationCircle,
   FaCog,
   FaBell,
   FaCrown,
   FaTimes,
-  FaSignOutAlt,
   FaEnvelope,
   FaPhone,
   FaMapMarkerAlt,
@@ -381,7 +379,7 @@ function DailyUpdate({ onSubmit }) {
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   // Notification count would be used when implementing notification features
   // const notificationCount = 0;
@@ -811,15 +809,12 @@ export default function ProfilePage() {
             <FaCalendarAlt /> Lịch hẹn Coach
           </Link>
           <Link
-            to="#"
-            className={`nav-item ${activeTab === "achievements" ? "active" : ""
+            to="#" className={`nav-item ${activeTab === "achievements" ? "active" : ""
               }`}
             onClick={() => setActiveTab("achievements")}
           >
             <FaTrophy /> Huy hiệu
-          </Link><button onClick={logout} className="nav-item logout-btn">
-            <FaSignOutAlt /> Đăng xuất
-          </button>
+          </Link>
         </nav>
       </div>
 

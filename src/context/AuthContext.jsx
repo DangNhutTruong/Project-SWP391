@@ -11,31 +11,38 @@ export const useAuth = () => useContext(AuthContext);
 
 // Provider component
 export const AuthProvider = ({ children }) => {
-  // Khởi tạo trạng thái từ localStorage (nếu có)
+  // Khởi tạo trạng thái từ sessionStorage (giữ khi reload, mất khi đóng browser)
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem('nosmoke_user');
+    const storedUser = sessionStorage.getItem('nosmoke_user');
     return storedUser ? JSON.parse(storedUser) : null;
   });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(() => {
-    return localStorage.getItem('nosmoke_token');
+    return sessionStorage.getItem('nosmoke_token');
   });
-  // Lưu user và token vào localStorage khi thay đổi
+
+  // Xóa localStorage cũ và sync với sessionStorage
+  useEffect(() => {
+    localStorage.removeItem('nosmoke_user');
+    localStorage.removeItem('nosmoke_token');
+    console.log('🧹 Cleared localStorage - using sessionStorage for this session');
+  }, []);
+
+  // Lưu user và token vào sessionStorage khi thay đổi
   useEffect(() => {
     if (user) {
-      localStorage.setItem('nosmoke_user', JSON.stringify(user));
+      sessionStorage.setItem('nosmoke_user', JSON.stringify(user));
     } else {
-      localStorage.removeItem('nosmoke_user');
+      sessionStorage.removeItem('nosmoke_user');
     }
   }, [user]);
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem('nosmoke_token', token);
+      sessionStorage.setItem('nosmoke_token', token);
     } else {
-      localStorage.removeItem('nosmoke_token');
+      sessionStorage.removeItem('nosmoke_token');
     }
   }, [token]);
   // API helper function
@@ -58,10 +65,10 @@ export const AuthProvider = ({ children }) => {
       console.log('🌐 Fetching:', url, 'with config:', config);
 
       const response = await fetch(url, config);
-      
+
       console.log('📡 Response status:', response.status);
       console.log('📡 Response ok:', response.ok);
-      
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -83,17 +90,16 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🚀 AuthContext register called with:', userData);
       console.log('📡 Making API call to:', `${API_BASE_URL}/auth/register`);
-      
+
       const data = await apiCall('/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData)
-      });
-
-      console.log('✅ API response:', data);
+      }); console.log('✅ API response:', data);
 
       if (data.success) {
         setUser(data.data.user);
         setToken(data.data.token);
+        console.log('✅ User registered - session persists until browser close');
         return { success: true, user: data.data.user };
       } else {
         throw new Error(data.message);
@@ -115,11 +121,10 @@ export const AuthProvider = ({ children }) => {
       const data = await apiCall('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password })
-      });
-
-      if (data.success) {
+      }); if (data.success) {
         setUser(data.data.user);
         setToken(data.data.token);
+        console.log('✅ User logged in - session persists until browser close');
         return { success: true, user: data.data.user };
       } else {
         throw new Error(data.message);
@@ -131,7 +136,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
   // Hàm đăng xuất
   const logout = async () => {
     try {
@@ -143,8 +147,14 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
+      // Xóa hoàn toàn state và sessionStorage
       setUser(null);
       setToken(null);
+      sessionStorage.removeItem('nosmoke_user');
+      sessionStorage.removeItem('nosmoke_token');
+      localStorage.removeItem('nosmoke_user');
+      localStorage.removeItem('nosmoke_token');
+      console.log('🔐 User logged out - all session data cleared');
       return { success: true };
     }
   };
