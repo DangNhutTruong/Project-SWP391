@@ -81,8 +81,9 @@ export default function Header() {  const [isLoginModalOpen, setIsLoginModalOpen
                 <FaBell /> Thông báo
                 {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
               </Link>              <div className="user-menu-container" ref={userMenuRef}>                <button className="user-menu-button" onClick={toggleUserMenu}>
-                  <span className="user-initial">{user.name.charAt(0)}</span>                  <span className="user-name">                    
-                    {user.name}
+                  <span className="user-initial">{(user.fullName || user.name || 'U').charAt(0)}</span>
+                  <span className="user-name">
+                    {user.fullName || user.name || 'User'}
                     {/* Kiểm tra cả hai trường hợp để hiển thị nhãn thành viên */}
                     {(user.membership && user.membership !== 'free') ? (
                       <span className={`membership-label ${user.membership}`}>
