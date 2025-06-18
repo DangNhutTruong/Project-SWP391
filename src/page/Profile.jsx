@@ -13,6 +13,17 @@ import {
   FaBell,
   FaCrown,
   FaTimes,
+  FaSignOutAlt,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaTransgender,
+  FaLock,
+  FaEdit, FaSave,
+  FaImage,
+  FaCheck,
+  FaClipboardList,
+  FaArrowRight,
 } from "react-icons/fa";
 
 import "./Profile.css";
@@ -21,23 +32,70 @@ import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import AppointmentList from "../components/AppointmentList";
 import QuitPlanDisplay from "../components/QuitPlanDisplay";
-import ProgressDashboard from "../components/ProgressDashboard";
+import DailyCheckin from "../components/DailyCheckin";
+import UserProfile from "./User.jsx";
+import Achievement from "../components/Achievement.jsx";
+import CollapsibleSection from "../components/CollapsibleSection.jsx";
+import HealthProfile from "../components/HealthProfile.jsx";
+import ProfilePlan from "../components/ProfilePlan.jsx";
+import "../styles/CollapsibleSection.css";
+import "../styles/HealthProfile.css";
+import "../styles/ProfilePlan.css";
+import "../styles/ModalStyles.css";
+import "../styles/JournalEntry.css";
+import "../styles/ProgressTracker.css";
 
 // Component Modal chỉnh sửa kế hoạch
-function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
-  const [planData, setPlanData] = useState({
-    strategy:
-      currentPlan.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
-    startDate: currentPlan.startDate
-      ? new Date(
-        currentPlan.startDate.split("/").reverse().join("-")
-      )
-        .toISOString()
-        .split("T")[0]
-      : new Date().toISOString().split("T")[0],
-    goal: currentPlan.goal || "Cai thuốc hoàn toàn và duy trì lâu dài",
-  });
+function PlanEditModal({ isOpen, onClose, currentPlan, activePlan, onSave }) {
+  // Khi modal mở, thêm class vào body
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
 
+    // Cleanup khi component unmount
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [isOpen]);
+
+  const [planData, setPlanData] = useState({
+    strategy: currentPlan.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
+    startDate: (() => {
+      try {
+        if (activePlan?.startDate) {
+          const date = new Date(activePlan.startDate);
+          if (!isNaN(date.getTime())) {
+            return date.toISOString().split("T")[0];
+          }
+        }
+        if (currentPlan?.startDate) {
+          // Kiểm tra nếu startDate là định dạng DD/MM/YYYY
+          if (typeof currentPlan.startDate === 'string' && currentPlan.startDate.includes('/')) {
+            const parts = currentPlan.startDate.split('/');
+            if (parts.length === 3) {
+              // Nếu định dạng là DD/MM/YYYY
+              const day = parseInt(parts[0], 10);
+              const month = parseInt(parts[1], 10) - 1; // Trừ 1 vì tháng trong JS bắt đầu từ 0
+              const year = parseInt(parts[2], 10);
+              const formattedDate = new Date(year, month, day);
+              if (!isNaN(formattedDate.getTime())) {
+                return formattedDate.toISOString().split("T")[0];
+              }
+            }
+          }
+        }
+        // Mặc định trả về ngày hiện tại nếu không có ngày hợp lệ khác
+        return new Date().toISOString().split("T")[0];
+      } catch (error) {
+        console.error("Lỗi khi xử lý ngày:", error);
+        return new Date().toISOString().split("T")[0];
+      }
+    })(),
+    goal: activePlan?.goal || currentPlan.goal || "Cai thuốc hoàn toàn và duy trì lâu dài",
+  });
   const handleChange = (e) => {
     const { name, value } = e.target;
     setPlanData((prev) => ({
@@ -51,11 +109,17 @@ function PlanEditModal({ isOpen, onClose, currentPlan, onSave }) {
     onSave(planData);
     onClose();
   };
-
   if (!isOpen) return null;
+  // Bắt sự kiện click trên overlay để đóng modal
+  const handleOverlayClick = (e) => {
+    // Check if the click was directly on the overlay (not on its children)
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal-content">
         <div className="modal-header">
           <h2>Điều chỉnh kế hoạch cai thuốc</h2>
@@ -333,30 +397,30 @@ export default function ProfilePage() {
       setActiveTab(savedTab);
       // Clear the saved tab after using it
       localStorage.removeItem('activeProfileTab');
-      
+
       // Scroll to the top of the content area
       const profileContent = document.querySelector('.profile-content');
       if (profileContent) {
         window.scrollTo({ top: profileContent.offsetTop, behavior: 'smooth' });
       }
     }
-    
+
     // Check for hash in URL to navigate to specific section
     if (window.location.hash) {
       const hash = window.location.hash.substring(1); // remove the # symbol
       if (hash === 'achievements' || hash === 'profile' || hash === 'appointments' || hash === 'journal' || hash === 'membership' || hash === 'health') {
         setActiveTab(hash === 'health' ? 'profile' : hash);
-        
+
         // Scroll to the top of the content area
         window.scrollTo({ top: 0, behavior: 'auto' });
-        
+
         // Use setTimeout to ensure the DOM has updated after the tab change
         setTimeout(() => {
           const profileContent = document.querySelector('.profile-content');
           if (profileContent) {
             window.scrollTo({ top: profileContent.offsetTop, behavior: 'auto' });
           }
-          
+
           // If it's the health section, scroll to that section
           if (hash === 'health') {
             setTimeout(() => {
@@ -368,6 +432,29 @@ export default function ProfilePage() {
           }
         }, 100);
       }
+    }
+  }, []);
+
+  const [activePlan, setActivePlan] = useState(null);
+  useEffect(() => {
+    // Tải kế hoạch cai thuốc từ localStorage
+    try {
+      // Kiểm tra kế hoạch đã hoàn thành
+      const completionData = localStorage.getItem('quitPlanCompletion');
+      if (completionData) {
+        const parsedData = JSON.parse(completionData);
+        setActivePlan(parsedData.userPlan);
+        return;
+      }
+
+      // Nếu chưa hoàn thành, tải kế hoạch đang thực hiện
+      const savedPlan = localStorage.getItem('activePlan');
+      if (savedPlan) {
+        const parsedPlan = JSON.parse(savedPlan);
+        setActivePlan(parsedPlan);
+      }
+    } catch (error) {
+      console.error('Lỗi khi đọc kế hoạch cai thuốc:', error);
     }
 
     // Đọc dữ liệu kế hoạch cai thuốc từ localStorage
@@ -397,18 +484,49 @@ export default function ProfilePage() {
     loadQuitPlanData();
   }, []);
 
-  // Tính toán các giá trị
+  // Tính toán các giá trị - chuyển xuống dưới useEffect để đảm bảo activePlan đã được cập nhật
   const calculateSavings = () => {
     if (!user) return { days: 0, money: 0, cigarettes: 0 };
 
-    const startDate = new Date(user.startDate);
+    // Sử dụng ngày bắt đầu từ kế hoạch cai thuốc nếu có
+    let startDate;
+    try {
+      // Dùng optional chaining để tránh lỗi khi activePlan là null
+      if (activePlan?.startDate) {
+        startDate = new Date(activePlan.startDate);
+
+        // Kiểm tra ngày có hợp lệ không
+        if (isNaN(startDate.getTime())) {
+          console.warn("Ngày bắt đầu từ activePlan không hợp lệ:", activePlan.startDate);
+          startDate = user?.startDate ? new Date(user.startDate) : new Date();
+        }
+      } else if (user?.startDate) {
+        startDate = new Date(user.startDate);
+        if (isNaN(startDate.getTime())) {
+          console.warn("Ngày bắt đầu từ user không hợp lệ:", user.startDate);
+          startDate = new Date();
+        }
+      } else {
+        startDate = new Date();
+      }
+    } catch (error) {
+      console.error("Lỗi khi xử lý ngày bắt đầu:", error);
+      startDate = new Date();
+    }
+
     const now = new Date();
     const days = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
 
-    const costPerDay =
-      (user.costPerPack / user.cigarettesPerPack) * user.cigarettesPerDay;
+    // Số điếu thuốc mỗi ngày từ kế hoạch hoặc từ thông tin người dùng
+    const cigarettesPerDay = activePlan?.initialCigarettes ||
+      (activePlan?.weeks && activePlan.weeks[0]?.amount) ||
+      user?.cigarettesPerDay || 20;
+
+    const costPerDay = user?.costPerPack && user?.cigarettesPerPack ?
+      (user.costPerPack / user.cigarettesPerPack) * cigarettesPerDay : 30000;
+
     const moneySaved = days * costPerDay;
-    const cigarettesSaved = days * user.cigarettesPerDay;
+    const cigarettesSaved = days * cigarettesPerDay;
 
     return {
       days: days > 0 ? days : 0,
@@ -417,7 +535,25 @@ export default function ProfilePage() {
     };
   };
 
+  // Đảm bảo giá trị savings được tính sau khi activePlan đã được cập nhật
   const savings = calculateSavings();
+  // Hàm định dạng ngày tháng
+  const formatDate = (dateString) => {
+    try {
+      if (!dateString) return "01/05/2023"; // Default date
+
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        console.warn("Ngày không hợp lệ:", dateString);
+        return "01/05/2023";
+      }
+
+      return date.toLocaleDateString("vi-VN");
+    } catch (error) {
+      console.error("Lỗi khi định dạng ngày:", error);
+      return "01/05/2023";
+    }
+  };
 
   // Dữ liệu người dùng mẫu - chỉ sử dụng cho các giá trị không có trong user
   const userData = {
@@ -426,8 +562,7 @@ export default function ProfilePage() {
     daysWithoutSmoking: savings.days,
     moneySaved: savings.money,
     pointsEarned: savings.cigarettes,
-    startDate:
-      new Date(user?.startDate).toLocaleDateString("vi-VN") || "01/05/2023",
+    startDate: formatDate(user?.startDate),
     cigarettesPerDay: user?.cigarettesPerDay || 20,
     costPerDay:
       (user?.costPerPack / user?.cigarettesPerPack) * user?.cigarettesPerDay ||
@@ -478,7 +613,7 @@ export default function ProfilePage() {
       },
       {
         id: 3,
-        name: "Tuần đầu tiên không hút thuốc",
+        name: "Tuần đầu tiên không hút",
         date: new Date(
           new Date(user?.startDate).getTime() + 7 * 86400000
         ).toLocaleDateString("vi-VN"),
@@ -557,25 +692,81 @@ export default function ProfilePage() {
       },
     ],
   };
-  // Function would be used when implementing daily update feature
-  // const handleUpdateToday = (updateData) => {
-  //   console.log("Cập nhật mới:", updateData);
-  //   alert("Đã lưu cập nhật của bạn!");
-  // };
+  // Xử lý cập nhật hôm nay
+  const handleUpdateToday = (updateData) => {
+    console.log("Cập nhật mới:", updateData);
+    alert("Đã lưu cập nhật của bạn!");
+  };
   // Xử lý lưu kế hoạch
   const handleSavePlan = (planData) => {
-    console.log("Dữ liệu kế hoạch mới:", planData);
-    alert("Đã lưu kế hoạch của bạn!");
+    try {
+      // Lấy kế hoạch cài đặt hiện tại từ localStorage
+      let currentPlanData;
+      const completionData = localStorage.getItem('quitPlanCompletion');
+      if (completionData) {
+        const parsedData = JSON.parse(completionData);
+        currentPlanData = parsedData.userPlan;
+      } else {
+        const savedPlan = localStorage.getItem('activePlan');
+        if (savedPlan) {
+          currentPlanData = JSON.parse(savedPlan);
+        }
+      }
+
+      // Kiểm tra và chuẩn hóa định dạng ngày tháng
+      let validStartDate = planData.startDate;
+      try {
+        // Đảm bảo rằng startDate là một chuỗi ngày tháng hợp lệ
+        const date = new Date(planData.startDate);
+        if (!isNaN(date.getTime())) {
+          // Lưu trữ theo định dạng ISO để đảm bảo tính nhất quán
+          validStartDate = date.toISOString();
+        } else {
+          console.error("Ngày không hợp lệ:", planData.startDate);
+          validStartDate = new Date().toISOString();
+        }
+      } catch (error) {
+        console.error("Lỗi khi xử lý ngày:", error);
+        validStartDate = new Date().toISOString();
+      }
+
+      // Cập nhật thông tin mới vào kế hoạch
+      if (currentPlanData) {
+        const updatedPlan = {
+          ...currentPlanData,
+          strategy: planData.strategy,
+          goal: planData.goal,
+          startDate: validStartDate
+        };
+
+        // Lưu lại vào localStorage
+        if (completionData) {
+          const updatedCompletion = JSON.parse(completionData);
+          updatedCompletion.userPlan = updatedPlan;
+          localStorage.setItem('quitPlanCompletion', JSON.stringify(updatedCompletion));
+        } else {
+          localStorage.setItem('activePlan', JSON.stringify(updatedPlan));
+        }
+
+        // Cập nhật state
+        setActivePlan(updatedPlan);
+        alert("Đã lưu cập nhật kế hoạch thành công!");
+      } else {
+        alert("Không tìm thấy kế hoạch để cập nhật. Vui lòng tạo kế hoạch mới.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi lưu kế hoạch:", error);
+      alert("Có lỗi xảy ra khi lưu kế hoạch. Vui lòng thử lại sau.");
+    }
   };
 
   return (
     <div className="profile-container">
       {/* Sidebar */}
       <div className="profile-sidebar">
-        <div className="user-info">
-          <div className="user-avatar">
-            <span className="user-initial">NT</span>
-          </div>          <div className="user-details">
+        <div className="user-info">          <div className="user-avatar">
+          <span className="user-initial">{userData.name ? userData.name.charAt(0) : 'U'}</span>
+        </div><div className="user-details">
             <h3>
               {userData.name}
               {userData.membershipType && userData.membershipType !== 'free' && (
@@ -584,24 +775,24 @@ export default function ProfilePage() {
                 </span>
               )}
             </h3>
-            <p>Đang cai thuốc: {userData.daysWithoutSmoking} ngày</p>
+            <p><span className="status-dot"></span> Đang cai thuốc: <span className="day-count">{userData.daysWithoutSmoking}</span> ngày</p>
           </div>
         </div>        <nav className="profile-nav">          <Link
-            to="#"
-            className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab("profile");
-              // Scroll to the top of the content area
-              const profileContent = document.querySelector('.profile-content');
-              if (profileContent) {
-                setTimeout(() => {
-                  profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 10);
-              }
-            }}
-          >
-            <FaUserAlt /> Hồ sơ cá nhân
-          </Link>
+          to="#"
+          className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
+          onClick={() => {
+            setActiveTab("profile");
+            // Scroll to the top of the content area
+            const profileContent = document.querySelector('.profile-content');
+            if (profileContent) {
+              setTimeout(() => {
+                profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 10);
+            }
+          }}
+        >
+          <FaUserAlt /> Hồ sơ cá nhân
+        </Link>
 
           <Link
             to="#"
@@ -619,7 +810,6 @@ export default function ProfilePage() {
           >
             <FaCalendarAlt /> Lịch hẹn Coach
           </Link>
-
           <Link
             to="#"
             className={`nav-item ${activeTab === "achievements" ? "active" : ""
@@ -627,372 +817,204 @@ export default function ProfilePage() {
             onClick={() => setActiveTab("achievements")}
           >
             <FaTrophy /> Huy hiệu
-          </Link>
-
-
-
-          <button onClick={logout} className="nav-item logout-btn">
-            <i className="fas fa-sign-out-alt"></i> Đăng xuất
+          </Link><button onClick={logout} className="nav-item logout-btn">
+            <FaSignOutAlt /> Đăng xuất
           </button>
         </nav>
       </div>
 
-      {/* Main content */}
-      <div className="profile-content">
-        {activeTab === "profile" && (
-          <div className="profile-overview">
-            <div className="section-header">
-              <h1>Hồ sơ cá nhân</h1>
-              <button
-                className="update-btn"
-                onClick={() => setIsPlanEditOpen(true)}
+      {/* Main content */}      <div className="profile-content">        {activeTab === "profile" && (
+        <div className="profile-overview">
+          <div className="section-header">
+            <h1>Hồ sơ</h1>
+          </div>
+
+          <div className="profile-sections">
+            {/* Thông tin cá nhân - sử dụng component UserProfile */}
+            <div className="profile-main-content">
+              <UserProfile isStandalone={false} />
+              <div className="action-buttons-container">
+              </div>
+            </div>
+
+            <div className="profile-collapsible-sections">
+              {/* Sử dụng CollapsibleSection cho Hồ sơ sức khỏe */}
+              <CollapsibleSection
+                title="Hồ sơ sức khỏe"
+                icon={<FaHeartbeat />}
+                defaultOpen={false}
+                className="health-collapsible"
               >
-                Cập nhật
-              </button>
-            </div>
+                <HealthProfile
+                  healthData={{
+                    stats: {
+                      smokingHistory: `${userData.yearsOfSmoking} năm`,
+                      dailyConsumption: `${activePlan?.initialCigarettes || userData.cigarettesPerDay} điếu/ngày`,
+                      quitAttempts: "2 lần",
+                      healthIssues: "Tình trạng sức khỏe ban đầu",
+                      bloodPressure: "Chưa cập nhật",
+                      heartRate: "Chưa cập nhật",
+                      oxygenLevel: "Chưa cập nhật",
+                      respiratoryRate: "Chưa cập nhật"
+                    },
+                    improvements: userData.healthImprovements
+                  }}
+                />
+              </CollapsibleSection>
 
-            <div className="overview-stats">
-              <div className="stat-card">
-                <h3>Không hút thuốc</h3>
-                <div className="stat-value">{userData.daysWithoutSmoking} ngày</div>
-                <p className="stat-detail">672 giờ không hút thuốc</p>
-              </div>
-
-              <div className="stat-card">
-                <h3>Tiền tiết kiệm</h3>
-                <div className="stat-value">{userData.moneySaved.toLocaleString()} đ</div>
-                <p className="stat-detail">30.000 đ mỗi ngày</p>
-              </div>
-
-              <div className="stat-card">
-                <h3>Điểm thuốc tránh được</h3>
-                <div className="stat-value">{userData.pointsEarned} điếu</div>
-                <p className="stat-detail">20 điếu mỗi ngày</p>
-              </div>
-            </div>
-
-            <div className="profile-sections">
-              <div className="health-section">
-                <h2>Hồ sơ sức khỏe</h2>
-
-                <div className="health-stats">
-                  <div className="health-stat-row">
-                    <div className="health-stat">
-                      <h4>Tình trạng hút thuốc ban đầu</h4>
-                      <p>Cập nhật lần cuối: {userData.daysWithoutSmoking} ngày trước</p>
-                    </div>
-                  </div>
-
-                  <div className="health-stat-row two-col">
-                    <div className="health-stat-item">
-                      <label>Số điếu mỗi ngày</label>
-                      <p>{userData.cigarettesPerDay} điếu/ngày</p>
-                    </div>
-
-                    <div className="health-stat-item">
-                      <label>Chi phí mỗi ngày</label>
-                      <p>{userData.costPerDay.toLocaleString()} đ/ngày</p>
-                    </div>
-                  </div>
-
-                  <div className="health-stat-row two-col">
-                    <div className="health-stat-item">
-                      <label>Thời gian hút thuốc</label>
-                      <p>{userData.yearsOfSmoking} năm</p>
-                    </div>
-
-                    <div className="health-stat-item">
-                      <label>Mức độ nghiện</label>
-                      <p>Cao (Fagerstrom: {userData.fagerstromScore})</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="health-improvements">
-                  <h3>Cải thiện sức khỏe</h3>
-                  <div className="improvements-list">
-                    {userData.healthImprovements.map((improvement, index) => (
-                      <div key={index} className="improvement-item">
-                        <span className="improvement-time">{improvement.time}</span>
-                        <span className="improvement-description">{improvement.description}</span>
-                        {improvement.completed ? (
-                          <FaCheckCircle className="completed-icon" />
-                        ) : (
-                          <span className="pending-icon">○</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>              <div className="plan-section">
-                <h2>Kế hoạch cai thuốc</h2>
-
-                {/* Hiển thị kế hoạch cai thuốc từ localStorage */}
-                <QuitPlanDisplay />
-
-                {/* Hiển thị dashboard tiến trình nếu đã hoàn thành kế hoạch */}
-                {completionDate && quitPlanData && (
-                  <div className="dashboard-section">
-                    <h3>Tiến trình cai thuốc</h3>
-                    <ProgressDashboard
-                      userPlan={quitPlanData}
-                      completionDate={completionDate}
-                    />
-                  </div>
-                )}
-
-                <div className="current-plan">
-                  <h3>Kế hoạch hiện tại</h3>
-                  <p className="plan-strategy">
-                    Phương pháp: Cai thuốc hoàn toàn và duy trì lâu dài
-                  </p>
-
-                  <div className="plan-start-date">
-                    <div className="date-label">
-                      <FaCalendarAlt className="icon" />
-                      <span>Ngày bắt đầu cai thuốc: {userData.startDate}</span>
-                    </div>
-                    <div className="plan-goal">
-                      <strong>Mục tiêu:</strong> Cai thuốc hoàn toàn và duy trì lâu dài
-                    </div>
-                  </div>
-
-                  <div className="milestones">
-                    {userData.milestones.map((milestone) => (
-                      <div key={milestone.id} className="milestone-item">
-                        <div className="milestone-status">
-                          {milestone.completed ? (
-                            <div className="status-circle completed">
-                              <FaCheckCircle />
-                            </div>
-                          ) : (
-                            <div className="status-circle in-progress"></div>
-                          )}
-                        </div>
-                        <div className="milestone-info">
-                          <h4>{milestone.name}</h4>
-                          <p>
-                            {milestone.completed
-                              ? `Hoàn thành: ${milestone.date}`
-                              : `Đang tiến hành: ${milestone.progress}`}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    className="edit-plan-btn"
-                    onClick={() => setIsPlanEditOpen(true)}
-                  >
-                    Điều chỉnh kế hoạch
-                  </button>
-                </div>
-              </div>
+              {/* Sử dụng CollapsibleSection cho Kế hoạch cai thuốc */}
+              <CollapsibleSection
+                title="Kế hoạch cai thuốc"
+                icon={<FaClipboardList />}
+                defaultOpen={false}
+                className="plan-collapsible"
+              >                  <ProfilePlan
+                  planData={{
+                    strategy: activePlan?.strategy || "Cai thuốc hoàn toàn và duy trì lâu dài",
+                    startDate: userData.startDate || new Date().toLocaleDateString('vi-VN'),
+                    goal: activePlan?.goal || "Cải thiện sức khỏe và tiết kiệm chi phí",
+                    milestones: userData.milestones
+                  }}
+                  onEditClick={() => setIsPlanEditOpen(true)}
+                />
+              </CollapsibleSection>
             </div>
           </div>
-        )}        {activeTab === "membership" && (
-          <div className="membership-section">
-            <h1>Thông tin Thành viên</h1>
+        </div>
+      )}        {activeTab === "membership" && (
+        <div className="membership-section">
+          <h1>Thông tin Thành viên</h1>
 
-            <div className="membership-status">
-              <div className="card membership-status-card">
-                <h2>Trạng thái thành viên</h2>
-                <div className="membership-status-info">
-                  {userData.membershipType && userData.membershipType !== 'free' ? (
-                    <div className="current-membership">
-                      <div className="membership-badge-large">
-                        <FaCrown className={userData.membershipType === "premium" ? "premium-icon" : "pro-icon"} />
-                        <span className={`membership-type ${userData.membershipType}`}>
-                          {userData.membershipType === "premium" ? "Premium" : "Pro"}
-                        </span>
-                      </div>
-                      <p className="membership-description">
-                        {userData.membershipType === "premium"
-                          ? "Bạn đang sử dụng gói Premium với đầy đủ tính năng hỗ trợ."
-                          : "Bạn đang sử dụng gói Pro với đầy đủ tính năng hàng năm."}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="free-membership">
-                      <p>Bạn đang sử dụng gói Miễn phí</p>
-                      <button className="upgrade-btn" onClick={() => navigate('/membership')}>
-                        Nâng cấp ngay
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="membership-features">
-              <h2>Tính năng của bạn</h2>
-              <div className="feature-list">
-                <div className="feature-item">
-                  <FaCheck className="feature-check" />
-                  <div className="feature-text">
-                    <h3>Theo dõi cai thuốc</h3>
-                    <p>Theo dõi tiến trình cai thuốc của bạn hàng ngày</p>
-                  </div>
-                </div>
-                <div className="feature-item">
-                  <FaCheck className="feature-check" />
-                  <div className="feature-text">
-                    <h3>Lập kế hoạch cá nhân</h3>
-                    <p>Tạo kế hoạch cai thuốc phù hợp với bạn</p>
-                  </div>
-                </div>
-
+          <div className="membership-status">
+            <div className="card membership-status-card">
+              <h2>Trạng thái thành viên</h2>
+              <div className="membership-status-info">
                 {userData.membershipType && userData.membershipType !== 'free' ? (
-                  <>
-                    <div className="feature-item">
-                      <FaCheck className="feature-check" />
-                      <div className="feature-text">
-                        <h3>Huy hiệu & cộng đồng</h3>
-                        <p>Tham gia cộng đồng và nhận huy hiệu</p>
-                      </div>
+                  <div className="current-membership">
+                    <div className="membership-badge-large">
+                      <FaCrown className={userData.membershipType === "premium" ? "premium-icon" : "pro-icon"} />
+                      <span className={`membership-type ${userData.membershipType}`}>
+                        {userData.membershipType === "premium" ? "Premium" : "Pro"}
+                      </span>
                     </div>
-                    <div className="feature-item">
-                      <FaCheck className="feature-check" />
-                      <div className="feature-text">
-                        <h3>Chat huấn luyện viên</h3>
-                        <p>Nhận tư vấn từ huấn luyện viên chuyên nghiệp</p>
-                      </div>
-                    </div>
-                    <div className="feature-item">
-                      <FaCheck className="feature-check" />
-                      <div className="feature-text">
-                        <h3>Video call tư vấn</h3>
-                        <p>Tham gia các buổi tư vấn qua video</p>
-                      </div>
-                    </div>
-                  </>
+                    <p className="membership-description">
+                      {userData.membershipType === "premium"
+                        ? "Bạn đang sử dụng gói Premium với đầy đủ tính năng hỗ trợ."
+                        : "Bạn đang sử dụng gói Pro với đầy đủ tính năng hàng năm."}
+                    </p>
+                  </div>
                 ) : (
-                  <>
-                    <div className="feature-item disabled">
-                      <FaTimes className="feature-times" />
-                      <div className="feature-text">
-                        <h3>Huy hiệu & cộng đồng</h3>
-                        <p>Nâng cấp để mở khóa tính năng này</p>
-                      </div>
-                    </div>
-                    <div className="feature-item disabled">
-                      <FaTimes className="feature-times" />
-                      <div className="feature-text">
-                        <h3>Chat huấn luyện viên</h3>
-                        <p>Nâng cấp để mở khóa tính năng này</p>
-                      </div>
-                    </div>
-                    <div className="feature-item disabled">
-                      <FaTimes className="feature-times" />
-                      <div className="feature-text">
-                        <h3>Video call tư vấn</h3>
-                        <p>Nâng cấp để mở khóa tính năng này</p>
-                      </div>
-                    </div>
-                  </>
+                  <div className="free-membership">
+                    <p>Bạn đang sử dụng gói Miễn phí</p>
+                    <button className="upgrade-btn" onClick={() => navigate('/membership')}>
+                      Nâng cấp ngay
+                    </button>
+                  </div>
                 )}
               </div>
-
-              {!userData.membershipType || userData.membershipType === 'free' ? (
-                <div className="membership-upgrade">
-                  <h3>Nâng cấp để sử dụng đầy đủ tính năng</h3>
-                  <button className="upgrade-btn-large" onClick={() => navigate('/membership')}>
-                    Khám phá gói thành viên
-                  </button>
-                </div>
-              ) : null}
             </div>
           </div>
-        )}
 
-        {activeTab === "achievements" && (
-          <div className="achievements-section">
-            <h1>Huy hiệu đã đạt</h1>
-
-            <div className="achievements-grid">
-              {userData.achievements.map((achievement) => (
-                <div
-                  key={achievement.id}
-                  className={`achievement-card ${!achievement.date ? "locked" : ""
-                    }`}
-                >
-                  <div className="achievement-icon">{achievement.icon}</div>
-                  <h3>{achievement.name}</h3>
-                  <p>{achievement.date || "Đạt khi đủ điều kiện"}</p>
+          <div className="membership-features">
+            <h2>Tính năng của bạn</h2>
+            <div className="feature-list">
+              <div className="feature-item">
+                <FaCheck className="feature-check" />
+                <div className="feature-text">
+                  <h3>Theo dõi cai thuốc</h3>
+                  <p>Theo dõi tiến trình cai thuốc của bạn hàng ngày</p>
                 </div>
-              ))}
+              </div>
+              <div className="feature-item">
+                <FaCheck className="feature-check" />
+                <div className="feature-text">
+                  <h3>Lập kế hoạch cá nhân</h3>
+                  <p>Tạo kế hoạch cai thuốc phù hợp với bạn</p>
+                </div>
+              </div>
+
+              {userData.membershipType && userData.membershipType !== 'free' ? (
+                <>
+                  <div className="feature-item">
+                    <FaCheck className="feature-check" />
+                    <div className="feature-text">
+                      <h3>Huy hiệu & cộng đồng</h3>
+                      <p>Tham gia cộng đồng và nhận huy hiệu</p>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <FaCheck className="feature-check" />
+                    <div className="feature-text">
+                      <h3>Chat huấn luyện viên</h3>
+                      <p>Nhận tư vấn từ huấn luyện viên chuyên nghiệp</p>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <FaCheck className="feature-check" />
+                    <div className="feature-text">
+                      <h3>Video call tư vấn</h3>
+                      <p>Tham gia các buổi tư vấn qua video</p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="feature-item disabled">
+                    <FaTimes className="feature-times" />
+                    <div className="feature-text">
+                      <h3>Huy hiệu & cộng đồng</h3>
+                      <p>Nâng cấp để mở khóa tính năng này</p>
+                    </div>
+                  </div>
+                  <div className="feature-item disabled">
+                    <FaTimes className="feature-times" />
+                    <div className="feature-text">
+                      <h3>Chat huấn luyện viên</h3>
+                      <p>Nâng cấp để mở khóa tính năng này</p>
+                    </div>
+                  </div>
+                  <div className="feature-item disabled">
+                    <FaTimes className="feature-times" />
+                    <div className="feature-text">
+                      <h3>Video call tư vấn</h3>
+                      <p>Nâng cấp để mở khóa tính năng này</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
-            <h2>Xem tất cả huy hiệu</h2>
+            {!userData.membershipType || userData.membershipType === 'free' ? (
+              <div className="membership-upgrade">
+                <h3>Nâng cấp để sử dụng đầy đủ tính năng</h3>
+                <button className="upgrade-btn-large" onClick={() => navigate('/membership')}>
+                  Khám phá gói thành viên
+                </button>
+              </div>
+            ) : null}
           </div>
-        )}
+        </div>
+      )}        {activeTab === "achievements" && (
+        <Achievement achievements={userData.achievements} />
+      )}
 
         {activeTab === "appointments" && (
           <div className="appointments-section">
             <h1>Lịch hẹn Coach</h1>
             <AppointmentList />
           </div>
-        )}
-
-        {activeTab === "journal" && (
+        )}        {activeTab === "journal" && (
           <div className="journal-section">
             <h1>Cập nhật hàng ngày</h1>
 
-            <DailyUpdate
-              onSubmit={(data) => {
+            <DailyCheckin
+              onProgressUpdate={(data) => {
                 console.log("Dữ liệu cập nhật:", data);
                 alert("Đã lưu cập nhật của bạn!");
               }}
+              currentPlan={activePlan}
             />
-
-            <div className="journal-history">
-              <h2>Lịch sử tiến trình</h2>
-              <div className="view-toggle">
-                <button className="toggle-btn active">Tất cả</button>
-                <button className="toggle-btn">Ngày tốt</button>
-                <button className="toggle-btn">Ngày khó khăn</button>
-              </div>
-
-              <div className="timeline-entries">
-                {userData.journalEntries.map((entry) => (
-                  <div key={entry.id} className="timeline-entry">
-                    <div className="entry-header">
-                      <div className="entry-day">
-                        <span className="day-number">Ngày {entry.day}</span>
-                        <span className="date">{entry.date}</span>
-                      </div>
-                      <div className="mood-indicator">
-                        {entry.mood === "Tốt" && (
-                          <span className="mood-emoji">😃</span>
-                        )}
-                        {entry.mood === "Bình thường" && (
-                          <span className="mood-emoji">😐</span>
-                        )}
-                        {entry.mood === "Không tốt" && (
-                          <span className="mood-emoji">😔</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="entry-details">
-                      <div className="detail-row">
-                        <span className="detail-label">Tâm trạng:</span>
-                        <span className="detail-value">{entry.mood}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">Triệu chứng:</span>
-                        <span className="detail-value">{entry.symptoms}</span>
-                      </div>
-                      <div className="entry-note">{entry.notes}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <button className="view-all-button">Xem tất cả</button>
-            </div>
-          </div>
-        )}
+          </div>)}
 
         {/* Modal chỉnh sửa kế hoạch */}
         <PlanEditModal
@@ -1003,6 +1025,7 @@ export default function ProfilePage() {
             startDate: userData.startDate,
             goal: userData.planGoal,
           }}
+          activePlan={activePlan}
           onSave={handleSavePlan}
         />
       </div>

@@ -16,6 +16,7 @@ import MembershipPackage from "./page/MembershipPackage.jsx"; // Import componen
 import BookAppointment from "./page/BookAppointment.jsx"; // Import component BookAppointment
 import ProtectedRoute from "./components/ProtectedRoute.jsx"; // Import ProtectedRoute
 import AccessDenied from "./page/AccessDenied.jsx"; // Import AccessDenied
+import UserProfile from "./page/User.jsx"; // Import UserProfile component
 import { AuthProvider } from "./context/AuthContext.jsx"; // Import AuthProvider
 import { MembershipProvider } from "./context/MembershipContext.jsx"; // Import MembershipProvider
 import "./style.css";
@@ -66,6 +67,16 @@ const router = createBrowserRouter([
     loader: () => {
       return window.location.replace("/");
     },
+  },
+  {
+    path: "/user",
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <UserProfile isStandalone={true} />
+        </ProtectedRoute>
+      </Layout>
+    ),
   },
   {
     path: "/profile",
@@ -314,7 +325,8 @@ const router = createBrowserRouter([
         <Register />
       </Layout>
     ),
-  },  {
+  },
+  {
     path: "/settings",
     element: (
       <Layout>
@@ -323,7 +335,8 @@ const router = createBrowserRouter([
         </ProtectedRoute>
       </Layout>
     ),
-  },  {
+  },
+  {
     path: "/access-denied",
     element: (
       <Layout>
@@ -377,7 +390,8 @@ const SimpleBackToTop = () => {
   );
 };
 
-export default function App() {  return (
+export default function App() {
+  return (
     <AuthProvider>
       <MembershipProvider>
         <RouterProvider router={router} />

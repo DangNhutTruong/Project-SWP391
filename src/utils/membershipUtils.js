@@ -46,7 +46,7 @@ export const getMinimumRequiredMembership = (allowedMemberships = []) => {
 export const formatMembershipName = (membershipType = 'free') => {
   const names = {
     'free': 'Miễn phí',
-    'premium': 'Premium',
+    'premium': 'Pre',
     'pro': 'Pro'
   };
   

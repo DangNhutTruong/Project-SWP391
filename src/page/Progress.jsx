@@ -4,8 +4,7 @@ import QuitProgressChart from '../components/QuitProgressChart';
 import DailyCheckin from '../components/DailyCheckin';
 import MoodTracking from '../components/MoodTracking';
 import ProgressDashboard from '../components/ProgressDashboard';
-import ProgressStats from '../components/ProgressStats';
-import DataViewer from '../components/DataViewer';
+import ResetCheckinData from '../components/ResetCheckinData';
 import './Progress.css';
 import '../styles/DailyCheckin.css';
 import '../styles/MoodTracking.css';
@@ -105,10 +104,9 @@ export default function Progress() {
         { week: 1, amount: 20, phase: "Thích nghi" },
         { week: 2, amount: 16, phase: "Thích nghi" },
         { week: 3, amount: 12, phase: "Tăng tốc" },
-        { week: 4, amount: 8, phase: "Tăng tốc" },
-        { week: 5, amount: 5, phase: "Hoàn thiện" },
+        { week: 4, amount: 8, phase: "Tăng tốc" },        { week: 5, amount: 5, phase: "Hoàn thiện" },
         { week: 6, amount: 2, phase: "Hoàn thiện" },
-        { week: 7, amount: 0, phase: "Hoàn thành" }
+        { week: 7, amount: 0, phase: "Mục tiêu đạt được" }
       ],
       initialCigarettes: 20,
       cigarettePrice: 3000
@@ -300,10 +298,26 @@ export default function Progress() {
   }
 
   return (
-    <div className="progress-container">
-      <h1 className="page-title">
-        {showCompletionDashboard ? 'Chúc mừng! Bạn đã hoàn thành kế hoạch' : 'Tiến trình cai thuốc hiện tại'}
-      </h1>
+    <div className="progress-container">      <h1 className="page-title">
+        {showCompletionDashboard ? 'Chúc mừng! Bạn đã lập kế hoạch cai thuốc' : 'Tiến trình cai thuốc hiện tại'}
+      </h1>        {/* Daily Checkin Section - Luôn hiển thị để người dùng có thể nhập số điếu đã hút */}
+      <DailyCheckin 
+        onProgressUpdate={handleProgressUpdate}
+        currentPlan={userPlan || {
+          name: "Kế hoạch mặc định",
+          startDate: new Date().toISOString().split('T')[0],
+          weeks: [
+            { week: 1, amount: 20, phase: "Thích nghi" },
+            { week: 2, amount: 16, phase: "Thích nghi" },
+            { week: 3, amount: 12, phase: "Tăng tốc" },
+            { week: 4, amount: 8, phase: "Tăng tốc" },
+            { week: 5, amount: 5, phase: "Hoàn thiện" },
+            { week: 6, amount: 2, phase: "Hoàn thiện" },
+            { week: 7, amount: 0, phase: "Mục tiêu đạt được" }
+          ],
+          initialCigarettes: 20
+        }}
+      />
 
       {/* Show completion dashboard if plan is completed */}
       {showCompletionDashboard && completionData ? (
@@ -313,19 +327,8 @@ export default function Progress() {
         />
       ) : (
         <>
-          {/* Daily Checkin Section - Moved to top */}
-          <DailyCheckin
-            onProgressUpdate={handleProgressUpdate}
-            currentPlan={userPlan}
-          />
-
-          {/* Progress Statistics - New comprehensive stats */}
-          <ProgressStats
-            userPlan={userPlan}
-            actualProgress={actualProgress}
-          />          {/* Enhanced Progress Chart with Chart.js */}
-          <QuitProgressChart
-            key={`chart-${actualProgress.length}`}
+          {/* Enhanced Progress Chart with Chart.js */}
+          <QuitProgressChart 
             userPlan={userPlan}
             actualProgress={actualProgress}
             timeFilter={activeTimeFilter}
@@ -430,18 +433,41 @@ export default function Progress() {
                 <span className="value">{userPlan?.startDate ? new Date(userPlan.startDate).toLocaleDateString('vi-VN') : 'Hôm nay'}</span>
               </div>
             </div>
-          </div>
-
-          {/* Data Viewer - Show actual check-in data */}
-          <DataViewer
-            actualProgress={actualProgress}
-            userPlan={userPlan}
-          />
-
-          {/* Mood Tracking Section */}
-          <MoodTracking
-            onMoodUpdate={handleMoodUpdate}
-          />
+          </div>          {/* Progress Statistics */}
+          {actualProgress.length > 0 && (
+            <div className="progress-stats">
+              <h2>Thống kê tiến trình</h2>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <div className="stat-value">{actualProgress.length}</div>
+                  <div className="stat-label">Ngày đã check-in</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">
+                    {actualProgress.filter(p => p.actualCigarettes <= p.targetCigarettes).length}
+                  </div>
+                  <div className="stat-label">Ngày đạt mục tiêu</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">
+                    {actualProgress.length > 0 ? 
+                      Math.round(actualProgress.reduce((sum, p) => sum + p.actualCigarettes, 0) / actualProgress.length) 
+                      : (userPlan.initialCigarettes || (userPlan.weeks && userPlan.weeks[0]?.amount) || 20)}
+                  </div>
+                  <div className="stat-label">Trung bình điếu/ngày</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">
+                    {Math.round((actualProgress.filter(p => p.actualCigarettes <= p.targetCigarettes).length / actualProgress.length) * 100)}%
+                  </div>
+                  <div className="stat-label">Tỷ lệ thành công</div>
+                </div>
+              </div>
+              
+              {/* Công cụ Reset dữ liệu */}
+              <ResetCheckinData />
+            </div>
+          )}
         </>
       )}
     </div>

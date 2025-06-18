@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import RequireMembership from '../components/RequireMembership';
 import './BookAppointment.css';
 
-export default function BookAppointment() {
+function BookAppointment() {
   const [step, setStep] = useState(1); // 1: Choose coach, 2: Select date, 3: Select time
   const [selectedCoach, setSelectedCoach] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -143,11 +143,11 @@ export default function BookAppointment() {
   const handleSelectTime = (time) => {
     setSelectedTime(time);
     
-    // Tạo ID ngẫu nhiên cho cuộc hẹn
-    const newAppointmentId = Math.floor(Math.random() * 1000000);
+    // Sử dụng ID của lịch hẹn cũ nếu đang thay đổi lịch hẹn, ngược lại tạo ID mới
+    const newAppointmentId = isRescheduling ? originalAppointment.id : Math.floor(Math.random() * 1000000);
     setAppointmentId(newAppointmentId);
     
-    // Tạo đối tượng lịch hẹn
+    // Tạo đối tượng lịch hẹn mới
     const appointment = {
       id: newAppointmentId,
       coachId: selectedCoach.id,
@@ -162,9 +162,22 @@ export default function BookAppointment() {
     
     // Lưu vào localStorage
     const existingAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
-    const updatedAppointments = [...existingAppointments, appointment];
-    localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
-      // Hiển thị thông báo thành công
+    
+    if (isRescheduling) {
+      // Nếu đang thay đổi lịch hẹn, xóa lịch hẹn cũ và thêm lịch hẹn mới
+      const updatedAppointments = existingAppointments.filter(app => app.id !== originalAppointment.id);
+      updatedAppointments.push(appointment);
+      localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+      
+      // Xóa thông tin lịch hẹn đang thay đổi từ localStorage
+      localStorage.removeItem('appointmentToReschedule');
+    } else {
+      // Nếu đang đặt lịch hẹn mới, thêm vào danh sách
+      const updatedAppointments = [...existingAppointments, appointment];
+      localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+    }
+      
+    // Hiển thị thông báo thành công
     setShowSuccess(true);
     
     // Lưu trạng thái tab trong localStorage để Profile page hiển thị tab lịch hẹn
@@ -300,8 +313,9 @@ export default function BookAppointment() {
       <div className="appointment-success">
         <div className="success-icon">
           <FaCheck />
-        </div>        <h2>Đặt lịch thành công!</h2>
-        <p>Bạn đã đặt lịch hẹn với <strong>{selectedCoach.name}</strong></p>
+        </div>
+        <h2>{isRescheduling ? 'Thay đổi lịch thành công!' : 'Đặt lịch thành công!'}</h2>
+        <p>Bạn đã {isRescheduling ? 'thay đổi lịch hẹn' : 'đặt lịch hẹn'} với <strong>{selectedCoach.name}</strong></p>
         <p>Vào ngày <strong>{selectedDate.toLocaleDateString('vi-VN')}</strong> lúc <strong>{selectedTime}</strong></p>
         <p>Mã cuộc hẹn: <strong>#{appointmentId}</strong></p>
         <p className="redirect-message">Bạn sẽ được chuyển đến trang hồ sơ cá nhân để xem lịch hẹn của bạn...</p>
@@ -348,11 +362,13 @@ export default function BookAppointment() {
             <div className="appointment-content">
               {step === 1 && renderCoachSelection()}
               {step === 2 && renderDateSelection()}
-              {step === 3 && renderTimeSelection()}
-            </div>
+              {step === 3 && renderTimeSelection()}            </div>
           </RequireMembership>
         )}
       </div>
     </section>
   );
 }
+
+// Export the component wrapped with membership requirement
+export default BookAppointment;

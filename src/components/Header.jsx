@@ -1,16 +1,18 @@
 import { Link } from 'react-router-dom';
 import { FaBell } from 'react-icons/fa';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LoginModal from './LoginModal';
 import { useAuth } from '../context/AuthContext';
 import { formatMembershipName } from '../utils/membershipUtils';
 import './Header.css';
 
-export default function Header() {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+export default function Header() {  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0); // Add this state for notification count
   const { user, logout } = useAuth();
+  
+  // Thêm useRef để theo dõi dropdown menu
+  const userMenuRef = useRef(null);
     // Debug user membership và đảm bảo nhất quán
   useEffect(() => {
     if (user) {
@@ -40,6 +42,26 @@ export default function Header() {
   const toggleUserMenu = () => {
     setIsUserMenuOpen(!isUserMenuOpen);
   };
+
+  useEffect(() => {
+    // Hàm xử lý click bên ngoài dropdown
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    // Thêm event listener khi dropdown đang mở
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Cleanup function
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
+
   return (
     <header className="nosmoke-header">
       <div className="container">
@@ -58,8 +80,7 @@ export default function Header() {
               <Link to="/notifications" className="nav-item notification-nav-item">
                 <FaBell /> Thông báo
                 {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
-              </Link>
-              <div className="user-menu-container">                <button className="user-menu-button" onClick={toggleUserMenu}>
+              </Link>              <div className="user-menu-container" ref={userMenuRef}>                <button className="user-menu-button" onClick={toggleUserMenu}>
                   <span className="user-initial">{user.name.charAt(0)}</span>                  <span className="user-name">                    
                     {user.name}
                     {/* Kiểm tra cả hai trường hợp để hiển thị nhãn thành viên */}
@@ -73,14 +94,12 @@ export default function Header() {
                       </span>
                     )}
                   </span>
-                </button>
-
-                {isUserMenuOpen && (
+                </button>                {isUserMenuOpen && (
                   <div className="user-dropdown-menu">
-                    <Link to="/profile" className="dropdown-item">
+                    <Link to="/profile" className="dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
                       <i className="fas fa-user"></i> Hồ sơ cá nhân
                     </Link>
-                    <Link to="/settings" className="dropdown-item">
+                    <Link to="/settings" className="dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
                       <i className="fas fa-cog"></i> Cài đặt
                     </Link>
                     <button onClick={handleLogout} className="dropdown-item logout-btn">

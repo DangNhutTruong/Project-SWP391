@@ -166,11 +166,12 @@
   right: 0;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   width: 200px;
-  z-index: 100;
+  z-index: 1000; /* Higher z-index to ensure it's above other elements */
   overflow: hidden;
   animation: fadeIn 0.2s ease-out;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 @keyframes fadeIn {
@@ -196,6 +197,11 @@
 
 .dropdown-item:hover {
   background-color: #f5f8ff;
+  color: #2570e8;
+}
+
+.dropdown-item:active {
+  background-color: #e5eeff;
 }
 
 .dropdown-item i {
