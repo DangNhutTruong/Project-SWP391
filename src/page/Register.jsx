@@ -42,8 +42,8 @@ export default function Register() {
     if (password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự');
       return;
-    } setIsLoading(true);
-
+    }    setIsLoading(true);
+    
     try {
       const userData = {
         username,

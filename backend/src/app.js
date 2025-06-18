@@ -1,4 +1,3 @@
-//backend
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -26,21 +25,14 @@ const corsOptions = {
         // Allow requests with no origin (mobile apps, postman, etc.)
         if (!origin) return callback(null, true);
 
-        // Allow any localhost port for development (5173, 5174, 5175, etc.)
-        if (origin && (
-            origin.startsWith('http://localhost:') ||
-            origin.startsWith('http://127.0.0.1:')
-        )) {
-            console.log(`✅ CORS: Allowing localhost origin: ${origin}`);
+        // Allow any localhost port for development
+        if (origin && origin.startsWith('http://localhost:')) {
             return callback(null, true);
         }
 
-        // Check specific allowed origins
         if (allowedOrigins.indexOf(origin) !== -1) {
-            console.log(`✅ CORS: Allowing configured origin: ${origin}`);
             callback(null, true);
         } else {
-            console.log(`❌ CORS: Blocking origin: ${origin}`);
             callback(new Error('Not allowed by CORS'));
         }
     },

@@ -58,16 +58,14 @@ export const AuthProvider = ({ children }) => {
       console.log('🌐 Fetching:', url, 'with config:', config);
 
       const response = await fetch(url, config);
-
+      
       console.log('📡 Response status:', response.status);
       console.log('📡 Response ok:', response.ok);
+      
       const data = await response.json();
-
-      console.log('📋 Response data:', data); // Log full response
 
       if (!response.ok) {
         console.error('❌ API Error:', data);
-        console.error('❌ Validation errors:', data.data?.errors); // Log validation details
         throw new Error(data.message || 'Request failed');
       }
 
@@ -85,7 +83,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🚀 AuthContext register called with:', userData);
       console.log('📡 Making API call to:', `${API_BASE_URL}/auth/register`);
-
+      
       const data = await apiCall('/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData)
