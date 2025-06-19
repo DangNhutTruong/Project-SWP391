@@ -7,6 +7,9 @@ export default function Hero() {
   return (
     <section className="hero nosmoke-hero">
       <div className="hero-bg-pattern"></div>
+      <div className="floating-circle circle1"></div>
+      <div className="floating-circle circle2"></div>
+      <div className="floating-circle circle3"></div>
       <div className="container">
         <div className="hero-content">
           <div className="hero-badge">Nói không với thuốc lá</div>
