@@ -537,21 +537,31 @@ export default function ProfilePage() {
   return (
     <div className="profile-container">
       {/* Sidebar */}
-      <div className="profile-sidebar">
-        <div className="user-info">          <div className="user-avatar">
-            <span className="user-initial">{userData.name ? userData.name.charAt(0) : 'U'}</span>
+      <div className="profile-sidebar">        <div className="user-info">          <div className="avatar-circle">
+            <div className="user-initial-container">
+              <span className="user-initial">{userData.name ? userData.name.charAt(0) : 'U'}</span>
+            </div>
           </div><div className="user-details">
-            <h3>
-              {userData.name}
+            <div className="user-name-wrapper">
+              <h3 className="user-name">{userData.name}</h3>
               {userData.membershipType && userData.membershipType !== 'free' && (
                 <span className={`membership-label ${userData.membershipType}`}>
                   {userData.membershipType === 'premium' ? 'Premium' : 'Pro'}
                 </span>
               )}
-            </h3>
-            <p><span className="status-dot"></span> Đang cai thuốc: <span className="day-count">{userData.daysWithoutSmoking}</span> ngày</p>
+            </div>
+            <div className="quit-status-container">
+              <div className="quit-status-text">
+                <span className="status-dot"></span>
+                Đang cai thuốc
+              </div>
+              <div className="quit-days-display">
+                <span className="day-count">{userData.daysWithoutSmoking || 5}</span>
+                <span className="day-text">ngày</span>
+              </div>
+            </div>
           </div>
-        </div>        <nav className="profile-nav">          <Link
+        </div><nav className="profile-nav">          <Link
             to="#"
             className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
             onClick={() => {
