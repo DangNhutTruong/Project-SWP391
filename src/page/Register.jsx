@@ -42,8 +42,8 @@ export default function Register() {
     if (password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự');
       return;
-    }    setIsLoading(true);
-    
+    } setIsLoading(true);
+
     try {
       const userData = {
         username,
@@ -60,12 +60,21 @@ export default function Register() {
 
       console.log('🔍 Sending userData:', userData); // Debug log
 
-      const result = await register(userData);
-
-      console.log('📋 Register result:', result); // Debug log
+      const result = await register(userData); console.log('📋 Register result:', result); // Debug log
 
       if (result.success) {
-        navigate('/profile');
+        if (result.needsVerification) {
+          // Redirect to email verification page
+          navigate('/verify-email', {
+            state: {
+              email: result.email,
+              message: result.message
+            }
+          });
+        } else {
+          // Direct login (fallback)
+          navigate('/profile');
+        }
       } else {
         setError(result.error || 'Đăng ký không thành công');
       }

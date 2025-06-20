@@ -2,6 +2,77 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool } from '../config/database.js';
 import { sendSuccess, sendError } from '../utils/response.js';
+import emailService from '../services/emailService.js';
+
+// Auto-create tables if they don't exist (for Railway deployment)
+const ensureTablesExist = async () => {
+    try {
+        // Create pending_registrations table
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS pending_registrations (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) NOT NULL,
+                email VARCHAR(100) NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                full_name VARCHAR(100) NOT NULL,
+                phone VARCHAR(20),
+                date_of_birth DATE,
+                gender ENUM('male', 'female', 'other'),
+                verification_code VARCHAR(6) NOT NULL,
+                expires_at DATETIME NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_email (email),
+                INDEX idx_username (username),
+                INDEX idx_verification_code (verification_code),
+                INDEX idx_expires_at (expires_at)
+            )
+        `);
+
+        // Create email_verifications table  
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS email_verifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                email VARCHAR(100) NOT NULL,
+                verification_code VARCHAR(6) NOT NULL,
+                expires_at DATETIME NOT NULL,
+                is_used BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_email (email),
+                INDEX idx_verification_code (verification_code),
+                INDEX idx_expires_at (expires_at)
+            )
+        `);
+
+        // Create smoker table if not exists
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS smoker (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) NOT NULL UNIQUE,
+                email VARCHAR(100) NOT NULL UNIQUE,
+                password_hash VARCHAR(255) NOT NULL,
+                full_name VARCHAR(100) NOT NULL,
+                phone VARCHAR(20),
+                date_of_birth DATE,
+                gender ENUM('male', 'female', 'other'),
+                cigarettes_per_day INT DEFAULT 10,
+                cost_per_pack DECIMAL(10,2) DEFAULT 25000.00,
+                cigarettes_per_pack INT DEFAULT 20,
+                membership_type ENUM('free', 'premium') DEFAULT 'free',
+                membership_expires_at DATETIME NULL,
+                quit_date DATE,
+                email_verified BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_email (email),
+                INDEX idx_username (username)
+            )
+        `);
+
+        console.log('✅ Database tables ensured');
+    } catch (error) {
+        console.error('❌ Error ensuring tables exist:', error);
+    }
+};
 
 // Generate JWT Token
 const generateToken = (userId) => {
@@ -38,9 +109,11 @@ const formatUserResponse = (user) => {
     };
 };
 
-// Register User
+// Register User - Step 1: Send verification code
 export const register = async (req, res) => {
     try {
+        // Ensure required tables exist (for Railway deployment)
+        await ensureTablesExist();
         const {
             username,
             email,
@@ -48,7 +121,10 @@ export const register = async (req, res) => {
             fullName,
             phone,
             dateOfBirth,
-            gender
+            gender,
+            cigarettesPerDay,
+            costPerPack,
+            cigarettesPerPack
         } = req.body;
 
         // Check if user already exists
@@ -61,67 +137,52 @@ export const register = async (req, res) => {
             return sendError(res, 'User with this email or username already exists', 409);
         }
 
-        // Hash password
-        const saltRounds = 12;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        // Check if user already exists in pending registrations
+        const [pendingUsers] = await pool.execute(
+            'SELECT id FROM pending_registrations WHERE email = ? OR username = ?',
+            [email, username]
+        );        // Generate verification code and expiry time
+        const verificationCode = emailService.generateVerificationCode();
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-        // Start transaction
-        const connection = await pool.getConnection();
-        await connection.beginTransaction();
-
-        try {
-            // Insert new user
-            const [result] = await connection.execute(
-                `INSERT INTO smoker (username, email, password_hash, full_name, phone, date_of_birth, gender, membership_type) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 'free')`,
-                [username, email, hashedPassword, fullName, phone || null, dateOfBirth || null, gender || null]
+        if (pendingUsers.length > 0) {
+            // Update existing pending registration
+            await pool.execute(
+                `UPDATE pending_registrations 
+                 SET username = ?, password_hash = ?, full_name = ?, phone = ?, 
+                     date_of_birth = ?, gender = ?, verification_code = ?, expires_at = ?, created_at = NOW()
+                 WHERE email = ?`,
+                [username, await bcrypt.hash(password, 12), fullName, phone || null,
+                    dateOfBirth || null, gender || null, verificationCode, expiresAt, email]
             );
-
-            const userId = result.insertId;
-
-            // Create smoking status record
-            await connection.execute(
-                'INSERT INTO smokingstatus (smoker_id) VALUES (?)',
-                [userId]
+        } else {
+            // Create new pending registration
+            const hashedPassword = await bcrypt.hash(password, 12);
+            await pool.execute(
+                `INSERT INTO pending_registrations 
+                 (username, email, password_hash, full_name, phone, date_of_birth, gender, verification_code, expires_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [username, email, hashedPassword, fullName, phone || null,
+                    dateOfBirth || null, gender || null, verificationCode, expiresAt]
             );
-
-            // Commit transaction
-            await connection.commit();
-
-            // Get created user (without password)
-            const [users] = await pool.execute(
-                `SELECT id, username, email, full_name, phone, date_of_birth, gender, 
-                        membership_type, avatar_url, created_at, updated_at 
-                 FROM smoker 
-                 WHERE id = ?`,
-                [userId]
-            );
-
-            const user = users[0];
-            const token = generateToken(userId);
-            const refreshToken = generateRefreshToken(userId);
-
-            sendSuccess(res, 'User registered successfully', {
-                user: formatUserResponse(user),
-                token,
-                refreshToken
-            }, 201);
-
-        } catch (error) {
-            await connection.rollback();
-            throw error;
-        } finally {
-            connection.release();
         }
+
+        // Try to send verification email (don't fail registration if email fails)
+        try {
+            await emailService.sendVerificationEmail(email, fullName, verificationCode);
+            console.log(`✅ Verification email sent to ${email}`);
+        } catch (emailError) {
+            console.log(`⚠️ Email service not configured. Verification code for ${email}: ${verificationCode}`);
+        }
+
+        sendSuccess(res, 'Verification code sent to your email. Please check your inbox.', {
+            email: email,
+            message: 'Please enter the 6-digit code sent to your email',
+            verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined // Only show in dev mode
+        }, 200);
 
     } catch (error) {
         console.error('Register error:', error);
-
-        // Handle specific MySQL errors
-        if (error.code === 'ER_DUP_ENTRY') {
-            return sendError(res, 'Email or username already exists', 409);
-        }
-
         sendError(res, 'Registration failed. Please try again.', 500);
     }
 };
@@ -376,3 +437,157 @@ export const refreshToken = async (req, res) => {
         sendError(res, 'Failed to refresh token', 500);
     }
 };
+
+// Verify Email and Complete Registration
+export const verifyEmail = async (req, res) => {
+    try {
+        // Ensure required tables exist (for Railway deployment)
+        await ensureTablesExist();
+
+        const { email, verificationCode } = req.body;
+
+        console.log(`📨 Yêu cầu xác thực email cho: ${email}, mã: ${verificationCode}`);
+
+        // Kiểm tra trực tiếp trong database để debug
+        const [verificationRecords] = await pool.execute(
+            'SELECT * FROM email_verifications WHERE email = ? ORDER BY created_at DESC LIMIT 5',
+            [email]
+        );
+
+        console.log(`📨 Tìm thấy ${verificationRecords.length} bản ghi xác thực cho email: ${email}`);
+
+        if (verificationRecords.length > 0) {
+            verificationRecords.forEach((record, index) => {
+                const now = new Date();
+                const expires = new Date(record.expires_at);
+                const isExpired = expires < now;
+                const isCodeMatch = record.verification_code === verificationCode;
+
+                console.log(`📨 Bản ghi #${index + 1}:`);
+                console.log(`   Mã: ${record.verification_code}, Nhận được: ${verificationCode}`);
+                console.log(`   Khớp: ${isCodeMatch}`);
+                console.log(`   Hết hạn: ${expires.toLocaleString()}, Hiện tại: ${now.toLocaleString()}`);
+                console.log(`   Đã hết hạn: ${isExpired}`);
+                console.log(`   Đã sử dụng: ${record.is_used ? 'Có' : 'Không'}`);
+            });
+        }
+
+        // Verify the code
+        const isValidCode = await emailService.verifyCode(email, verificationCode);
+        if (!isValidCode) {
+            console.log(`❌ Mã xác thực không hợp lệ hoặc đã hết hạn cho ${email}`);
+            return sendError(res, 'Mã xác thực không hợp lệ hoặc đã hết hạn', 400);
+        }
+
+        console.log(`✅ Mã xác thực hợp lệ cho ${email}`);
+
+        // Get pending registration data
+        const [pendingUsers] = await pool.execute(
+            'SELECT * FROM pending_registrations WHERE email = ?',
+            [email]
+        );
+
+        if (pendingUsers.length === 0) {
+            console.log(`❌ Không tìm thấy đăng ký chờ xác nhận cho ${email}`);
+            return sendError(res, 'Không tìm thấy đăng ký chờ xác nhận với email này', 404);
+        }
+
+        console.log(`✅ Tìm thấy đăng ký chờ xác nhận cho ${email}`);
+        const pendingUser = pendingUsers[0];
+
+        // Start transaction to create actual user
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        try {            // Insert new user into smoker table
+            const [result] = await connection.execute(
+                `INSERT INTO smoker (username, email, password_hash, full_name, phone, date_of_birth, gender, membership_type, email_verified) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'free', true)`,
+                [pendingUser.username, pendingUser.email, pendingUser.password_hash,
+                pendingUser.full_name, pendingUser.phone, pendingUser.date_of_birth,
+                pendingUser.gender]
+            );
+
+            const userId = result.insertId;
+
+            // Create smoking status record
+            await connection.execute(
+                'INSERT INTO smokingstatus (smoker_id) VALUES (?)',
+                [userId]
+            );
+
+            // Delete from pending registrations
+            await connection.execute(
+                'DELETE FROM pending_registrations WHERE email = ?',
+                [email]
+            );            // Commit transaction
+            await connection.commit();
+
+            // Delete verification code
+            await emailService.deleteVerificationCode(email);
+
+            // Get created user (without password)
+            const [users] = await pool.execute(
+                `SELECT id, username, email, full_name, phone, date_of_birth, gender, 
+                        membership_type, avatar_url, created_at, updated_at 
+                 FROM smoker 
+                 WHERE id = ?`,
+                [userId]
+            );
+
+            const user = users[0];
+            const token = generateToken(userId);
+            const refreshToken = generateRefreshToken(userId);
+
+            // Send welcome email
+            await emailService.sendWelcomeEmail(email, pendingUser.full_name);
+
+            sendSuccess(res, 'Email verified successfully! Account created.', {
+                user: formatUserResponse(user),
+                token,
+                refreshToken
+            }, 201);
+
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+
+    } catch (error) {
+        console.error('Email verification error:', error);
+        sendError(res, 'Email verification failed. Please try again.', 500);
+    }
+};
+
+// Resend Verification Code
+export const resendVerificationCode = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Check if pending registration exists
+        const [pendingUsers] = await pool.execute(
+            'SELECT * FROM pending_registrations WHERE email = ?',
+            [email]
+        );
+
+        if (pendingUsers.length === 0) {
+            return sendError(res, 'No pending registration found for this email', 404);
+        }
+
+        const pendingUser = pendingUsers[0];        // Generate and send new verification code
+        const verificationCode = emailService.generateVerificationCode();
+        await emailService.sendVerificationEmail(email, pendingUser.full_name, verificationCode);
+
+        sendSuccess(res, 'New verification code sent to your email', {
+            email: email
+        });
+
+    } catch (error) {
+        console.error('Resend verification error:', error);
+        sendError(res, 'Failed to resend verification code', 500);
+    }
+};
+
+ensureTablesExist();

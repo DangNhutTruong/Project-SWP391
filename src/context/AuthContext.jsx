@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
 // Base API URL - change this to your backend URL
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Tạo context cho xác thực
 const AuthContext = createContext(null);
@@ -62,27 +62,33 @@ export const AuthProvider = ({ children }) => {
       }
 
       const url = `${API_BASE_URL}${endpoint}`;
-      console.log('🌐 Fetching:', url, 'with config:', config);
-
-      const response = await fetch(url, config);
+      console.log('🌐 Fetching:', url, 'with config:', config); const response = await fetch(url, config);
 
       console.log('📡 Response status:', response.status);
       console.log('📡 Response ok:', response.ok);
 
+      // Xử lý trường hợp server error (500)
+      if (response.status === 500) {
+        console.error('❌ Server error (500)');
+        throw new Error('Lỗi máy chủ nội bộ. Vui lòng thử lại sau.');
+      }
+
       const data = await response.json();
+      console.log('📡 Response data:', data);
 
       if (!response.ok) {
         console.error('❌ API Error:', data);
-        throw new Error(data.message || 'Request failed');
+        throw new Error(data.message || 'Yêu cầu thất bại');
       }
 
       return data;
     } catch (error) {
+      // Log chi tiết lỗi bao gồm stack trace
+      console.error('🚨 API call error details:', error);
       console.error('🚨 apiCall error:', error);
       throw error;
     }
-  };
-  // Hàm đăng ký tài khoản mới
+  };  // Hàm đăng ký tài khoản mới - Bước 1: Gửi mã xác nhận
   const register = async (userData) => {
     setLoading(true);
     setError(null);
@@ -94,13 +100,81 @@ export const AuthProvider = ({ children }) => {
       const data = await apiCall('/auth/register', {
         method: 'POST',
         body: JSON.stringify(userData)
-      }); console.log('✅ API response:', data);
+      });
+
+      console.log('✅ API response:', data);
 
       if (data.success) {
+        // Registration successful, verification code sent
+        return {
+          success: true,
+          message: data.message,
+          email: data.data.email,
+          needsVerification: true
+        };
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };  // Hàm xác nhận email
+  const verifyEmail = async (email, verificationCode) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log(`🔍 Xác thực email: ${email} với mã: ${verificationCode}`);
+      console.log(`🌐 API URL: ${API_BASE_URL}/auth/verify-email`);
+
+      // Đảm bảo mã xác thực luôn là string và loại bỏ khoảng trắng
+      const formattedCode = String(verificationCode).trim();
+
+      console.log(`📤 Gửi request với dữ liệu:`, { email, verificationCode: formattedCode });
+
+      const data = await apiCall('/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({
+          email,
+          verificationCode: formattedCode
+        })
+      });
+
+      console.log(`📥 Nhận response:`, data); if (data.success) {
         setUser(data.data.user);
         setToken(data.data.token);
-        console.log('✅ User registered - session persists until browser close');
+        console.log('✅ Email verified and user registered');
         return { success: true, user: data.data.user };
+      } else {
+        console.error('❌ Verification failed:', data.message);
+        throw new Error(data.message || 'Xác thực email không thành công');
+      }
+    } catch (err) {
+      console.error('🔴 Lỗi khi xác thực email:', err);
+      console.error('❌ Verification error:', err);
+      setError(err.message || 'Không thể kết nối đến server');
+      return { success: false, error: err.message || 'Không thể kết nối đến server' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Hàm gửi lại mã xác nhận
+  const resendVerificationCode = async (email) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await apiCall('/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      });
+
+      if (data.success) {
+        return { success: true, message: data.message };
       } else {
         throw new Error(data.message);
       }
@@ -240,6 +314,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
+    verifyEmail,
+    resendVerificationCode,
     updateUser,
     changePassword,
     refreshUser,
