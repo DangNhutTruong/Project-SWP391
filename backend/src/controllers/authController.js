@@ -51,7 +51,7 @@ export const ensureTablesExist = async () => {
             if (!error.message.includes('Duplicate column name')) {
                 console.log('is_active column error:', error.message);
             }
-        }        try {
+        } try {
             await pool.execute(`
                 ALTER TABLE users 
                 ADD COLUMN refresh_token TEXT
@@ -161,7 +161,7 @@ const formatUserResponse = (user) => {
 export const register = async (req, res) => {
     try {
         console.log('📝 Registration request received:', req.body);
-        
+
         const {
             username,
             email,
@@ -189,7 +189,7 @@ export const register = async (req, res) => {
         if (existingUsers.length > 0) {
             console.log('❌ User already exists');
             return sendError(res, 'User with this email or username already exists', 409);
-        }        console.log('🔍 Checking for pending registrations...');
+        } console.log('🔍 Checking for pending registrations...');
         // Check pending registrations
         const [pendingUsers] = await pool.execute(
             'SELECT id FROM pending_registrations WHERE email = ? OR username = ?',
@@ -302,7 +302,7 @@ export const verifyEmail = async (req, res) => {
             return sendError(res, 'Email and verification code are required', 400);
         }        // Check if verification code is valid using emailService
         const isCodeValid = await emailService.verifyCode(email, verificationCode);
-        
+
         if (!isCodeValid) {
             return sendError(res, 'Invalid or expired verification code', 400);
         }
@@ -354,7 +354,7 @@ export const verifyEmail = async (req, res) => {
         await pool.execute(
             'UPDATE users SET refresh_token = ? WHERE id = ?',
             [refreshToken, userId]
-        );        sendSuccess(res, 'Email verified and account created successfully', {
+        ); sendSuccess(res, 'Email verified and account created successfully', {
             user: {
                 id: userId,
                 username: pendingUser.username,
