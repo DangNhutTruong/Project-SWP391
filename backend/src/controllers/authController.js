@@ -41,9 +41,7 @@ const ensureTablesExist = async () => {
                 INDEX idx_verification_code (verification_code),
                 INDEX idx_expires_at (expires_at)
             )
-        `);
-
-        // Create smoker table if not exists
+        `);        // Create smoker table if not exists
         await pool.execute(`
             CREATE TABLE IF NOT EXISTS smoker (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -61,14 +59,52 @@ const ensureTablesExist = async () => {
                 membership_expires_at DATETIME NULL,
                 quit_date DATE,
                 email_verified BOOLEAN DEFAULT FALSE,
+                is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 INDEX idx_email (email),
                 INDEX idx_username (username)
             )
         `);
+        // Add missing columns if they don't exist (for existing databases)
+        try {
+            await pool.execute(`
+                ALTER TABLE smoker 
+                ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE
+            `);
+        } catch (error) {
+            // Ignore column exists errors
+        }
 
-        console.log('✅ Database tables ensured');
+        try {
+            await pool.execute(`
+                ALTER TABLE smoker 
+                ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE
+            `);
+        } catch (error) {
+            // Ignore column exists errors            }
+        }
+
+        // Create smokingstatus table if not exists
+        await pool.execute(`
+            CREATE TABLE IF NOT EXISTS smokingstatus (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                smoker_id INT NOT NULL,
+                current_streak_days INT DEFAULT 0,
+                longest_streak_days INT DEFAULT 0,
+                total_days_quit INT DEFAULT 0,
+                total_cigarettes_avoided INT DEFAULT 0,
+                money_saved DECIMAL(10,2) DEFAULT 0.00,
+                current_status ENUM('smoking', 'quitting', 'quit') DEFAULT 'smoking',
+                health_score INT DEFAULT 0,
+                last_smoke_date DATE NULL,
+                quit_attempts INT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (smoker_id) REFERENCES smoker(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_smoker (smoker_id)
+            )
+        `); console.log('✅ Database tables ensured');
     } catch (error) {
         console.error('❌ Error ensuring tables exist:', error);
     }
@@ -165,14 +201,12 @@ export const register = async (req, res) => {
                 [username, email, hashedPassword, fullName, phone || null,
                     dateOfBirth || null, gender || null, verificationCode, expiresAt]
             );
-        }
-
-        // Try to send verification email (don't fail registration if email fails)
+        }        // Try to send verification email (don't fail registration if email fails)
         try {
             await emailService.sendVerificationEmail(email, fullName, verificationCode);
-            console.log(`✅ Verification email sent to ${email}`);
+            console.log(`📧 Email sent to ${email}`);
         } catch (emailError) {
-            console.log(`⚠️ Email service not configured. Verification code for ${email}: ${verificationCode}`);
+            console.log(`⚠️  Development mode - Code: ${verificationCode}`);
         }
 
         sendSuccess(res, 'Verification code sent to your email. Please check your inbox.', {
@@ -444,9 +478,7 @@ export const verifyEmail = async (req, res) => {
         // Ensure required tables exist (for Railway deployment)
         await ensureTablesExist();
 
-        const { email, verificationCode } = req.body;
-
-        console.log(`📨 Yêu cầu xác thực email cho: ${email}, mã: ${verificationCode}`);
+        const { email, verificationCode } = req.body; console.log(`� Email verification request: ${email}`);
 
         // Kiểm tra trực tiếp trong database để debug
         const [verificationRecords] = await pool.execute(
@@ -454,45 +486,40 @@ export const verifyEmail = async (req, res) => {
             [email]
         );
 
-        console.log(`📨 Tìm thấy ${verificationRecords.length} bản ghi xác thực cho email: ${email}`);
-
         if (verificationRecords.length > 0) {
-            verificationRecords.forEach((record, index) => {
-                const now = new Date();
-                const expires = new Date(record.expires_at);
-                const isExpired = expires < now;
-                const isCodeMatch = record.verification_code === verificationCode;
+            console.log(`📊 Found ${verificationRecords.length} verification records`);
+            const latestRecord = verificationRecords[0];
+            const isExpired = new Date(latestRecord.expires_at) < new Date();
+            const isCodeMatch = latestRecord.verification_code === verificationCode;
 
-                console.log(`📨 Bản ghi #${index + 1}:`);
-                console.log(`   Mã: ${record.verification_code}, Nhận được: ${verificationCode}`);
-                console.log(`   Khớp: ${isCodeMatch}`);
-                console.log(`   Hết hạn: ${expires.toLocaleString()}, Hiện tại: ${now.toLocaleString()}`);
-                console.log(`   Đã hết hạn: ${isExpired}`);
-                console.log(`   Đã sử dụng: ${record.is_used ? 'Có' : 'Không'}`);
-            });
+            console.log(`🔍 Latest code: ${latestRecord.verification_code} | Input: ${verificationCode} | Match: ${isCodeMatch ? '✅' : '❌'}`);
+            console.log(`⏰ Expires: ${new Date(latestRecord.expires_at).toLocaleTimeString()} | Expired: ${isExpired ? '❌' : '✅'}`);
+        } else {
+            console.log(`❌ No verification records found for ${email}`);
+        } try {
+            // Verify the code
+            const isValidCode = await emailService.verifyCode(email, verificationCode);
+            if (!isValidCode) {
+                console.log(`❌ Invalid verification code for ${email}`);
+                return sendError(res, 'Mã xác thực không hợp lệ hoặc đã hết hạn', 400);
+            }
+
+            console.log(`✅ Code verified successfully for ${email}`);
+        } catch (verifyError) {
+            console.error('❌ Verification error:', verifyError.message);
+            return sendError(res, 'Lỗi khi xác thực mã. Vui lòng thử lại.', 400);
         }
-
-        // Verify the code
-        const isValidCode = await emailService.verifyCode(email, verificationCode);
-        if (!isValidCode) {
-            console.log(`❌ Mã xác thực không hợp lệ hoặc đã hết hạn cho ${email}`);
-            return sendError(res, 'Mã xác thực không hợp lệ hoặc đã hết hạn', 400);
-        }
-
-        console.log(`✅ Mã xác thực hợp lệ cho ${email}`);
 
         // Get pending registration data
         const [pendingUsers] = await pool.execute(
             'SELECT * FROM pending_registrations WHERE email = ?',
             [email]
-        );
-
-        if (pendingUsers.length === 0) {
-            console.log(`❌ Không tìm thấy đăng ký chờ xác nhận cho ${email}`);
+        ); if (pendingUsers.length === 0) {
+            console.log(`❌ No pending registration found for ${email}`);
             return sendError(res, 'Không tìm thấy đăng ký chờ xác nhận với email này', 404);
         }
 
-        console.log(`✅ Tìm thấy đăng ký chờ xác nhận cho ${email}`);
+        console.log(`✅ Creating user account for ${email}`);
         const pendingUser = pendingUsers[0];
 
         // Start transaction to create actual user
@@ -501,8 +528,8 @@ export const verifyEmail = async (req, res) => {
 
         try {            // Insert new user into smoker table
             const [result] = await connection.execute(
-                `INSERT INTO smoker (username, email, password_hash, full_name, phone, date_of_birth, gender, membership_type, email_verified) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 'free', true)`,
+                `INSERT INTO smoker (username, email, password_hash, full_name, phone, date_of_birth, gender, membership_type) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'free')`,
                 [pendingUser.username, pendingUser.email, pendingUser.password_hash,
                 pendingUser.full_name, pendingUser.phone, pendingUser.date_of_birth,
                 pendingUser.gender]
@@ -537,10 +564,13 @@ export const verifyEmail = async (req, res) => {
 
             const user = users[0];
             const token = generateToken(userId);
-            const refreshToken = generateRefreshToken(userId);
-
-            // Send welcome email
-            await emailService.sendWelcomeEmail(email, pendingUser.full_name);
+            const refreshToken = generateRefreshToken(userId);            // Send welcome email
+            try {
+                await emailService.sendWelcomeEmail(email, pendingUser.full_name);
+                console.log(`🎉 Account created successfully for ${pendingUser.username}`);
+            } catch (emailError) {
+                console.log(`🎉 Account created for ${pendingUser.username} (welcome email failed)`);
+            }
 
             sendSuccess(res, 'Email verified successfully! Account created.', {
                 user: formatUserResponse(user),
@@ -554,10 +584,14 @@ export const verifyEmail = async (req, res) => {
         } finally {
             connection.release();
         }
-
     } catch (error) {
-        console.error('Email verification error:', error);
-        sendError(res, 'Email verification failed. Please try again.', 500);
+        console.error('❌ Email verification failed:', error.message);
+        // Cải thiện thông báo lỗi với thông tin chi tiết hơn
+        const errorMessage =
+            error.code === 'ER_DUP_ENTRY' ? 'Email hoặc tên đăng nhập đã tồn tại.' :
+                error.message || 'Xác thực email thất bại. Vui lòng thử lại.';
+
+        sendError(res, errorMessage, 500);
     }
 };
 

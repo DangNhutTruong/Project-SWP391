@@ -33,13 +33,41 @@ class EmailService {
     }    // Verify code
     async verifyCode(email, code) {
         try {
-            console.log(`🔎 Kiểm tra mã xác thực: '${code}' cho email: ${email}`);
-
-            // Đảm bảo code là chuỗi và xóa khoảng trắng
             const trimmedCode = String(code).trim();
-            console.log(`🔎 Mã xác thực đã xử lý: '${trimmedCode}'`);
 
-            // Kiểm tra tất cả mã xác thực gần đây nhất trước để debug
+            // Kiểm tra mã xác thực hợp lệ
+            const query = `
+                SELECT * FROM email_verifications 
+                WHERE email = ? 
+                AND verification_code = ? 
+                AND expires_at > NOW()
+                ORDER BY created_at DESC
+                LIMIT 1
+            `;
+
+            const [rows] = await pool.execute(query, [email, trimmedCode]);
+
+            if (rows.length > 0) {
+                const record = rows[0];
+
+                if (record.is_used) {
+                    // Cho phép dùng lại mã để hoàn tất xác thực
+                    await pool.execute(
+                        'UPDATE email_verifications SET is_used = TRUE WHERE id = ?',
+                        [record.id]
+                    );
+                    return true;
+                } else {
+                    // Đánh dấu mã đã được sử dụng
+                    await pool.execute(
+                        'UPDATE email_verifications SET is_used = TRUE WHERE id = ?',
+                        [record.id]
+                    );
+                    return true;
+                }
+            }
+
+            // Kiểm tra mã gần nhất nếu không tìm thấy mã hợp lệ
             const [allCodes] = await pool.execute(
                 `SELECT * FROM email_verifications 
                 WHERE email = ?
@@ -48,41 +76,27 @@ class EmailService {
                 [email]
             );
 
-            console.log(`🔎 Tìm thấy ${allCodes.length} bản ghi xác thực gần nhất cho email ${email}:`);
-            allCodes.forEach((record, i) => {
-                console.log(`   #${i + 1}: Code='${record.verification_code}', Expires=${new Date(record.expires_at).toLocaleString()}, Used=${record.is_used}`);
-                console.log(`   Khớp với input: ${record.verification_code === trimmedCode}`);
-            });
+            if (allCodes.length > 0) {
+                const matchingCode = allCodes.find(record => record.verification_code === trimmedCode);
 
-            // 1. Kiểm tra mã xác thực hợp lệ (chưa sử dụng và chưa hết hạn)
-            const query = `
-                SELECT * FROM email_verifications 
-                WHERE email = ? 
-                AND verification_code = ? 
-                AND expires_at > NOW()
-                AND is_used = FALSE
-                ORDER BY created_at DESC
-                LIMIT 1
-            `;
+                if (matchingCode) {
+                    const now = new Date();
+                    const expiryDate = new Date(matchingCode.expires_at);
+                    const isExpired = now > expiryDate;
 
-            const [rows] = await pool.execute(query, [email, trimmedCode]);
-
-            if (rows.length > 0) {
-                console.log(`✅ Tìm thấy mã xác thực hợp lệ cho ${email}`);
-
-                // Đánh dấu mã đã được sử dụng để tránh sử dụng lại
-                await pool.execute(
-                    'UPDATE email_verifications SET is_used = TRUE WHERE id = ?',
-                    [rows[0].id]
-                );
-
-                return true;
-            } else {
-                console.log(`❌ Không tìm thấy mã xác thực hợp lệ cho ${email}`);
-                return false;
+                    if (!isExpired && !matchingCode.is_used) {
+                        await pool.execute(
+                            'UPDATE email_verifications SET is_used = TRUE WHERE id = ?',
+                            [matchingCode.id]
+                        );
+                        return true;
+                    }
+                }
             }
+
+            return false;
         } catch (error) {
-            console.error('❌ Lỗi khi xác thực mã:', error);
+            console.error('❌ Code verification error:', error.message);
             return false;
         }
     }
@@ -101,13 +115,11 @@ class EmailService {
                 to: email,
                 subject: 'Mã xác nhận tài khoản NoSmoke',
                 html: this.getVerificationEmailTemplate(fullName, code)
-            };
-
-            await this.transporter.sendMail(mailOptions);
-            console.log(`Verification email sent to ${email} with code: ${code}`);
+            }; await this.transporter.sendMail(mailOptions);
+            console.log(`📧 Verification email sent to ${email}`);
 
         } catch (error) {
-            console.error('Send verification email error:', error);
+            console.error('❌ Send verification email error:', error.message);
             throw new Error('Failed to send verification email');
         }
     }
@@ -120,13 +132,11 @@ class EmailService {
                 to: email,
                 subject: 'Chào mừng đến với NoSmoke!',
                 html: this.getWelcomeEmailTemplate(fullName)
-            };
-
-            await this.transporter.sendMail(mailOptions);
-            console.log(`Welcome email sent to ${email}`);
+            }; await this.transporter.sendMail(mailOptions);
+            console.log(`🎉 Welcome email sent to ${email}`);
 
         } catch (error) {
-            console.error('Send welcome email error:', error);
+            console.error('❌ Send welcome email error:', error.message);
             // Don't throw error for welcome email
         }
     }
