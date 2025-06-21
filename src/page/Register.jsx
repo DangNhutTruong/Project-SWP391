@@ -11,9 +11,8 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('');
-  const [cigarettesPerDay, setCigarettesPerDay] = useState(10);
-  const [costPerPack, setCostPerPack] = useState(25000);
-  const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
+  const [role, setRole] = useState('user');
+  const [dateOfBirth, setDateOfBirth] = useState('');
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +44,7 @@ export default function Register() {
     } setIsLoading(true);
 
     try {
+      // Xử lý dữ liệu gửi đi: chỉ gửi gender và dateOfBirth nếu có giá trị
       const userData = {
         username,
         fullName,
@@ -52,10 +52,9 @@ export default function Register() {
         password,
         confirmPassword,
         phone,
-        gender,
-        cigarettesPerDay: parseInt(cigarettesPerDay),
-        costPerPack: parseInt(costPerPack),
-        cigarettesPerPack: parseInt(cigarettesPerPack)
+        role,
+        ...(gender ? { gender } : {}),
+        ...(dateOfBirth ? { dateOfBirth } : {}),
       };
 
       console.log('🔍 Sending userData:', userData); // Debug log
@@ -193,52 +192,28 @@ export default function Register() {
               />
             </div>
 
-            <div className="form-divider">
-              <span>Thông tin về thói quen hút thuốc</span>
-            </div>
-
             <div className="form-group">
-              <label htmlFor="cigarettesPerDay">Số điếu thuốc mỗi ngày</label>
-              <input
-                type="number"
-                id="cigarettesPerDay"
-                value={cigarettesPerDay}
-                onChange={(e) => setCigarettesPerDay(e.target.value)}
-                min="1"
-                max="100"
+              <label htmlFor="role">Vai trò</label>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
                 disabled={isLoading}
                 required
-              />
+              >
+                <option value="user">Người dùng</option>
+                <option value="coach">Chuyên gia</option>
+              </select>
             </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="costPerPack">Giá một gói thuốc (VNĐ)</label>
-                <input
-                  type="number"
-                  id="costPerPack"
-                  value={costPerPack}
-                  onChange={(e) => setCostPerPack(e.target.value)}
-                  min="1000"
-                  step="1000"
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="cigarettesPerPack">Số điếu trong một gói</label>
-                <input
-                  type="number"
-                  id="cigarettesPerPack"
-                  value={cigarettesPerPack}
-                  onChange={(e) => setCigarettesPerPack(e.target.value)}
-                  min="1"
-                  max="50"
-                  disabled={isLoading}
-                  required
-                />
-              </div>
+            <div className="form-group">
+              <label htmlFor="dateOfBirth">Ngày sinh (tuỳ chọn)</label>
+              <input
+                type="date"
+                id="dateOfBirth"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
 
             <div className="terms-privacy">

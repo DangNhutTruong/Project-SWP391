@@ -46,12 +46,10 @@ export default function EmailVerification() {
 
         try {
             const result = await verifyEmail(email, verificationCode);
-            console.log('🔐 Kết quả xác thực:', result);
-
-            if (result.success) {
-                // Show success message and redirect
-                alert('Xác nhận email thành công! Tài khoản đã được tạo.');
-                navigate('/login');
+            console.log('🔐 Kết quả xác thực:', result);            if (result.success) {
+                // Show success message and redirect to home
+                alert('Xác nhận email thành công! Chào mừng bạn đến với NoSmoke!');
+                navigate('/'); // Chuyển về trang chủ thay vì login
             } else {
                 console.error('🔐 Xác thực thất bại:', result.error);
                 setError(result.error || 'Mã xác nhận không đúng. Vui lòng kiểm tra và thử lại.');
