@@ -701,7 +701,7 @@ export const resetPassword = async (req, res) => {
 // Logout - Clear refresh token
 export const logout = async (req, res) => {
     try {
-        const userId = req.userId;
+        const userId = req.user.id;
 
         // Clear refresh token from database
         await pool.execute(
