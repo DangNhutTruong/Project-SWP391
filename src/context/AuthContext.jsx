@@ -11,40 +11,58 @@ export const useAuth = () => useContext(AuthContext);
 
 // Provider component
 export const AuthProvider = ({ children }) => {
-  // Khởi tạo trạng thái từ sessionStorage (giữ khi reload, mất khi đóng browser)
+  // Khởi tạo trạng thái từ localStorage hoặc sessionStorage
   const [user, setUser] = useState(() => {
-    const storedUser = sessionStorage.getItem('nosmoke_user');
+    // Kiểm tra localStorage trước (remember me), sau đó sessionStorage
+    const storedUser = localStorage.getItem('nosmoke_user') || sessionStorage.getItem('nosmoke_user');
     return storedUser ? JSON.parse(storedUser) : null;
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [token, setToken] = useState(() => {
-    return sessionStorage.getItem('nosmoke_token');
+    // Kiểm tra localStorage trước (remember me), sau đó sessionStorage
+    return localStorage.getItem('nosmoke_token') || sessionStorage.getItem('nosmoke_token');
   });
-
+  const [rememberMe, setRememberMe] = useState(() => {
+    return localStorage.getItem('nosmoke_remember') === 'true';
+  });
   // Xóa localStorage cũ và sync với sessionStorage
   useEffect(() => {
-    localStorage.removeItem('nosmoke_user');
-    localStorage.removeItem('nosmoke_token');
-    console.log('🧹 Cleared localStorage - using sessionStorage for this session');
+    // Không xóa localStorage nữa vì cần cho remember me
+    console.log('🔧 AuthContext initialized with remember me support');
   }, []);
 
-  // Lưu user và token vào sessionStorage khi thay đổi
+  // Lưu user và token vào storage khi thay đổi
   useEffect(() => {
     if (user) {
-      sessionStorage.setItem('nosmoke_user', JSON.stringify(user));
+      if (rememberMe) {
+        localStorage.setItem('nosmoke_user', JSON.stringify(user));
+        localStorage.setItem('nosmoke_remember', 'true');
+      } else {
+        sessionStorage.setItem('nosmoke_user', JSON.stringify(user));
+        localStorage.removeItem('nosmoke_user');
+        localStorage.removeItem('nosmoke_remember');
+      }
     } else {
       sessionStorage.removeItem('nosmoke_user');
+      localStorage.removeItem('nosmoke_user');
+      localStorage.removeItem('nosmoke_remember');
     }
-  }, [user]);
+  }, [user, rememberMe]);
 
   useEffect(() => {
     if (token) {
-      sessionStorage.setItem('nosmoke_token', token);
+      if (rememberMe) {
+        localStorage.setItem('nosmoke_token', token);
+      } else {
+        sessionStorage.setItem('nosmoke_token', token);
+        localStorage.removeItem('nosmoke_token');
+      }
     } else {
       sessionStorage.removeItem('nosmoke_token');
+      localStorage.removeItem('nosmoke_token');
     }
-  }, [token]);
+  }, [token, rememberMe]);
   // API helper function
   const apiCall = async (endpoint, options = {}) => {
     try {
@@ -185,9 +203,8 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
   // Hàm đăng nhập
-  const login = async (email, password, rememberMe) => {
+  const login = async (email, password, rememberMeOption = false) => {
     setLoading(true);
     setError(null);
 
@@ -195,10 +212,15 @@ export const AuthProvider = ({ children }) => {
       const data = await apiCall('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password })
-      }); if (data.success) {
+      });
+
+      if (data.success) {
+        // Cập nhật rememberMe trước khi set user và token
+        setRememberMe(rememberMeOption);
         setUser(data.data.user);
         setToken(data.data.token);
-        console.log('✅ User logged in - session persists until browser close');
+
+        console.log(`✅ User logged in - ${rememberMeOption ? 'persistent across browser sessions' : 'session only'}`);
         return { success: true, user: data.data.user };
       } else {
         throw new Error(data.message);
@@ -221,13 +243,15 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
-      // Xóa hoàn toàn state và sessionStorage
+      // Xóa hoàn toàn state và cả localStorage và sessionStorage
       setUser(null);
       setToken(null);
+      setRememberMe(false);
       sessionStorage.removeItem('nosmoke_user');
       sessionStorage.removeItem('nosmoke_token');
       localStorage.removeItem('nosmoke_user');
       localStorage.removeItem('nosmoke_token');
+      localStorage.removeItem('nosmoke_remember');
       console.log('🔐 User logged out - all session data cleared');
       return { success: true };
     }

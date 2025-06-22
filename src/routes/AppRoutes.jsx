@@ -6,6 +6,9 @@ import MembershipPackage from '../page/MembershipPackage';
 import SettingsPage from '../page/Settings';
 import Pay from '../page/Pay';
 import PaymentSuccess from '../page/PaymentSuccess';
+import ForgotPassword from '../page/ForgotPassword';
+import Login from '../page/Login';
+import Register from '../page/Register';
 
 /**
  * AppRoutes - Cung cấp cấu hình định tuyến (routing) cho toàn bộ ứng dụng
@@ -30,18 +33,29 @@ const router = createBrowserRouter([
   {
     path: "/home",
     loader: () => { return window.location.replace('/') },
-  },  {
+  }, {
     path: "/tools",
     element: <Layout><Tools /></Layout>,
   }, {
-   path: "/settings",
+    path: "/settings",
     element: <Layout><SettingsPage /></Layout>,
-  },  {
+  }, {
     path: "/membership",
     element: <Layout><MembershipPackage /></Layout>,
-  },  {
+  }, {
     path: "/payment",
     element: <Layout><Pay /></Layout>,
+  }, {
+    path: "/forgot-password",
+    element: <Layout><ForgotPassword /></Layout>,
+  },
+  {
+    path: "/login",
+    element: <Layout><Login /></Layout>,
+  },
+  {
+    path: "/signup",
+    element: <Layout><Register /></Layout>,
   },
   {
     path: "*",

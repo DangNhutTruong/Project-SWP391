@@ -141,6 +141,23 @@ class EmailService {
         }
     }
 
+    // Send password reset email
+    async sendPasswordResetEmail(email, fullName, resetCode) {
+        try {
+            const mailOptions = {
+                from: `"NoSmoke App" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: 'Mã đặt lại mật khẩu NoSmoke',
+                html: this.getPasswordResetEmailTemplate(fullName, resetCode)
+            }; await this.transporter.sendMail(mailOptions);
+            console.log(`🔑 Password reset email sent to ${email}`);
+
+        } catch (error) {
+            console.error('❌ Send password reset email error:', error.message);
+            throw new Error('Failed to send password reset email');
+        }
+    }
+
     // Email template for verification
     getVerificationEmailTemplate(fullName, code) {
         return `
@@ -248,6 +265,62 @@ class EmailService {
                     
                     <div class="footer">
                         <p>&copy; 2025 NoSmoke App. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+
+    // Password reset email template
+    getPasswordResetEmailTemplate(fullName, resetCode) {
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+                    .header { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 30px; text-align: center; }
+                    .content { padding: 30px; background: #f9f9f9; }
+                    .code-box { background: #fff; border: 2px dashed #f39c12; padding: 20px; text-align: center; margin: 20px 0; border-radius: 10px; }
+                    .code { font-size: 32px; font-weight: bold; color: #f39c12; letter-spacing: 5px; }
+                    .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 5px; margin: 20px 0; }
+                    .footer { background: #333; color: white; padding: 20px; text-align: center; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🔑 NoSmoke</h1>
+                        <h2>Đặt lại mật khẩu</h2>
+                    </div>
+                    
+                    <div class="content">
+                        <h3>Xin chào ${fullName}!</h3>
+                        <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản NoSmoke của bạn. Vui lòng nhập mã xác nhận bên dưới để tiếp tục:</p>
+                        
+                        <div class="code-box">
+                            <p style="margin: 0; font-size: 16px; color: #666;">Mã đặt lại mật khẩu:</p>
+                            <div class="code">${resetCode}</div>
+                        </div>
+                        
+                        <div class="warning">
+                            <h4 style="margin-top: 0;">⚠️ Lưu ý quan trọng:</h4>
+                            <ul style="margin-bottom: 0;">
+                                <li>Mã xác nhận có hiệu lực trong <strong>15 phút</strong></li>
+                                <li>Không chia sẻ mã này với bất kỳ ai</li>
+                                <li>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này</li>
+                                <li>Liên hệ với chúng tôi ngay lập tức nếu bạn nghi ngờ tài khoản bị xâm phạm</li>
+                            </ul>
+                        </div>
+                        
+                        <p>Sau khi đặt lại mật khẩu thành công, bạn sẽ cần đăng nhập lại với mật khẩu mới.</p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>&copy; 2025 NoSmoke App. All rights reserved.</p>
+                        <p>Email này được gửi tự động, vui lòng không reply.</p>
                     </div>
                 </div>
             </body>
