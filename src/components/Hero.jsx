@@ -58,7 +58,7 @@ export default function Hero() {
               <span className="stat-label">Người thành công</span>
             </div>
             <div className="stat-item">
-              <span className="stat-number">90%</span>
+              <span className="stat-number">61,7%</span>
               <span className="stat-label">Tỉ lệ thành công</span>
             </div>
           </div>
