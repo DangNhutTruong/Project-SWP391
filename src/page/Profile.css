@@ -29,13 +29,15 @@
 .user-info {
   display: flex;
   align-items: center;
-  padding: 20px;
+  padding: 15px;
   border-bottom: 1px solid #e0e4e8;
   background: linear-gradient(to right bottom, #f9fafb, #ebf2fd);
   border-radius: 12px;
-  margin: 0 15px;
+  margin: 0 15px 15px;
   box-shadow: 0 4px 12px rgba(37, 112, 232, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: calc(100% - 30px);
+  min-width: 200px;
 }
 
 .user-info:hover {
@@ -43,23 +45,19 @@
   box-shadow: 0 6px 16px rgba(37, 112, 232, 0.12);
 }
 
+/* Đã xóa user-avatar-wrapper không cần thiết */
+
 .user-avatar {
-  width: 75px;
-  height: 75px;
-  border-radius: 50%;
-  background: linear-gradient(120deg, #4CAF50, #2570e8);
+  width: 50px;
+  height: 50px;
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
-  margin-right: 15px;
-  border: 4px solid #fff;
-  box-shadow: 0 3px 10px rgba(37, 112, 232, 0.25);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  margin-right: 12px;
+  flex-shrink: 0;
 }
 
 .user-avatar::after {
@@ -82,14 +80,33 @@
   opacity: 1;
 }
 
-.user-details h3 {
+.user-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.user-name-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 5px;
+}
+
+.membership-container {
+  margin-bottom: -2px;
+}
+
+.user-name {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #333;
-  display: flex;
-  align-items: center;
   letter-spacing: 0.2px;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .user-details p {
@@ -102,12 +119,15 @@
 
 .status-dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background-color: #34a853;
   border-radius: 50%;
-  margin-right: 6px;
+  margin-right: 5px;
   animation: pulse 2s infinite;
+  flex-shrink: 0;
+  position: relative;
+  top: -1px;
 }
 
 @keyframes pulse {
@@ -127,28 +147,23 @@
   }
 }
 
-.day-count {
-  font-weight: 600;
-  color: #2570e8;
-  margin: 0 4px;
-}
-
 /* Membership Label Styles */
 .membership-label {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 9px;
   font-weight: 700;
   color: white;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-left: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
+  height: fit-content;
+  margin-left: 1px;
 }
 
 .membership-label::before {
@@ -957,15 +972,134 @@ aaaaaaaaaa*/
   transform: translateX(3px);
 }
 
-/* Responsive adjustments for action buttons */
+/* Quit Status Styles */
+.quit-status-container {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+
+.quit-status-text {
+  display: flex;
+  align-items: center;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.quit-days-display {
+  display: flex;
+  align-items: baseline;
+  position: relative;
+  margin-left: 5px;
+}
+
+.day-count {
+  font-weight: 700;
+  color: #2570e8;
+  font-size: 18px;
+  margin-right: 2px;
+  position: relative;
+  display: inline-block;
+}
+
+.day-count::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: rgba(37, 112, 232, 0.2);
+  border-radius: 2px;
+}
+
+.day-text {
+  color: #666;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Responsive Design for User Info */
 @media (max-width: 768px) {
-  .action-buttons-container {
-    justify-content: center;
+  .user-info {
+    flex-direction: row;
     padding: 12px;
   }
   
-  .update-plan-btn {
-    width: 100%;
-    justify-content: center;
+  .user-avatar {
+    margin-right: 6px;
   }
+  
+  .user-details {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .avatar-circle {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .user-initial-container {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .user-initial {
+    font-size: 12px;
+  }
+  
+  .user-details .user-name {
+    font-size: 14px;
+  }
+  
+  .membership-label {
+    padding: 1px 4px;
+    font-size: 8px;
+  }
+  
+  .day-count {
+    font-size: 16px;
+  }
+  
+  .quit-status-text,
+  .day-text {
+    font-size: 12px;
+  }
+  
+  .status-dot {
+    width: 5px;
+    height: 5px;
+  }
+}
+
+.avatar-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(120deg, #43b36b, #1e88e5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.user-initial-container {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #2196f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-initial {
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
 }
