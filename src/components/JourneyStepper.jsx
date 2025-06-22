@@ -171,9 +171,17 @@ export default function JourneyStepper() {
     setCurrentStep(4);
     setShowCompletionScreen(true);
   };
-
   // Function to animate the progress bar when changing steps
   const animateProgressBar = (newStep) => {
+    // Nếu đã hoàn thành, kích hoạt tất cả các đường kết nối
+    if (isCompleted) {
+      document.querySelectorAll('.step-line').forEach(line => {
+        line.classList.add('active');
+      });
+      return;
+    }
+    
+    // Nếu chưa hoàn thành, chỉ kích hoạt đến bước hiện tại
     document.querySelectorAll('.step-line').forEach((line, index) => {
       if (index < newStep - 1) {
         line.classList.add('active');
@@ -181,7 +189,7 @@ export default function JourneyStepper() {
         line.classList.remove('active');
       }
     });
-  };  const handleSubmit = () => {
+  };const handleSubmit = () => {
     // Add animation to the submit button
     const submitButton = document.querySelector('.btn-submit');
     submitButton.classList.add('loading');
@@ -324,6 +332,16 @@ export default function JourneyStepper() {
       }
     }
   }, []);
+
+  // Đảm bảo thanh tiến trình được cập nhật khi isCompleted thay đổi
+  useEffect(() => {
+    if (isCompleted) {
+      // Nếu hoàn thành, làm cho tất cả các line đều active
+      document.querySelectorAll('.step-line').forEach(line => {
+        line.classList.add('active');
+      });
+    }
+  }, [isCompleted]);
 
   // Xử lý input số
   const handleNumberInput = (field, e) => {
@@ -500,11 +518,11 @@ export default function JourneyStepper() {
     // Kế hoạch 2: 6 tuần - giảm từ từ hơn (25%)
     const plan2 = {
       id: 2,
-      name: "Kế hoạch từ từ",
+      name: "Kế hoạch giảm dần",
       totalWeeks: 6,
       weeklyReductionRate: 0.25, // Giảm 25% mỗi tuần
       description: "Cai thuốc trong 6 tuần",
-      subtitle: "Phù hợp cho người muốn từ từ",
+      subtitle: "Phù hợp cho người muốn cai thuốc chậm",
       color: "#17a2b8",
       weeks: []
     };
@@ -566,7 +584,7 @@ export default function JourneyStepper() {
     // Kế hoạch 2: 8 tuần - giảm từ từ hơn (15%)
     const plan2 = {
       id: 2,
-      name: "Kế hoạch từ từ",
+      name: "Kế hoạch giảm dần",
       totalWeeks: 8,
       weeklyReductionRate: 0.15, // Giảm 15% mỗi tuần
       description: "Cai thuốc trong 8 tuần",
@@ -632,7 +650,7 @@ export default function JourneyStepper() {
     // Kế hoạch 2: 12 tuần - giảm từ từ hơn (10%)
     const plan2 = {
       id: 2,
-      name: "Kế hoạch từ từ",
+      name: "Kế hoạch giảm dần",
       totalWeeks: 12,
       weeklyReductionRate: 0.10, // Giảm 10% mỗi tuần
       description: "Cai thuốc trong 12 tuần",
@@ -804,9 +822,8 @@ export default function JourneyStepper() {
                 {currentStep > step.id || isCompleted ? '✓' : step.id}
               </div>
               <div className="step-name">{step.name}</div>
-            </div>
-              {index < steps.length - 1 && (
-                <div className={`step-line ${currentStep > index + 1 || isCompleted ? 'active' : ''}`}></div>
+            </div>              {index < steps.length - 1 && (
+                <div className={`step-line ${isCompleted ? 'active' : (currentStep > index + 1 ? 'active' : '')}`}></div>
               )}
             </React.Fragment>
           ))}
@@ -815,12 +832,11 @@ export default function JourneyStepper() {
             <div className="completion-screen">
               <div className="completion-checkmark-container">
                 <div className="completion-checkmark">✓</div>
-              </div>              <h2 className="completion-title">Chúc mừng bạn đã tạo kế hoạch cai thuốc!</h2>
+              </div>              <h2 className="completion-title"> Bạn đã tạo kế hoạch cai thuốc thành công!</h2>
               <p className="completion-subtitle">Hành trình mới của bạn bắt đầu từ hôm nay</p>
 
               {/* Tóm tắt kế hoạch */}
               <div className="plan-summary-container">
-                <h3 className="summary-title">Kế hoạch của bạn</h3>
                 <div className="plan-summary-card">
                   <div className="plan-summary-header" style={{ backgroundColor: formData.selectedPlan?.color || '#2570e8' }}>
                     <h4>{formData.selectedPlan?.name || "Kế hoạch cai thuốc"}</h4>
@@ -1566,7 +1582,7 @@ export default function JourneyStepper() {
                     </div>
                     <div className="congratulations-message">
                       <div className="congrats-icon">🎉</div>
-                      <div className="congrats-text">                        <h3>Chúc mừng bạn đã lập kế hoạch cai thuốc!</h3>
+                      <div className="congrats-text">                        <h3> Chúc mừng bạn đã lập kế hoạch cai thuốc thành công!</h3>
                         <p>Hãy kiên trì thực hiện, chúng tôi sẽ luôn bên cạnh hỗ trợ bạn trong suốt hành trình này.</p>
                       </div>
                     </div>

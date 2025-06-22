@@ -533,50 +533,26 @@ export default function ProfilePage() {
       alert("Có lỗi xảy ra khi lưu kế hoạch. Vui lòng thử lại sau.");
     }
   };
-
   return (
-    <div className="profile-container">
-      {/* Sidebar */}
-      <div className="profile-sidebar">        <div className="user-info">          <div className="avatar-circle">
-            <div className="user-initial-container">
-              <span className="user-initial">{userData.name ? userData.name.charAt(0) : 'U'}</span>
-            </div>
-          </div><div className="user-details">
-            <div className="user-name-wrapper">
-              <h3 className="user-name">{userData.name}</h3>
-              {userData.membershipType && userData.membershipType !== 'free' && (
-                <span className={`membership-label ${userData.membershipType}`}>
-                  {userData.membershipType === 'premium' ? 'Premium' : 'Pro'}
-                </span>
-              )}
-            </div>
-            <div className="quit-status-container">
-              <div className="quit-status-text">
-                <span className="status-dot"></span>
-                Đang cai thuốc
-              </div>
-              <div className="quit-days-display">
-                <span className="day-count">{userData.daysWithoutSmoking || 5}</span>
-                <span className="day-text">ngày</span>
-              </div>
-            </div>
-          </div>
-        </div><nav className="profile-nav">          <Link
-            to="#"
-            className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab("profile");
-              // Scroll to the top of the content area
-              const profileContent = document.querySelector('.profile-content');
-              if (profileContent) {
-                setTimeout(() => {
-                  profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 10);
-              }
-            }}
-          >
-            <FaUserAlt /> Hồ sơ cá nhân
-          </Link>
+    <div className="profile-container">      {/* Sidebar */}      <div className="profile-sidebar">
+        <nav className="profile-nav">
+          <div className="nav-top-group">
+            <Link
+              to="#"
+              className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
+              onClick={() => {
+                setActiveTab("profile");
+                // Scroll to the top of the content area
+                const profileContent = document.querySelector('.profile-content');
+                if (profileContent) {
+                  setTimeout(() => {
+                    profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 10);
+                }
+              }}
+            >
+              <FaUserAlt /> Hồ sơ cá nhân
+            </Link>
 
           <Link
             to="#"
@@ -609,15 +585,20 @@ export default function ProfilePage() {
                 }, 10);
               }
             }}
-          >
-            <FaTrophy /> Huy hiệu
-          </Link><button onClick={logout} className="nav-item logout-btn">
-            <FaSignOutAlt /> Đăng xuất
-          </button>
+          >            <FaTrophy /> Huy hiệu          </Link>
+          </div>
+          
+          <div className="nav-bottom-group">
+            <button onClick={logout} className="nav-item logout-btn">
+              <FaSignOutAlt /> Đăng xuất
+            </button>
+          </div>
         </nav>
       </div>
 
-      {/* Main content */}      <div className="profile-content">        {activeTab === "profile" && (
+      {/* Main content */}
+      <div className="profile-content">
+        {activeTab === "profile" && (
           <div className="profile-overview">
             <div className="section-header">
               <h1>Hồ sơ</h1>

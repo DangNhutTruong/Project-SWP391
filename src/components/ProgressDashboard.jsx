@@ -3,7 +3,7 @@ import { FaTrophy, FaCalendarCheck, FaChartLine, FaLeaf, FaCoins, FaHeart } from
 import { Link } from 'react-router-dom';
 import QuitProgressChart from './QuitProgressChart';
 
-const ProgressDashboard = ({ userPlan, completionDate }) => {
+const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalStats, onDataReset }) => {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [milestones, setMilestones] = useState([]);  // Tính toán thống kê
   
@@ -19,24 +19,45 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
   const calculateDashboardStats = useCallback(() => {
     if (!userPlan || !completionDate) return;
 
+    // Nếu có thống kê từ bên ngoài, sử dụng nó thay vì tính toán lại
+    if (externalStats && Object.keys(externalStats).length > 0) {
+      console.log("Sử dụng thống kê từ Progress.jsx:", externalStats);
+      setDashboardStats({
+        daysSincePlanCreation: externalStats.noSmokingDays || 0, 
+        cigarettesSaved: externalStats.savedCigarettes || 0,
+        moneySaved: externalStats.savedMoney || 0,
+        planDuration: userPlan.weeks ? userPlan.weeks.length : 0,
+        planName: userPlan.name || 'Kế hoạch cá nhân',
+        healthProgress: externalStats.healthProgress || 0
+      });
+      return;
+    }
+
+    // Tính toán thông thường nếu không có thống kê từ bên ngoài
     const startDate = new Date(completionDate);
     const today = new Date();
     const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-      // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
+    
+    // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
     const initialCigarettesPerDay = userPlan.weeks && userPlan.weeks.length > 0 ? 
       userPlan.weeks[0]?.amount || 20 : 20;
     const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
-    
-    // Tính tiền tiết kiệm (giả sử 1 gói = 25,000đ, 1 gói = 20 điếu)
+      // Tính tiền tiết kiệm (giả sử 1 gói = 25,000đ, 1 gói = 20 điếu)
+    // Nếu có thống kê từ bên ngoài, sử dụng số tiền đã tính toán
     const pricePerCigarette = 25000 / 20;
-    const moneySaved = estimatedSaved * pricePerCigarette;    setDashboardStats({
-      daysSincePlanCreation: daysSinceStart, // Renamed to clarify this is time since plan creation
+    const moneySaved = externalStats && externalStats.savedMoney ? 
+                     externalStats.savedMoney : 
+                     estimatedSaved * pricePerCigarette;
+    
+    setDashboardStats({
+      daysSincePlanCreation: daysSinceStart, 
       cigarettesSaved: estimatedSaved,
       moneySaved: moneySaved,
       planDuration: userPlan.weeks ? userPlan.weeks.length : 0,
-      planName: userPlan.name || 'Kế hoạch cá nhân'
+      planName: userPlan.name || 'Kế hoạch cá nhân',
+      healthProgress: 0 // Giá trị mặc định
     });
-  }, [userPlan, completionDate]);
+  }, [userPlan, completionDate, externalStats]);
   
   const loadMilestones = useCallback(() => {
     // Nếu không có dữ liệu đầy đủ, không thực hiện
@@ -75,14 +96,13 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
     if (dashboardStats) {
       loadMilestones();
     }
-  }, [dashboardStats, loadMilestones]);
-
-  const getNextMilestone = () => {
-    if (!milestones || milestones.length === 0) return null;
-    return milestones.find(m => !m.achieved) || milestones[milestones.length - 1]; // Return last milestone if all achieved
-  };
-
-  const getAchievementProgress = () => {
+  }, [dashboardStats, loadMilestones]);  const getAchievementProgress = () => {
+    // Nếu có giá trị từ bên ngoài, sử dụng nó
+    if (dashboardStats && dashboardStats.healthProgress !== undefined) {
+      return dashboardStats.healthProgress;
+    }
+    
+    // Nếu không, tính toán từ milestone
     if (!milestones || milestones.length === 0) return 0;
     const achieved = milestones.filter(m => m.achieved).length;
     return (achieved / milestones.length) * 100;
@@ -101,11 +121,21 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
       <div className="dashboard-loading">
         <p>Đang tải dashboard...</p>
       </div>
-    );
-  }
+    );  }
 
-  const nextMilestone = getNextMilestone();
   const achievementProgress = getAchievementProgress();
+
+  // Thêm reset toàn bộ dữ liệu
+  const handleReset = () => {
+    if (window.confirm('Bạn có chắc muốn reset dữ liệu check-in?')) {
+      localStorage.removeItem('actualProgress');
+      localStorage.removeItem('dashboardStats');
+      if (onDataReset) {
+        onDataReset();
+      }
+      alert('Dữ liệu đã được reset');
+    }
+  };
 
   return (
     <div className="progress-dashboard">      {/* Key Statistics */}
@@ -116,17 +146,14 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
           </div>
           <div className="stat-content">
             <h3>{dashboardStats.daysSincePlanCreation}</h3>
-            <p>Ngày không hút thuốc</p>
+            <p>Thời gian cai thuốc</p>
           </div>
-        </div>
-
-        <div className="stat-card success">
+        </div>        <div className="stat-card success">
           <div className="stat-icon">
             <FaLeaf />
-          </div>
-          <div className="stat-content">
-            <h3>{dashboardStats.cigarettesSaved.toLocaleString()}</h3>
-            <p>Điếu thuốc đã tránh</p>
+          </div>          <div className="stat-content">
+            <h3>{externalStats && externalStats.savedCigarettes ? externalStats.savedCigarettes.toLocaleString() : (dashboardStats.cigarettesSaved ? dashboardStats.cigarettesSaved.toLocaleString() : '0')}</h3>
+            <p>Điếu thuốc đã tránh</p>       
           </div>
         </div>
 
@@ -149,11 +176,11 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             <p>Milestone sức khỏe</p>
           </div>
         </div>
-      </div>      {/* Progress Maintenance Chart */}
+      </div>      {/* Progress Chart */}
       <div className="maintenance-section">
         <h2>
           <FaChartLine className="section-icon" />
-          Duy trì thành quả
+          Kế hoạch của bạn
         </h2>
         <div className="maintenance-chart">
           <QuitProgressChart
@@ -189,34 +216,12 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Next Steps */}
-      <div className="next-steps-section">
-        <h2>Bước tiếp theo</h2>
+      </div>      {/* Tips section */}
+      <div className="maintenance-tips-section">
+        <h2>Lời khuyên duy trì</h2>
         
-        {nextMilestone && (
-          <div className="next-milestone">
-            <h3>🎯 Milestone tiếp theo: {nextMilestone.title}</h3>
-            <p>{nextMilestone.description}</p>
-            <div className="milestone-progress">
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ 
-                    width: `${(dashboardStats.daysSincePlanCreation / nextMilestone.days) * 100}%` 
-                  }}
-                ></div>
-              </div>
-              <span className="progress-text">
-                {dashboardStats.daysSincePlanCreation}/{nextMilestone.days} ngày
-              </span>
-            </div>
-          </div>
-        )}
-
         <div className="maintenance-tips">
-          <h3>💡 Lời khuyên duy trì</h3>
+          <h3>💡 Mẹo hữu ích</h3>
           <ul>
             <li>Tiếp tục tránh xa môi trường có khói thuốc</li>
             <li>Duy trì các hoạt động thể chất thường xuyên</li>
@@ -224,7 +229,7 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             <li>Tìm kiếm hỗ trợ từ gia đình và bạn bè</li>
             <li>Nhắc nhở bản thân về lợi ích đã đạt được</li>
           </ul>
-        </div>        <div className="support-options">
+        </div><div className="support-options">
           <h3>🤝 Hỗ trợ thêm</h3>
           <div className="support-buttons">
             <Link to="/blog" className="support-btn primary">
@@ -235,11 +240,11 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             </Link>
           </div>
         </div>
-      </div>
-
-      {/* Success Story */}
+      </div>      {/* Success Story */}
       <div className="success-story">
-        <h2>🎉 Câu chuyện thành công của bạn</h2>        <div className="story-content">          <p>
+        <h2>🎉 Câu chuyện thành công của bạn</h2>
+        <div className="story-content">
+          <p>
             Bạn đã lập thành công <strong>{userPlan?.name || 'Kế hoạch cá nhân'}</strong> và duy trì được{' '}
             <strong>{dashboardStats.daysSincePlanCreation} ngày</strong> không hút thuốc.
           </p>

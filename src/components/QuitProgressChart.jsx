@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Chart as ChartJS } from 'chart.js/auto';
 import { Line } from 'react-chartjs-2';
+import '../styles/QuitProgressChart.css';
 
 const QuitProgressChart = ({
     userPlan = null,
@@ -74,9 +75,7 @@ const QuitProgressChart = ({
         }
         
         return dailyPlan;
-    };
-
-    // Filter data based on timeFilter
+    };    // Filter data based on timeFilter
     const filterDataByTime = (data, filter) => {
         const today = new Date();
         let daysToShow = 30;
@@ -96,12 +95,24 @@ const QuitProgressChart = ({
             default:
                 daysToShow = 30;
         }
-          const cutoffDate = new Date(today);
+        
+        const cutoffDate = new Date(today);
         cutoffDate.setDate(cutoffDate.getDate() - daysToShow);
         
+        console.log(`Lọc dữ liệu: Hiển thị ${daysToShow} ngày gần nhất, từ ${cutoffDate.toLocaleDateString()}`);
+        
         // Make sure data is an array before filtering
-        return Array.isArray(data) ? data.filter(item => new Date(item.date) >= cutoffDate) : [];
+        const filteredData = Array.isArray(data) ? data.filter(item => {
+            if (!item || !item.date) return false;
+            const itemDate = new Date(item.date);
+            return !isNaN(itemDate) && itemDate >= cutoffDate;
+        }) : [];
+        
+        console.log(`Kết quả lọc: ${filteredData.length} mục dữ liệu`);
+        return filteredData;
     };useEffect(() => {
+        console.log("QuitProgressChart - Updating chart with:", { userPlan, actualProgress, timeFilter });
+        
         // Make sure we have valid data or generate sample data
         let data;
         
@@ -114,8 +125,17 @@ const QuitProgressChart = ({
             data = generateSampleData();
         }
 
+        // Kiểm tra dữ liệu thực tế
+        if (Array.isArray(data.actual) && data.actual.length > 0) {
+            console.log(`Có ${data.actual.length} bản ghi dữ liệu thực tế:`, 
+                data.actual.map(a => `${a.date}: ${a.actualCigarettes}/${a.targetCigarettes}`));
+        } else {
+            console.log("Không có dữ liệu thực tế hoặc dữ liệu không đúng định dạng");
+        }
+
         // Tạo dữ liệu kế hoạch theo ngày
         const dailyPlanData = generateDailyPlanData(data.plan);
+        console.log(`Tạo được ${dailyPlanData.length} mục dữ liệu kế hoạch theo ngày`);
         
         // Filter dữ liệu theo timeFilter
         const filteredPlanData = filterDataByTime(dailyPlanData || [], timeFilter);
@@ -124,7 +144,9 @@ const QuitProgressChart = ({
         // Tạo labels cho trục X (theo ngày)
         const labels = [];
         const planData = [];
-        const actualData = [];        // Tạo map cho việc lookup nhanh
+        const actualData = [];
+        
+        // Tạo map cho việc lookup nhanh
         const actualMap = new Map();
         if (Array.isArray(filteredActualData)) {
             filteredActualData.forEach(item => {
@@ -137,55 +159,56 @@ const QuitProgressChart = ({
         // Tạo dữ liệu cho chart
         if (Array.isArray(filteredPlanData)) {
             filteredPlanData.forEach((planItem, index) => {
-            // Format ngày cho label (chỉ hiển thị ngày/tháng)
-            const date = new Date(planItem.date);
-            const label = `${date.getDate()}/${date.getMonth() + 1}`;
-            labels.push(label);
-            
-            // Dữ liệu kế hoạch
-            planData.push(planItem.targetCigarettes);
-              // Dữ liệu thực tế (nếu có)
-            const actualValue = actualMap.get(planItem.date);
-            actualData.push(actualValue !== undefined ? actualValue : null);
+                // Format ngày cho label (chỉ hiển thị ngày/tháng)
+                const date = new Date(planItem.date);
+                const label = `${date.getDate()}/${date.getMonth() + 1}`;
+                labels.push(label);
+                
+                // Dữ liệu kế hoạch
+                planData.push(planItem.targetCigarettes);
+                
+                // Dữ liệu thực tế (nếu có)
+                const actualValue = actualMap.get(planItem.date);
+                actualData.push(actualValue !== undefined ? actualValue : null);
             });
-        }
-
-        const chartConfig = {
+        }        const chartConfig = {
             labels,
             datasets: [
                 {
                     label: 'Kế hoạch dự kiến',
                     data: planData,
-                    borderColor: '#4285f4',
+                    borderColor: '#4285f4', // Xanh dương
                     backgroundColor: 'rgba(66, 133, 244, 0.1)',
                     borderWidth: 2,
                     fill: false,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
+                    tension: 0.1,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
                     pointBackgroundColor: '#4285f4',
                     pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2
+                    pointBorderWidth: 2,
+                    pointStyle: 'circle'
                 },
                 {
                     label: 'Thực tế',
                     data: actualData,
-                    borderColor: '#34a853',
+                    borderColor: '#34a853', // Xanh lá
                     backgroundColor: 'rgba(52, 168, 83, 0.1)',
                     borderWidth: 3,
                     fill: false,
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointHoverRadius: 8,
+                    tension: 0.1,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                     pointBackgroundColor: '#34a853',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
-                    spanGaps: true // Kết nối các điểm có dữ liệu ngay cả khi có gaps
+                    spanGaps: true, // Kết nối các điểm có dữ liệu ngay cả khi có gaps
+                    pointStyle: 'circle'
                 },
                 {
                     label: 'Mục tiêu (0 điếu)',
                     data: new Array(labels.length).fill(0),
-                    borderColor: '#ea4335',
+                    borderColor: '#ea4335', // Đỏ
                     backgroundColor: 'rgba(234, 67, 53, 0.1)',
                     borderWidth: 2,
                     borderDash: [5, 5],
@@ -196,27 +219,22 @@ const QuitProgressChart = ({
             ]
         };        setChartData(chartConfig);
         setIsLoading(false);
-    }, [userPlan, actualProgress, timeFilter]);
-
-    const options = {
+    }, [userPlan, actualProgress, timeFilter]);    const options = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
             title: {
-                display: true,
-                text: 'Tiến trình cai thuốc của bạn',
-                font: {
-                    size: 18,
-                    weight: 'bold'
-                },
-                color: '#1a73e8',
+                display: false, // Tắt tiêu đề mặc định vì chúng ta đã có tiêu đề riêng
                 padding: 20
             },
             legend: {
-                position: 'bottom',
+                position: 'top',
+                align: 'center',
                 labels: {
                     usePointStyle: true,
-                    padding: 15,
+                    padding: 20,
+                    boxWidth: 10,
+                    boxHeight: 10,
                     font: {
                         size: 12
                     }
@@ -263,27 +281,28 @@ const QuitProgressChart = ({
                     }
                 }
             }
-        },
-        scales: {
-            x: {
-                display: true,
-                title: {
+        },            scales: {
+                x: {
                     display: true,
-                    text: 'Thời gian',
-                    font: {
-                        size: 14,
-                        weight: 'bold'
+                    title: {
+                        display: true,
+                        text: 'Thời gian',
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        color: '#5f6368'
                     },
-                    color: '#5f6368'
-                },
                 grid: {
                     display: false
                 },
-                ticks: {
+              ticks: {
                     color: '#5f6368',
                     font: {
                         size: 12
-                    }
+                    },
+                    maxRotation: 45,
+                    minRotation: 0
                 }
             },
             y: {
@@ -296,8 +315,9 @@ const QuitProgressChart = ({
                         weight: 'bold'
                     },
                     color: '#5f6368'
-                },
+                },                
                 beginAtZero: true,
+                suggestedMax: 25, // Giá trị mặc định cho max, đảm bảo không bị chạm nóc
                 grid: {
                     color: 'rgba(0, 0, 0, 0.1)',
                     borderDash: [2, 2]
@@ -306,10 +326,11 @@ const QuitProgressChart = ({
                     color: '#5f6368',
                     font: {
                         size: 12
-                    },
+                    },                  
                     callback: function (value) {
                         return value + ' điếu';
-                    }
+                    },
+                    stepSize: 5 // Đặt các bước nhỏ hơn cho trục Y
                 }
             }
         },
@@ -361,30 +382,31 @@ const QuitProgressChart = ({
                 <p>Đang tải biểu đồ...</p>
             </div>
         );
-    }
-
-    return (
+    }    return (
         <div className="quit-progress-chart" style={{ height: height }}>
-            <Line 
-                data={chartData}
-                options={options}
-                height={height}
-            />
-
-            {/* Thêm ghi chú cho biểu đồ */}
-            <div className="chart-notes" style={{
-                marginTop: '15px',
-                padding: '10px',
+            <div className="chart-wrapper"><Line 
+                    data={chartData}
+                    options={options}
+                    height={height - 100} // Giảm chiều cao để đảm bảo không bị trồng chéo
+                />
+            </div>{/* Legend hiển thị dưới biểu đồ */}
+              {/* Thêm ghi chú cho biểu đồ */}            <div className="chart-notes" style={{
+                marginTop: '25px',
+                padding: '15px',
                 backgroundColor: '#f8f9fa',
-                borderRadius: '6px',
-                fontSize: '12px',
-                color: '#5f6368'
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#5f6368',
+                borderLeft: '4px solid #fbbc04',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
             }}>
-                <p style={{ margin: '0 0 5px 0' }}>
-                    💡 <strong>Ghi chú:</strong> Đường xanh dương là kế hoạch, đường xanh lá là tiến độ thực tế của bạn.
+                <p style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'flex-start' }}>
+                    <span style={{ marginRight: '10px', fontSize: '18px', marginTop: '2px' }}>💡</span> 
+                    <span>Theo dõi tiến trình cai thuốc của bạn so với kế hoạch. Cố gắng giữ đường xanh lá (thực tế) ngang bằng hoặc thấp hơn đường xanh dương (kế hoạch).</span>
                 </p>
-                <p style={{ margin: '0' }}>
-                    🎯 Mục tiêu cuối cùng là đạt <strong>0 điếu/ngày</strong> và duy trì lâu dài.
+                <p style={{ margin: '10px 0 0 0', display: 'flex', alignItems: 'flex-start' }}>
+                    <span style={{ marginRight: '10px', fontSize: '18px', marginTop: '2px' }}>🎯</span> 
+                    <span><strong>Mục tiêu cuối cùng</strong> là đạt <strong>0 điếu/ngày</strong> và duy trì lâu dài.</span>
                 </p>
             </div>
         </div>
