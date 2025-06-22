@@ -703,6 +703,11 @@ export const logout = async (req, res) => {
     try {
         const userId = req.user.id;
 
+        // Add validation to ensure userId exists
+        if (!userId) {
+            return sendError(res, 'User ID not found in token', 400);
+        }
+
         // Clear refresh token from database
         await pool.execute(
             'UPDATE users SET refresh_token = NULL WHERE id = ?',
