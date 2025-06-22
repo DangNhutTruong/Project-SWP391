@@ -7,7 +7,6 @@ import BackToTop from "./components/BackToTop.jsx";
 import Home from "./page/Home.jsx";
 import ProfilePage from "./page/Profile.jsx"; // Đổi tên từ Tools sang ProfilePage
 import ProgressPage from "./page/Progress.jsx"; // Import component Progress
-import TestPage from "./page/TestPage.jsx"; // Thêm trang test đơn giản
 import Blog from "./page/Blog.jsx"; // Import component Blog
 import Login from "./page/Login.jsx"; // Import component Login
 import Register from "./page/Register.jsx"; // Import component Register
@@ -95,14 +94,6 @@ const router = createBrowserRouter([
         <ProtectedRoute>
           <ProgressPage />
         </ProtectedRoute>
-      </Layout>
-    ),
-  },
-  {
-    path: "/test",
-    element: (
-      <Layout>
-        <TestPage />
       </Layout>
     ),
   },
