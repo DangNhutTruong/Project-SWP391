@@ -701,7 +701,12 @@ export const resetPassword = async (req, res) => {
 // Logout - Clear refresh token
 export const logout = async (req, res) => {
     try {
-        const userId = req.userId;
+        const userId = req.user.id;
+
+        // Add validation to ensure userId exists
+        if (!userId) {
+            return sendError(res, 'User ID not found in token', 400);
+        }
 
         // Clear refresh token from database
         await pool.execute(

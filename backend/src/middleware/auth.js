@@ -62,7 +62,7 @@ export const optionalAuth = async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET); const [users] = await pool.execute(
                 `SELECT id, username, email, full_name, phone, date_of_birth, gender, 
                         role, email_verified, is_active, created_at 
-                 FROM user 
+                 FROM users 
                  WHERE id = ? AND is_active = true`,
                 [decoded.userId]
             );
