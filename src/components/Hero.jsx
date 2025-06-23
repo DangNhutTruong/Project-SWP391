@@ -60,10 +60,15 @@ export default function Hero() {
               <span className="stat-number">61,7%</span>
               <span className="stat-label">Tỉ lệ thành công</span>
             </div>
-          </div>
-          <div className="hero-buttons">
-            <Link to="/membership" className="btn btn-primary pulse">Trở thành Thành Viên</Link>
-            <Link to="/blog" className="btn btn-outline">Khám phá hành trình cai thuốc</Link>
+          </div>          <div className="hero-buttons">
+            <Link to="/membership" className="btn btn-primary glow">
+              <span className="btn-icon">👑</span>
+              <span className="btn-text">Trở thành Thành Viên</span>
+            </Link>
+            <Link to="/blog" className="btn btn-outline shine">
+              <span className="btn-icon">🔍</span>
+              <span className="btn-text">Khám phá hành trình cai thuốc</span>
+            </Link>
           </div>
         </div>        <div className="hero-image">
           <div className="image-wrapper">            <div className="image-slider">
