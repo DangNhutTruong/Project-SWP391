@@ -280,34 +280,7 @@ export default function Blog() {  const { user } = useAuth();
       comments: "63",
       category: "tips",
       url: "/blog/dinh-duong-cai-thuoc",
-    },
-  ];
-
-  // Component bài viết nổi bật
-  const FeaturedPost = ({ post }) => (
-    <div className="featured-post">
-      <div className="featured-image">
-        <img src={post.image} alt={post.title} />
-        <div className="post-category">{getCategoryName(post.category)}</div>
-      </div>
-      <div className="featured-content">
-        <h2>{post.title}</h2>
-        <p className="post-excerpt">{post.excerpt}</p>
-        <div className="post-meta">
-          <span className="post-author">{post.author}</span>
-          <span className="post-date">
-            <FaCalendarAlt /> {post.date}
-          </span>
-          <span className="post-views">
-            <FaEye /> {post.views} lượt đọc
-          </span>
-        </div>
-        <Link to={post.url} className="read-more-btn">
-          Đọc tiếp
-        </Link>
-      </div>
-    </div>
-  );
+    },  ];
 
   // Component bài viết thông thường
   const BlogPostCard = ({ post }) => (
@@ -352,16 +325,9 @@ export default function Blog() {  const { user } = useAuth();
       support: "Hỗ trợ cai thuốc",
     };
     return categories[category] || "Chung";
-  }
-  return (
+  }  return (
     <div className="blog-page">
       <div className="container blog-container">
-        {/* Bài viết nổi bật */}
-        <div className="featured-section">
-          <h2 className="section-title">Bài viết nổi bật</h2>
-          <FeaturedPost post={blogPosts[0]} />
-        </div>
-
         {/* Bài viết mới nhất */}
         <div className="latest-posts-section">
           <h2 className="section-title">Bài viết mới nhất</h2>

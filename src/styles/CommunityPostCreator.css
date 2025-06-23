@@ -14,11 +14,43 @@
   align-items: flex-start;
 }
 
-.user-avatar img {
-  width: 48px;
-  height: 48px;
+.community-post-creator .user-avatar {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50%;
+  overflow: hidden;
+  background: transparent !important;
+  border: 2px solid #e0e0e0;
+  flex-shrink: 0;
+  min-width: 48px;
+  max-width: 48px;
+  min-height: 48px;
+  max-height: 48px;
+}
+
+.community-post-creator .user-avatar img {
+  width: 48px !important;
+  height: 48px !important;
   border-radius: 50%;
   object-fit: cover;
+  background: transparent !important;
+}
+
+/* Override CSS từ User.css cho avatar trong post creator */
+.community-post-creator .user-avatar,
+.community-post-creator .user-avatar-placeholder {
+  width: 48px !important;
+  height: 48px !important;
+  border: 2px solid #e0e0e0 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  background: white !important;
+  background-color: white !important;
+}
+
+.community-post-creator .user-avatar svg,
+.community-post-creator .user-avatar-placeholder svg {
+  font-size: 20px !important;
+  color: #8395a7 !important;
 }
 
 .post-input-container {
@@ -369,9 +401,8 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  align-items: center;  justify-content: center;
+  z-index: 100;
   padding: 20px;
 }
 
@@ -624,4 +655,18 @@
   .modal-description {
     font-size: 15px;
   }
+}
+
+/* Loại bỏ hoàn toàn background xanh cho avatar trong post creator */
+.community-post-creator .user-avatar,
+.community-post-creator .user-avatar::before,
+.community-post-creator .user-avatar::after {
+  background: white !important;
+  background-color: white !important;
+}
+
+.community-post-creator .post-creator-header .user-avatar {
+  position: relative;
+  background: white !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
