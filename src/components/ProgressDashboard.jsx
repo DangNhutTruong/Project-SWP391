@@ -1,75 +1,173 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FaTrophy, FaCalendarCheck, FaChartLine, FaLeaf, FaCoins, FaHeart } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-import QuitProgressChart from './QuitProgressChart';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  FaTrophy,
+  FaCalendarCheck,
+  FaChartLine,
+  FaLeaf,
+  FaCoins,
+  FaHeart,
+} from "react-icons/fa";
+import { Link } from "react-router-dom";
+import QuitProgressChart from "./QuitProgressChart";
+import apiService from "../utils/apiService";
+import { useAuth } from "../context/AuthContext";
 
-const ProgressDashboard = ({ userPlan, completionDate }) => {
+const ProgressDashboard = ({
+  userPlan: propsPlan,
+  completionDate: propsCompletionDate,
+}) => {
   const [dashboardStats, setDashboardStats] = useState(null);
-  const [milestones, setMilestones] = useState([]);  // Tính toán thống kê
-  
-  // Early return if required props are missing
-  if (!userPlan || !completionDate) {
-    return (
-      <div className="dashboard-error">
-        <p>Không thể hiển thị dashboard - thiếu dữ liệu cần thiết</p>
-      </div>
-    );
-  }
-  
-  const calculateDashboardStats = useCallback(() => {
-    if (!userPlan || !completionDate) return;
+  const [milestones, setMilestones] = useState([]);
+  const [userPlan, setUserPlan] = useState(propsPlan);
+  const [completionDate, setCompletionDate] = useState(propsCompletionDate);
+  const [loading, setLoading] = useState(!propsPlan);
+  const [progressData, setProgressData] = useState([]);
+  const { user } = useAuth();
 
-    const startDate = new Date(completionDate);
+  // Tải dữ liệu kế hoạch và tiến trình từ API
+  useEffect(() => {
+    const fetchUserPlanAndProgress = async () => {
+      if (!user || !user.UserID) return;
+
+      try {
+        setLoading(true);
+
+        // Nếu đã có dữ liệu từ props, sử dụng nó
+        if (propsPlan) {
+          setUserPlan(propsPlan);
+        } else {
+          // Nếu không, tải từ API
+          const plans = await apiService.plans.getAll();
+          if (plans && plans.data && plans.data.length > 0) {
+            // Lấy kế hoạch mới nhất
+            const latestPlan = plans.data[0];
+            setUserPlan(latestPlan);
+            setCompletionDate(latestPlan.StartDate || new Date());
+          }
+        }
+
+        // Tải dữ liệu tiến trình
+        if (user.UserID) {
+          const progressResponse = await apiService.progress.getByUserId(
+            user.UserID
+          );
+          if (progressResponse && progressResponse.data) {
+            setProgressData(progressResponse.data);
+          }
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu kế hoạch:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchUserPlanAndProgress();
+  }, [user, propsPlan, propsCompletionDate]);
+
+  // Tính toán thống kê dashboard
+  const calculateDashboardStats = useCallback(() => {
+    if (!userPlan) return;
+
+    const startDate = completionDate
+      ? new Date(completionDate)
+      : userPlan.StartDate
+      ? new Date(userPlan.StartDate)
+      : new Date();
     const today = new Date();
-    const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-      // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
-    const initialCigarettesPerDay = userPlan.weeks && userPlan.weeks.length > 0 ? 
-      userPlan.weeks[0]?.amount || 20 : 20;
-    const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
-    
+    const daysSinceStart = Math.floor(
+      (today - startDate) / (1000 * 60 * 60 * 24)
+    );
+
+    // Ước tính số điếu thuốc đã tiết kiệm được
+    let initialCigarettesPerDay = 20; // Mặc định
+
     // Tính tiền tiết kiệm (giả sử 1 gói = 25,000đ, 1 gói = 20 điếu)
     const pricePerCigarette = 25000 / 20;
-    const moneySaved = estimatedSaved * pricePerCigarette;    setDashboardStats({
-      daysSincePlanCreation: daysSinceStart, // Renamed to clarify this is time since plan creation
+    const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
+    const moneySaved = estimatedSaved * pricePerCigarette;
+
+    setDashboardStats({
+      daysSincePlanCreation: daysSinceStart,
       cigarettesSaved: estimatedSaved,
       moneySaved: moneySaved,
-      planDuration: userPlan.weeks ? userPlan.weeks.length : 0,
-      planName: userPlan.name || 'Kế hoạch cá nhân'
+      planDuration: userPlan.ExpectedQuitDate
+        ? Math.ceil(
+            (new Date(userPlan.ExpectedQuitDate) - startDate) /
+              (1000 * 60 * 60 * 24)
+          )
+        : 30,
+      planName: userPlan.Title || "Kế hoạch cai thuốc",
     });
   }, [userPlan, completionDate]);
-  
+
   const loadMilestones = useCallback(() => {
     // Nếu không có dữ liệu đầy đủ, không thực hiện
-    if (!userPlan || !completionDate || !dashboardStats) {
+    if (!userPlan || !dashboardStats) {
       return;
     }
-    
-    
+
     // Milestone theo thời gian WHO
     const healthMilestones = [
-      { days: 1, title: '24 giờ đầu tiên', description: 'Carbon monoxide được loại bỏ khỏi cơ thể', achieved: false },
-      { days: 2, title: '48 giờ', description: 'Nicotine được loại bỏ, vị giác cải thiện', achieved: false },
-      { days: 3, title: '72 giờ', description: 'Đường hô hấp thư giãn, năng lượng tăng', achieved: false },
-      { days: 14, title: '2 tuần', description: 'Tuần hoàn máu cải thiện', achieved: false },
-      { days: 30, title: '1 tháng', description: 'Chức năng phổi tăng 30%', achieved: false },
-      { days: 90, title: '3 tháng', description: 'Ho và khó thở giảm đáng kể', achieved: false },
-      { days: 365, title: '1 năm', description: 'Nguy cơ bệnh tim giảm 50%', achieved: false }
+      {
+        days: 1,
+        title: "24 giờ đầu tiên",
+        description: "Carbon monoxide được loại bỏ khỏi cơ thể",
+        achieved: false,
+      },
+      {
+        days: 2,
+        title: "48 giờ",
+        description: "Nicotine được loại bỏ, vị giác cải thiện",
+        achieved: false,
+      },
+      {
+        days: 3,
+        title: "72 giờ",
+        description: "Đường hô hấp thư giãn, năng lượng tăng",
+        achieved: false,
+      },
+      {
+        days: 14,
+        title: "2 tuần",
+        description: "Tuần hoàn máu cải thiện",
+        achieved: false,
+      },
+      {
+        days: 30,
+        title: "1 tháng",
+        description: "Chức năng phổi tăng 30%",
+        achieved: false,
+      },
+      {
+        days: 90,
+        title: "3 tháng",
+        description: "Ho và khó thở giảm đáng kể",
+        achieved: false,
+      },
+      {
+        days: 365,
+        title: "1 năm",
+        description: "Nguy cơ bệnh tim giảm 50%",
+        achieved: false,
+      },
     ];
 
-    const updatedMilestones = healthMilestones.map(milestone => ({
+    const updatedMilestones = healthMilestones.map((milestone) => ({
       ...milestone,
-      achieved: dashboardStats.daysSincePlanCreation >= milestone.days
+      achieved: dashboardStats.daysSincePlanCreation >= milestone.days,
     }));
     setMilestones(updatedMilestones);
-  }, [userPlan, completionDate, dashboardStats]);
+  }, [userPlan, dashboardStats]);
 
-  // Add useEffect hooks after function declarations
+  // Cập nhật thống kê dashboard khi có dữ liệu kế hoạch
   useEffect(() => {
-    if (userPlan && completionDate) {
+    if (userPlan) {
       calculateDashboardStats();
     }
   }, [userPlan, completionDate, calculateDashboardStats]);
-  
+
   // Tải milestone sau khi đã có thống kê
   useEffect(() => {
     if (dashboardStats) {
@@ -77,14 +175,17 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
     }
   }, [dashboardStats, loadMilestones]);
 
+  // Các helper functions
   const getNextMilestone = () => {
     if (!milestones || milestones.length === 0) return null;
-    return milestones.find(m => !m.achieved) || milestones[milestones.length - 1]; // Return last milestone if all achieved
+    return (
+      milestones.find((m) => !m.achieved) || milestones[milestones.length - 1]
+    );
   };
 
   const getAchievementProgress = () => {
     if (!milestones || milestones.length === 0) return 0;
-    const achieved = milestones.filter(m => m.achieved).length;
+    const achieved = milestones.filter((m) => m.achieved).length;
     return (achieved / milestones.length) * 100;
   };
 
@@ -93,7 +194,7 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
     console.log("Current dashboard stats:", dashboardStats);
     console.log("Current milestones:", milestones);
   }, [dashboardStats, milestones]);
-  
+
   // Show loading state while dashboardStats is not set
   if (!dashboardStats) {
     console.log("Dashboard stats not set yet, showing loading screen");
@@ -108,7 +209,9 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
   const achievementProgress = getAchievementProgress();
 
   return (
-    <div className="progress-dashboard">      {/* Key Statistics */}
+    <div className="progress-dashboard">
+      {" "}
+      {/* Key Statistics */}
       <div className="dashboard-stats">
         <div className="stat-card primary">
           <div className="stat-icon">
@@ -149,7 +252,8 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             <p>Milestone sức khỏe</p>
           </div>
         </div>
-      </div>      {/* Progress Maintenance Chart */}
+      </div>{" "}
+      {/* Progress Maintenance Chart */}
       <div className="maintenance-section">
         <h2>
           <FaChartLine className="section-icon" />
@@ -157,32 +261,34 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
         </h2>
         <div className="maintenance-chart">
           <QuitProgressChart
-            userPlan={userPlan || { weeks: [], name: 'Kế hoạch cá nhân' }}
+            userPlan={userPlan || { weeks: [], name: "Kế hoạch cá nhân" }}
             actualProgress={[]} // Không cần actual data nữa vì đã hoàn thành
             timeFilter="Tất cả"
             height={250}
           />
         </div>
       </div>
-
       {/* Health Milestones */}
       <div className="milestones-section">
         <h2>Milestone sức khỏe</h2>
         <div className="milestones-grid">
           {milestones.map((milestone, index) => (
-            <div 
-              key={index} 
-              className={`milestone-card ${milestone.achieved ? 'achieved' : 'pending'}`}
+            <div
+              key={index}
+              className={`milestone-card ${
+                milestone.achieved ? "achieved" : "pending"
+              }`}
             >
               <div className="milestone-indicator">
-                {milestone.achieved ? '✅' : '⏳'}
+                {milestone.achieved ? "✅" : "⏳"}
               </div>
               <div className="milestone-content">
                 <h4>{milestone.title}</h4>
                 <p>{milestone.description}</p>
                 {!milestone.achieved && (
                   <span className="days-remaining">
-                    Còn {milestone.days - dashboardStats.daysSincePlanCreation} ngày
+                    Còn {milestone.days - dashboardStats.daysSincePlanCreation}{" "}
+                    ngày
                   </span>
                 )}
               </div>
@@ -190,21 +296,23 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
           ))}
         </div>
       </div>
-
       {/* Next Steps */}
       <div className="next-steps-section">
         <h2>Bước tiếp theo</h2>
-        
         {nextMilestone && (
           <div className="next-milestone">
             <h3>🎯 Milestone tiếp theo: {nextMilestone.title}</h3>
             <p>{nextMilestone.description}</p>
             <div className="milestone-progress">
               <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ 
-                    width: `${(dashboardStats.daysSincePlanCreation / nextMilestone.days) * 100}%` 
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${
+                      (dashboardStats.daysSincePlanCreation /
+                        nextMilestone.days) *
+                      100
+                    }%`,
                   }}
                 ></div>
               </div>
@@ -214,7 +322,6 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             </div>
           </div>
         )}
-
         <div className="maintenance-tips">
           <h3>💡 Lời khuyên duy trì</h3>
           <ul>
@@ -224,7 +331,8 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
             <li>Tìm kiếm hỗ trợ từ gia đình và bạn bè</li>
             <li>Nhắc nhở bản thân về lợi ích đã đạt được</li>
           </ul>
-        </div>        <div className="support-options">
+        </div>{" "}
+        <div className="support-options">
           <h3>🤝 Hỗ trợ thêm</h3>
           <div className="support-buttons">
             <Link to="/blog" className="support-btn primary">
@@ -236,20 +344,28 @@ const ProgressDashboard = ({ userPlan, completionDate }) => {
           </div>
         </div>
       </div>
-
       {/* Success Story */}
       <div className="success-story">
-        <h2>🎉 Câu chuyện thành công của bạn</h2>        <div className="story-content">          <p>
-            Bạn đã lập thành công <strong>{userPlan?.name || 'Kế hoạch cá nhân'}</strong> và duy trì được{' '}
-            <strong>{dashboardStats.daysSincePlanCreation} ngày</strong> không hút thuốc.
+        <h2>🎉 Câu chuyện thành công của bạn</h2>{" "}
+        <div className="story-content">
+          {" "}
+          <p>
+            Bạn đã lập thành công{" "}
+            <strong>{userPlan?.name || "Kế hoạch cá nhân"}</strong> và duy trì
+            được <strong>{dashboardStats.daysSincePlanCreation} ngày</strong>{" "}
+            không hút thuốc.
           </p>
           <p>
-            Trong thời gian này, bạn đã tiết kiệm được{' '}
-            <strong>{(dashboardStats.moneySaved / 1000).toFixed(0)}K VNĐ</strong> và tránh được{' '}
-            <strong>{dashboardStats.cigarettesSaved}</strong> điếu thuốc.
+            Trong thời gian này, bạn đã tiết kiệm được{" "}
+            <strong>
+              {(dashboardStats.moneySaved / 1000).toFixed(0)}K VNĐ
+            </strong>{" "}
+            và tránh được <strong>{dashboardStats.cigarettesSaved}</strong> điếu
+            thuốc.
           </p>
           <p>
-            Đây là một thành tích đáng tự hào! Hãy tiếp tục duy trì và truyền cảm hứng cho những người khác.
+            Đây là một thành tích đáng tự hào! Hãy tiếp tục duy trì và truyền
+            cảm hứng cho những người khác.
           </p>
         </div>
       </div>
