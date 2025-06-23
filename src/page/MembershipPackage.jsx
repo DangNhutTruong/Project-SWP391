@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './MembershipPackage.css';
 import { FaCheck, FaTimes, FaCrown, FaLeaf, FaRocket, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,19 @@ import { useAuth } from '../context/AuthContext';
 export default function MembershipPackage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [toasts, setToasts] = useState([]);
+  
+  // Hàm tạo toast notification
+  const addToast = (message, type = 'error') => {
+    const id = Date.now() + Math.random();
+    const newToast = { id, message, type };
+    setToasts(prev => [...prev, newToast]);
+    
+    // Tự động xóa toast sau 5 giây
+    setTimeout(() => {
+      setToasts(prev => prev.filter(toast => toast.id !== id));
+    }, 5000);
+  };
   
   // Định nghĩa thông tin cho từng gói (đặt ngoài hàm để có thể truy cập từ bất kỳ đâu trong component)
   const packageDetails = {
@@ -71,9 +84,16 @@ export default function MembershipPackage() {
     // Nếu giá trị gói hiện tại lớn hơn hoặc bằng giá trị gói đang xét, không thể mua
     return membershipValue[currentMembership] < membershipValue[packageType];
   };
-  
-  // Xử lý chuyển hướng khi người dùng chọn gói
+    // Xử lý chuyển hướng khi người dùng chọn gói
   const handlePackageSelection = (packageType) => {
+    // Kiểm tra xem người dùng đã đăng nhập chưa
+    if (!user) {
+      addToast('Bạn cần đăng nhập để mua gói thành viên!', 'error');
+      setTimeout(() => {
+        navigate('/login');
+      }, 1000);
+      return;
+    }
 
     // Nếu gói free, chuyển đến trang đăng ký
     if (packageType === 'free') {
@@ -82,9 +102,32 @@ export default function MembershipPackage() {
     }
 
     // Chuyển hướng đến trang thanh toán với thông tin gói đã chọn
-    navigate('/payment', { state: { package: packageDetails[packageType] } });
-  };
-  return (      <section className="pricing-section">
+    navigate('/payment', { state: { package: packageDetails[packageType] } });  };
+  
+  // Component Toast
+  const Toast = ({ toast, onClose }) => (
+    <div className={`toast toast-${toast.type}`}>
+      <span className="toast-message">{toast.message}</span>
+      <button className="toast-close" onClick={() => onClose(toast.id)}>×</button>
+    </div>
+  );
+
+  // Component ToastContainer
+  const ToastContainer = () => (
+    <div className="toast-container">
+      {toasts.map(toast => (
+        <Toast 
+          key={toast.id} 
+          toast={toast} 
+          onClose={(id) => setToasts(prev => prev.filter(t => t.id !== id))}
+        />
+      ))}
+    </div>
+  );
+
+  return (
+    <>
+      <section className="pricing-section">
         <div className="container">
           <h2>Gói thành viên</h2>
           <p className="pricing-subtitle">Chọn gói phù hợp với nhu cầu của bạn</p>
@@ -200,9 +243,10 @@ export default function MembershipPackage() {
               >
                 {canPurchasePackage('pro') ? 'Đăng ký Pro' : 'Đã sở hữu'}
               </button>
-            </div>
-          </div>
+            </div>          </div>
         </div>
       </section>
-    );
+      <ToastContainer />
+    </>
+  );
 }
