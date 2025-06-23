@@ -4,52 +4,34 @@
   min-height: calc(100vh - 200px);
   background-color: #f5f7fa;
   margin-bottom: 30px;
-  position: relative;
+  position: static;
   overflow: hidden;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  z-index: 0;
 }
 
-/* Sidebar Styles */
+/* Sidebar Styles - Compact version */
 .profile-sidebar {
-  width: 280px;
+  width: 260px;
+  min-width: 260px;
   background-color: #fff;
-  border-radius: 0 16px 16px 0;
-  padding: 25px 0;
-  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 20px 0;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
   position: relative;
-  z-index: 10;
   background-image: linear-gradient(to bottom, #ffffff, #f9fbff);
-  margin-right: 20px;
-  height: fit-content;
-  max-height: 100%;
-  overflow: visible;
+  margin-right: 20px;  height: fit-content;
   display: flex;
   flex-direction: column;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  padding: 15px;
-  border-bottom: 1px solid #e0e4e8;
-  background: linear-gradient(to right bottom, #f9fafb, #ebf2fd);
-  border-radius: 12px;
-  margin: 0 15px 15px;
-  box-shadow: 0 4px 12px rgba(37, 112, 232, 0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  width: calc(100% - 30px);
-  min-width: 200px;
-}
-
-.user-info:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(37, 112, 232, 0.12);
+  align-self: flex-start;
 }
 
 /* Đã xóa user-avatar-wrapper không cần thiết */
 
 .user-avatar {
-  width: 50px;
-  height: 50px;
+  width: 100px;
+  height: 100px;
   color: #fff;
   display: flex;
   align-items: center;
@@ -90,13 +72,10 @@
 
 .user-name-wrapper {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
   margin-bottom: 5px;
-}
-
-.membership-container {
-  margin-bottom: -2px;
 }
 
 .user-name {
@@ -151,9 +130,9 @@
 .membership-label {
   display: inline-flex;
   align-items: center;
-  padding: 1px 6px;
+  padding: 2px 6px;
   border-radius: 10px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   color: white;
   text-transform: uppercase;
@@ -163,7 +142,6 @@
   overflow: hidden;
   transition: all 0.3s ease;
   height: fit-content;
-  margin-left: 1px;
 }
 
 .membership-label::before {
@@ -192,16 +170,15 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+/* Nav styles */
 .profile-nav {
-  padding: 20px 15px;
-  margin-top: 10px;
+  padding: 10px 12px;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  position: relative;
-  max-height: calc(100vh - 250px);
-  overflow-y: auto;
-  scrollbar-width: thin;
+  height: 100%;
+  justify-content: space-between;
 }
 
 /* Hiệu ứng đổ bóng dọc theo thanh điều hướng */
@@ -217,123 +194,97 @@
   z-index: 5;
 }
 
+.nav-top-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-bottom-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 20px;
+}
+
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 14px 20px;
+  padding: 12px 15px;
+  border-radius: 10px;
   color: #555;
   text-decoration: none;
   transition: all 0.3s ease;
-  font-size: 14px;
-  margin-bottom: 3px;
-  border-radius: 8px;
   font-weight: 500;
-  position: relative;
-  overflow: hidden;
+  margin-bottom: 2px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
 }
 
-.nav-item svg, .nav-item i {
-  margin-right: 12px;
-  font-size: 18px;
-  width: 18px;
-  transition: transform 0.3s ease;
-}
-
-.nav-item .fa-crown {
-  color: #f7b733;
+.nav-item svg {
+  margin-right: 10px;
+  color: #8395a7;
+  font-size: 16px;
+  transition: color 0.3s ease;
 }
 
 .nav-item:hover {
-  background-color: rgba(37, 112, 232, 0.08);
-  color: #2570e8;
-  transform: translateX(3px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.nav-item:hover::after {
-  content: "";
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 6px;
-  height: 6px;
-  background-color: #2570e8;
-  border-radius: 50%;
-  opacity: 0.7;
-}
-
-.nav-item:hover svg, .nav-item:hover i {
-  transform: scale(1.1);
+  background-color: rgba(37, 112, 232, 0.05);
   color: #2570e8;
 }
 
-.nav-item:hover .fa-crown {
-  color: #e7a722;
+.nav-item:hover svg {
+  color: #2570e8;
 }
 
 .nav-item.active {
   background-color: #2570e8;
   color: white;
   font-weight: 600;
-  box-shadow: 0 4px 10px rgba(37, 112, 232, 0.3);
-  position: relative;
-  transform: translateX(0);
+  box-shadow: 0 5px 15px rgba(37, 112, 232, 0.2);
 }
 
-.nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(to bottom, #ffffff, rgba(255, 255, 255, 0.3));
-  border-radius: 0 4px 4px 0;
+.nav-item.active svg {
+  color: white;
 }
 
-.nav-item.active svg, .nav-item.active i {
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
-}
-
-/* Nút đăng xuất đặc biệt */
+/* Nút đăng xuất đặc biệt - Phiên bản cải tiến */
 .logout-btn {
-  margin-top: 20px;
-  margin-bottom: 10px;
-  background-color: transparent;
-  border: 1px solid #e0e4e8;
-  color: #ea4335;
+  margin: 0;
+  background-color: rgba(255, 241, 242, 0.7);
+  border: none;
+  color: #e11d48;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
-  width: calc(100% - 10px);
+  width: 100%;
   position: relative;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
 .logout-btn:hover {
-  background-color: rgba(234, 67, 53, 0.08) !important;
-  color: #ea4335 !important;
-  border: 1px solid rgba(234, 67, 53, 0.2);
-  transform: translateX(3px);
+  background-color: rgba(255, 241, 242, 0.9) !important;
+  color: #be123c !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(225, 29, 72, 0.1);
 }
 
 .logout-btn i, .logout-btn svg {
-  color: #ea4335;
-  transition: transform 0.3s ease;
+  color: #e11d48;
+  transition: all 0.3s ease;
 }
 
 .logout-btn:hover svg {
-  transform: translateX(3px);
+  transform: translateX(-2px);
 }
 
-/* Thêm đường phân cách trước nút đăng xuất */
+/* Xóa đường phân cách trước nút đăng xuất vì đã có ở nav-bottom-group */
 .logout-btn::before {
-  content: "";
-  display: block;
-  height: 1px;
-  background: linear-gradient(to right, transparent, #e0e4e8, transparent);
-  position: absolute;
-  top: -20px;
+  display: none;
   left: 10px;
   right: 10px;
 }
@@ -341,38 +292,35 @@
 /* Main Content Styles */
 .profile-content {
   flex: 1;
-  padding: 30px 40px;
-  overflow-y: auto;
+  padding: 25px;
   background-color: #fff;
-  border-radius: 16px 0 0 16px;
-  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.03);
-  margin-left: -20px;
-  z-index: 5;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+  min-height: 700px;
+  max-width: calc(100% - 300px);
+  position: relative;
+  overflow-x: hidden;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
+.profile-section {
+  margin-bottom: 30px;
 }
 
-.section-header h1 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-  margin: 0;
+/* Logout button specific style */
+.nav-item.logout-btn {
+  color: #dc3545;
+  border: 1px solid transparent;
+  margin-top: auto;
 }
 
-.update-btn {
-  background-color: #2570e8;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
+.nav-item.logout-btn svg {
+  color: #dc3545;
+}
+
+.nav-item.logout-btn:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border-color: rgba(220, 53, 69, 0.2);
 }
 
 /* Profile Sections */
@@ -669,11 +617,24 @@ aaaaaaaaaa*/
   
   .profile-sidebar {
     width: 100%;
+    min-width: 100%;
     border-right: none;
     border-bottom: 1px solid #e0e4e8;
     padding: 15px;
+    position: static;
+    margin-right: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
-    .profile-nav {
+  
+  .profile-content {
+    margin-left: 0;
+    border-radius: 0;
+    padding: 20px;
+    box-shadow: none;
+  }
+  
+  .profile-nav {
     display: flex;
     flex-direction: row;
     overflow-x: auto;
@@ -1021,18 +982,8 @@ aaaaaaaaaa*/
   white-space: nowrap;
 }
 
-/* Responsive Design for User Info */
-@media (max-width: 768px) {
-  .user-info {
-    flex-direction: row;
-    padding: 12px;
-  }
-  
-  .user-avatar {
-    margin-right: 6px;
-  }
-  
-  .user-details {
+/* Additional Responsive Styles */
+@media (max-width: 768px) {.user-details {
     width: 100%;
   }
 }
@@ -1058,7 +1009,7 @@ aaaaaaaaaa*/
   
   .membership-label {
     padding: 1px 4px;
-    font-size: 8px;
+    font-size: 9px;
   }
   
   .day-count {
@@ -1076,17 +1027,7 @@ aaaaaaaaaa*/
   }
 }
 
-.avatar-circle {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(120deg, #43b36b, #1e88e5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  flex-shrink: 0;
-}
+
 
 .user-initial-container {
   width: 30px;
@@ -1102,4 +1043,197 @@ aaaaaaaaaa*/
   color: white;
   font-weight: 700;
   font-size: 16px;
+}
+
+/* Additional styles to fix z-index and overlay issues */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Reset stacking context for main elements */
+.profile-container, 
+.profile-sidebar,
+.profile-content,
+.avatar-circle,
+.profile-sections,
+.profile-overview,
+.section-header {
+  z-index: auto;
+}
+
+/* Ensure all content stays inside containers */
+.profile-container > * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* Fix for nav menu */
+.profile-nav {
+  position: relative;
+  z-index: auto;
+}
+
+/* Fix for modal */
+.modal-overlay {
+  z-index: 9999;
+}
+
+/* Fix for sidebar display */
+@media (min-width: 993px) {
+  .profile-container {
+    gap: 20px;
+  }
+  
+  .profile-sidebar {
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    margin-right: 0;
+  }
+  
+  .profile-content {
+    margin-left: 0;
+  }
+}
+
+/* Style cho các nhóm điều hướng */
+.nav-top-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-bottom-group {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  padding-top: 15px;
+  position: relative;
+}
+
+.nav-bottom-group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  height: 1px;
+  background: linear-gradient(to right, rgba(0,0,0,0.02), rgba(0,0,0,0.06), rgba(0,0,0,0.02));
+}
+
+/* Modal Specific Styles for Plan Edit */
+.modal-header {
+  background-color: #f9fafb;
+  padding: 20px 25px;
+  border-bottom: 1px solid #eaeef3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+  font-weight: 600;
+}
+
+.modal-body {
+  padding: 25px;
+}
+
+.modal-footer {
+  padding: 20px 25px;
+  border-top: 1px solid #eaeef3;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background-color: #f9fafb;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #8395a7;
+  cursor: pointer;
+  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.modal-close:hover {
+  color: #2570e8;
+}
+
+/* Form Control Styles */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #dfe4ea;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.3s;
+  background-color: #fff;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #2570e8;
+  box-shadow: 0 0 0 3px rgba(37, 112, 232, 0.1);
+}
+
+.form-control.date-input {
+  cursor: pointer;
+  background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>') no-repeat 95% center;
+  background-size: 16px;
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary {
+  background-color: #2570e8;
+  color: white;
+  box-shadow: 0 4px 10px rgba(37, 112, 232, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: #1a5cbf;
+  box-shadow: 0 6px 15px rgba(37, 112, 232, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.btn-secondary:hover {
+  background-color: #e9ecef;
+  color: #475569;
 }
