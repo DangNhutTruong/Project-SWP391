@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaBell } from 'react-icons/fa';
 import { useState, useEffect, useRef } from 'react';
 import LoginModal from './LoginModal';
@@ -6,7 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { formatMembershipName } from '../utils/membershipUtils';
 import './Header.css';
 
-export default function Header() {  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+export default function Header() {  const navigate = useNavigate();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0); // Add this state for notification count
   const { user, logout } = useAuth();
@@ -32,9 +33,7 @@ export default function Header() {  const [isLoginModalOpen, setIsLoginModalOpen
   const handleLoginClick = (e) => {
     e.preventDefault();
     setIsLoginModalOpen(true);
-  };
-
-  const handleLogout = () => {
+  };  const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
   };
@@ -80,7 +79,7 @@ export default function Header() {  const [isLoginModalOpen, setIsLoginModalOpen
               <Link to="/notifications" className="nav-item notification-nav-item">
                 <FaBell /> Thông báo
                 {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
-              </Link>              <div className="user-menu-container" ref={userMenuRef}>                <button className="user-menu-button" onClick={toggleUserMenu}>
+              </Link>              <div className={`user-menu-container ${isUserMenuOpen ? 'menu-open' : ''}`} ref={userMenuRef}>                <button className="user-menu-button" onClick={toggleUserMenu}>
                   {user.avatar ? (
                     <img src={user.avatar} alt={user.name} className="user-avatar-header" />
                   ) : (
@@ -100,13 +99,18 @@ export default function Header() {  const [isLoginModalOpen, setIsLoginModalOpen
                     )}
                   </span>
                 </button>                {isUserMenuOpen && (
-                  <div className="user-dropdown-menu">
-                    <Link to="/profile" className="dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                  <div className="user-dropdown-menu">                    <button className="dropdown-item" onClick={() => {
+                      setIsUserMenuOpen(false);
+                      navigate('/profile');
+                    }}>
                       <i className="fas fa-user"></i> Hồ sơ cá nhân
-                    </Link>
-                    <Link to="/settings" className="dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                    </button>
+                    <button className="dropdown-item" onClick={() => {
+                      setIsUserMenuOpen(false);
+                      navigate('/settings');
+                    }}>
                       <i className="fas fa-cog"></i> Cài đặt
-                    </Link>
+                    </button>
                     <button onClick={handleLogout} className="dropdown-item logout-btn">
                       <i className="fas fa-sign-out-alt"></i> Đăng xuất
                     </button>

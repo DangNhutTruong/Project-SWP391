@@ -27,11 +27,13 @@
   align-items: center;
 }
 
-.user-avatar {
-  width: 48px;
-  height: 48px;
+.community-post .user-avatar {
+  width: 48px !important;
+  height: 48px !important;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid #e0e0e0;
+  box-shadow: none;
 }
 
 .user-details {
@@ -81,7 +83,7 @@
   border: 1px solid #e1e5e9;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 500; /* Giảm thêm z-index để tránh conflict */
   min-width: 150px;
   overflow: hidden;
 }
