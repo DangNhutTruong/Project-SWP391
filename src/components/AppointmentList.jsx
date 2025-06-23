@@ -165,23 +165,28 @@ function AppointmentList() {
     // Cũng tạo một bản sao ngày lịch hẹn với giờ reset để so sánh ngày
     const appointmentDay = new Date(appointmentDate);
     appointmentDay.setHours(0, 0, 0, 0);
-
-    // Đã hủy chỉ hiển thị trong "Tất cả" và "Đã qua", không hiển thị trong "Sắp tới"
-    if (appointment.status === "cancelled") {
-      if (filter === "upcoming") {
-        return false; // Lịch đã hủy không hiển thị trong "Sắp tới"
+    
+    // Kiểm tra xem lịch hẹn đã hoàn thành chưa
+    const isCompleted = appointment.status === 'completed' || appointment.completed === true;
+    
+    // Đã hủy hoặc đã hoàn thành chỉ hiển thị trong "Tất cả" và "Đã qua", không hiển thị trong "Sắp tới"
+    if (appointment.status === 'cancelled' || isCompleted) {
+      if (filter === 'upcoming') {
+        return false; // Lịch đã hủy hoặc đã hoàn thành không hiển thị trong "Sắp tới"
+      } else if (filter === 'past') {
+        return true; // Hiển thị trong "Đã qua"
       } else {
-        return true; // Hiển thị trong "Tất cả" và "Đã qua"
+        return true; // Hiển thị trong "Tất cả"
       }
     }
 
-    // Logic lọc dựa trên ngày, giờ và trạng thái
-    if (filter === "upcoming") {
-      // Filter "Sắp tới": Hiển thị tất cả lịch hẹn có thời gian >= thời gian hiện tại
+    // Logic lọc dựa trên ngày, giờ và trạng thái cho các lịch hẹn chưa hoàn thành
+    if (filter === 'upcoming') {
+      // Filter "Sắp tới": Hiển thị tất cả lịch hẹn chưa hoàn thành có thời gian >= thời gian hiện tại
       return appointmentDate >= now;
-    } else if (filter === "past") {
-      // Filter "Đã qua": Hiển thị lịch hẹn có thời gian < thời gian hiện tại hoặc đã hủy
-      return appointmentDate < now || appointment.status === "cancelled";
+    } else if (filter === 'past') {
+      // Filter "Đã qua": Hiển thị lịch hẹn có thời gian < thời gian hiện tại hoặc đã hủy hoặc đã hoàn thành
+      return appointmentDate < now || appointment.status === 'cancelled' || isCompleted;
     }
 
     return true; // 'all' filter: hiển thị tất cả
@@ -225,38 +230,23 @@ function AppointmentList() {
     );
   }; // Get status class based on appointment status
   const getStatusClass = (appointment) => {
-    if (appointment.status === "cancelled") {
-      return "cancelled";
-    } else if (appointment.status === "confirmed") {
-      // Lấy thời gian hiện tại (bao gồm giờ phút giây)
-      const now = new Date();
-
-      // Lấy thời gian lịch hẹn (bao gồm ngày và giờ)
-      // Chuyển đổi giờ từ định dạng "HH:mm" sang giá trị thời gian
-      const [hours, minutes] = appointment.time.split(":").map(Number);
-
-      // Tạo đối tượng Date từ ngày và giờ của lịch hẹn
-      const appointmentDate = new Date(appointment.date);
-      appointmentDate.setHours(hours, minutes, 0, 0);
-
-      console.log("Thời gian hiện tại:", now);
-      console.log("Thời gian lịch hẹn:", appointmentDate);
-      console.log("So sánh:", now > appointmentDate);
-
-      // Lịch hẹn chỉ được đánh dấu hoàn thành nếu thời gian hiện tại đã vượt qua thời gian của cuộc hẹn
-      if (now > appointmentDate) {
-        return "completed";
-      } else {
-        return "confirmed";
-      }
+    if (appointment.status === 'cancelled') {
+      return 'cancelled';
+    } else if (appointment.status === 'completed' || appointment.completed) {
+      return 'completed';
+    } else if (appointment.status === 'confirmed') {
+      // Always return confirmed regardless of time
+      return 'confirmed';
     }
 
     return "";
   }; // Get status text based on appointment status
   const getStatusText = (appointment) => {
-    if (appointment.status === "cancelled") {
-      return "Đã hủy";
-    } else if (appointment.status === "confirmed") {
+    if (appointment.status === 'cancelled') {
+      return 'Đã hủy';
+    } else if (appointment.status === 'completed' || appointment.completed) {
+      return 'Đã hoàn thành';
+    } else if (appointment.status === 'confirmed') {
       // Lấy ngày hiện tại
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -267,13 +257,8 @@ function AppointmentList() {
       );
       const appointmentDay = new Date(appointmentDate);
       appointmentDay.setHours(0, 0, 0, 0);
-
-      // Lịch hẹn chỉ được đánh dấu hoàn thành nếu ngày hẹn < ngày hiện tại
-      if (appointmentDay < today) {
-        return "Đã hoàn thành";
-      } else {
-        return "Đã xác nhận";
-      }
+      
+      return 'Đã xác nhận';
     }
 
     return "Chờ xác nhận";
@@ -487,6 +472,33 @@ function AppointmentList() {
         closeRatingModal();
       }, 1000);
     }
+  };
+
+  // Handle complete appointment
+  const handleCompleteAppointment = (appointmentId) => {
+    const updatedAppointments = appointments.map(appointment => {
+      if (appointment.id === appointmentId) {
+        return { 
+          ...appointment, 
+          status: 'completed',
+          completed: true,
+          completedAt: new Date().toISOString()
+        };
+      }
+      return appointment;
+    });
+    
+    setAppointments(updatedAppointments);
+    localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+    
+    // Show toast notification
+    setToastMessage('Buổi tư vấn đã được xác nhận hoàn thành!');
+    setShowToast(true);
+    
+    // Hide toast after 3 seconds
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000);
   };
 
   return (
@@ -909,7 +921,13 @@ function AppointmentList() {
                 {isSubmittingRating ? "Đang gửi..." : "Gửi đánh giá"}
               </button>
             </div>
-          </div>
+          </div>        </div>      )}
+      
+      {/* Toast notification for completion confirmation */}
+      {showToast && (
+        <div className="toast-notification">
+          <FaCheck />
+          {toastMessage}
         </div>
       )}
     </div>

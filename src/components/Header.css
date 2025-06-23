@@ -83,6 +83,15 @@
   margin-right: 8px;
 }
 
+.user-avatar-header {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+  border: 2px solid #2570e8;
+}
+
 .user-name {
   color: #333;
   font-size: 14px;
