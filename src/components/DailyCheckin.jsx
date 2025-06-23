@@ -193,21 +193,23 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
     
     return (
         <div className="daily-checkin">
-            <div className="checkin-header">
-                <div className="header-content">
-                    <FaCalendarCheck className="header-icon" />
+            <div className="checkin-header">                <div className="header-content">
+                    <div className="header-icon">
+                        <FaCalendarCheck />
+                    </div>
                     <div className="header-text">
-                        <h2>Checkin hôm nay</h2>
+                        <h2>Ghi nhận hôm nay</h2>
                         <p>Ghi nhận tiến trình cai thuốc ngày {new Date().toLocaleDateString('vi-VN')}</p>
                     </div>
                 </div>
 
-                {/* Streak counter */}
-                <div className="streak-badge">
+                {/* Streak counter */}                <div className="streak-badge">
                     <span className="streak-number">{streakDays}</span>
                     <span className="streak-text">ngày liên tiếp</span>
                 </div>
             </div>
+            
+            <div className="checkin-separator"></div>
             
             {/* Toast Notification */}
             {toast.show && (
@@ -283,29 +285,8 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
                             <FaSave className="btn-icon" />
                             Cập nhật số điếu hôm nay
                         </button>
-                    )}
-                </div>{/* Summary Card */}
-                {isSubmitted && (
-                    <div className="checkin-summary">
-                        <h3>Tóm tắt ngày hôm nay</h3>
-                        <div className="summary-grid">
-                            <div className="summary-item">
-                                <span className="label">Mục tiêu:</span>
-                                <span className="value">{todayData.targetCigarettes} điếu</span>
-                            </div>
-                            <div className="summary-item">
-                                <span className="label">Thực tế:</span>
-                                <span className="value">{todayData.actualCigarettes} điếu</span>
-                            </div>
-                            <div className="summary-item">
-                                <span className="label">Kết quả:</span>
-                                <span className={`value ${isTargetAchieved ? 'success' : 'warning'}`}>
-                                    {isTargetAchieved ? 'Đạt mục tiêu' : 'Chưa đạt'}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    )}                </div>
+                {/* Summary Card đã được xóa vì dư thừa */}
             </div>
         </div>
     );

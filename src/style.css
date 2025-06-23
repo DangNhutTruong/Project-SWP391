@@ -23,6 +23,8 @@ header .container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  overflow: visible; /* Đảm bảo dropdown không bị cắt */
+  position: relative;
 }
 
 .logo img {
@@ -530,6 +532,8 @@ footer {
   padding: 15px 0;
   background-color: #fff;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 100000; /* Đảm bảo header luôn nổi trên nội dung trang */
 }
 
 .logo-text {

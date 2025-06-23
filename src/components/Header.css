@@ -58,6 +58,16 @@
 
 .user-menu-container {
   position: relative;
+  z-index: 99998 !important; /* Z-index cực cao */
+  overflow: visible; /* Đảm bảo dropdown không bị cắt */
+}
+
+.user-menu-container.menu-open {
+  z-index: 10000 !important; /* Z-index cao nhất khi dropdown mở, quan trọng hơn mọi thứ */
+}
+
+.user-menu-container.menu-open .user-dropdown-menu {
+  z-index: 10001 !important; /* Z-index cao nhất cho dropdown menu, quan trọng hơn mọi thứ */
 }
 
 .user-menu-button {
@@ -89,7 +99,7 @@
   border-radius: 50%;
   object-fit: cover;
   margin-right: 8px;
-  border: 2px solid #2570e8;
+  border: 2px solid #e0e0e0;
 }
 
 .user-name {
@@ -177,21 +187,11 @@
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   width: 200px;
-  z-index: 1000; /* Higher z-index to ensure it's above other elements */
+  z-index: 99999 !important; /* Z-index cực cao để đảm bảo luôn hiển thị trên cùng */
   overflow: hidden;
   animation: fadeIn 0.2s ease-out;
   border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  pointer-events: auto !important; /* Đảm bảo có thể click được */
 }
 
 .dropdown-item {
@@ -202,6 +202,14 @@
   text-decoration: none;
   font-size: 14px;
   transition: background-color 0.2s;
+  cursor: pointer !important;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  pointer-events: auto !important; /* Đảm bảo có thể click được */
+  z-index: 99999 !important;
+  position: relative;
 }
 
 .dropdown-item:hover {
@@ -273,4 +281,31 @@
   align-items: center;
   justify-content: center;
   font-weight: 600;
+}
+
+/* Đảm bảo dropdown luôn hoạt động trên mọi trang */
+.nosmoke-header {
+  position: relative !important;
+  z-index: 100000 !important;
+}
+
+.nosmoke-header .container {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.nosmoke-header .user-menu-container {
+  position: relative !important;
+  z-index: 100001 !important;
+}
+
+.nosmoke-header .user-dropdown-menu {
+  position: absolute !important;
+  z-index: 100002 !important;
+  pointer-events: auto !important;
+}
+
+.nosmoke-header .dropdown-item {
+  pointer-events: auto !important;
+  z-index: 100003 !important;
 }
