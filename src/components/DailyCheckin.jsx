@@ -154,9 +154,9 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
             targetCigarettes: target
         }));
         
-        // Hiển thị thông tin về kế hoạch đang dùng
-        if (currentPlan?.name) {
-            console.log(`Đang sử dụng kế hoạch: ${currentPlan.name}`);
+    // Hiển thị thông tin về kế hoạch đang dùng
+        if (currentPlan) {
+            console.log(`Đang sử dụng kế hoạch: ${currentPlan.name || 'Kế hoạch cai thuốc cá nhân'}`);
         }
         
         calculateStreakDays();
@@ -185,19 +185,21 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
         }));
     };    const handleSubmit = () => {
         // Đảm bảo dữ liệu được lưu đúng định dạng
+        const todayDate = new Date().toISOString().split('T')[0];
+        console.log("CHECKIN DEBUG: Today's date for storage:", todayDate);
+        
         const dataToSave = {
             ...todayData,
-            date: new Date().toISOString().split('T')[0],  // Đảm bảo ngày là hôm nay
+            date: todayDate,  // Đảm bảo ngày là hôm nay
             targetCigarettes: todayData.targetCigarettes,  // Đảm bảo mục tiêu được lưu đúng
-            actualCigarettes: parseInt(todayData.actualCigarettes, 10)  // Đảm bảo số điếu là số nguyên
+            actualCigarettes: parseInt(todayData.actualCigarettes, 10),  // Đảm bảo số điếu là số nguyên
+            savedAt: new Date().toISOString() // Lưu thời gian lưu chính xác
         };
+          // Lưu dữ liệu vào localStorage
+        const isUpdate = localStorage.getItem(`checkin_${todayDate}`) !== null;
+        localStorage.setItem(`checkin_${todayDate}`, JSON.stringify(dataToSave));
         
-        // Lưu dữ liệu vào localStorage
-        const today = new Date().toISOString().split('T')[0];
-        const isUpdate = localStorage.getItem(`checkin_${today}`) !== null;
-        localStorage.setItem(`checkin_${today}`, JSON.stringify(dataToSave));
-        
-        console.log(`Đã lưu dữ liệu checkin cho ngày ${today}:`, dataToSave);
+        console.log(`Đã lưu dữ liệu checkin cho ngày ${todayDate}:`, dataToSave);
 
         // Cập nhật streak bằng cách tính toán lại từ dữ liệu đã lưu
         calculateStreakDays();
@@ -205,16 +207,15 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
         setIsSubmitted(true);
 
         // Callback để cập nhật component cha
-        if (onProgressUpdate) {
-            const updateData = {
+        if (onProgressUpdate) {            const updateData = {
                 week: currentWeek,
-                date: today,
+                date: todayDate,
                 actualCigarettes: parseInt(todayData.actualCigarettes, 10),
                 targetCigarettes: todayData.targetCigarettes,
                 achieved: parseInt(todayData.actualCigarettes, 10) <= todayData.targetCigarettes
             };
-            
-            console.log('Cập nhật tiến trình:', updateData);
+              console.log('Cập nhật tiến trình:', updateData);
+            console.log('DEBUG DAILY: Dữ liệu checkin đã được lưu, dòng xanh lá sẽ cập nhật với giá trị:', updateData.actualCigarettes);
             onProgressUpdate(updateData);
         }
 

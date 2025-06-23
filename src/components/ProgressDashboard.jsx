@@ -3,9 +3,47 @@ import { FaTrophy, FaCalendarCheck, FaChartLine, FaLeaf, FaCoins, FaHeart } from
 import { Link } from 'react-router-dom';
 import QuitProgressChart from './QuitProgressChart';
 
-const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalStats, onDataReset }) => {
+const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalStats, actualProgress = [], onDataReset }) => {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [milestones, setMilestones] = useState([]);  // Tính toán thống kê
+  
+  // Tạo dữ liệu mẫu cho biểu đồ thực tế
+  const generateSampleActualData = (plan) => {
+    if (!plan || !plan.weeks || plan.weeks.length === 0) return [];
+    
+    const startDate = new Date(plan.startDate || new Date());
+    const result = [];
+    
+    // Tạo dữ liệu mẫu cho mỗi tuần trong kế hoạch
+    plan.weeks.forEach((week, weekIndex) => {
+      // Tạo dữ liệu cho 3-5 ngày mỗi tuần
+      const daysToGenerate = Math.floor(Math.random() * 3) + 3; // 3-5 ngày mỗi tuần
+      
+      for (let i = 0; i < daysToGenerate; i++) {
+        const dayOffset = Math.floor(Math.random() * 7); // Ngẫu nhiên trong tuần
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + (weekIndex * 7) + dayOffset);
+        
+        // Tạo số điếu thực tế, hơi lệch so với kế hoạch một chút
+        const deviation = Math.floor(Math.random() * 5) - 2; // -2 to +2
+        const actualCigs = Math.max(0, week.amount + deviation);
+        
+        // Các trạng thái tâm trạng có thể có
+        const moods = ["good", "challenging", "easy", "difficult"];
+        const randomMood = moods[Math.floor(Math.random() * moods.length)];
+        
+        result.push({
+          date: date.toISOString().split('T')[0],
+          actualCigarettes: actualCigs,
+          targetCigarettes: week.amount,
+          mood: randomMood
+        });
+      }
+    });
+    
+    // Sắp xếp theo ngày tăng dần
+    return result.sort((a, b) => new Date(a.date) - new Date(b.date));
+  };
   
   // Early return if required props are missing
   if (!userPlan || !completionDate) {
@@ -41,10 +79,27 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
     // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
     const initialCigarettesPerDay = userPlan.weeks && userPlan.weeks.length > 0 ? 
       userPlan.weeks[0]?.amount || 20 : 20;
-    const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
-      // Tính tiền tiết kiệm (giả sử 1 gói = 25,000đ, 1 gói = 20 điếu)
+    const estimatedSaved = initialCigarettesPerDay * daysSinceStart;      // Tính tiền tiết kiệm dựa trên giá gói thuốc từ kế hoạch của người dùng
     // Nếu có thống kê từ bên ngoài, sử dụng số tiền đã tính toán
-    const pricePerCigarette = 25000 / 20;
+    let packPrice = 25000; // Giá mặc định nếu không tìm thấy
+    
+    // Lấy giá gói thuốc từ activePlan nếu không có thống kê từ bên ngoài
+    if (!externalStats || !externalStats.savedMoney) {
+      try {
+        const activePlanData = localStorage.getItem('activePlan');
+        if (activePlanData) {
+          const activePlan = JSON.parse(activePlanData);
+          if (activePlan && activePlan.packPrice) {
+            packPrice = activePlan.packPrice;
+            console.log(`[Dashboard] Lấy giá gói thuốc từ activePlan: ${packPrice.toLocaleString()}đ`);
+          }
+        }
+      } catch (error) {
+        console.error('[Dashboard] Lỗi khi đọc packPrice từ activePlan:', error);
+      }
+    }
+    
+    const pricePerCigarette = packPrice / 20; // Giả sử 1 gói = 20 điếu
     const moneySaved = externalStats && externalStats.savedMoney ? 
                      externalStats.savedMoney : 
                      estimatedSaved * pricePerCigarette;
@@ -143,10 +198,9 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
         <div className="stat-card primary">
           <div className="stat-icon">
             <FaCalendarCheck />
-          </div>
-          <div className="stat-content">
+          </div>          <div className="stat-content">
             <h3>{dashboardStats.daysSincePlanCreation}</h3>
-            <p>Thời gian cai thuốc</p>
+            <p>Ngày theo dõi</p>
           </div>
         </div>        <div className="stat-card success">
           <div className="stat-icon">
@@ -181,14 +235,17 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
         <h2>
           <FaChartLine className="section-icon" />
           Kế hoạch của bạn
-        </h2>
-        <div className="maintenance-chart">
+        </h2>        <div className="maintenance-chart">
+          {console.log("DASHBOARD DEBUG: Trước khi render QuitProgressChart")}
+          {console.log("DASHBOARD DEBUG: userPlan:", userPlan)}
+          {console.log("DASHBOARD DEBUG: actualProgress:", actualProgress)}
           <QuitProgressChart
             userPlan={userPlan || { weeks: [], name: 'Kế hoạch cá nhân' }}
-            actualProgress={[]} // Không cần actual data nữa vì đã hoàn thành
+            actualProgress={actualProgress} // Sử dụng dữ liệu thực tế từ props
             timeFilter="Tất cả"
             height={250}
           />
+          {console.log("DASHBOARD DEBUG: Sau khi render QuitProgressChart")}
         </div>
       </div>
 

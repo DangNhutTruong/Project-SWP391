@@ -3,12 +3,16 @@ import { Chart as ChartJS } from 'chart.js/auto';
 import { Line } from 'react-chartjs-2';
 import '../styles/QuitProgressChart.css';
 
+console.log("📊 QuitProgressChart.jsx FILE LOADED");
+
 const QuitProgressChart = ({
     userPlan = null,
     actualProgress = [],
     timeFilter = '30 ngày',
     height = 300
 }) => {
+    console.log("🚀 QuitProgressChart KHỞI TẠO với props:", { userPlan, actualProgress, timeFilter, height });
+    
     const [chartData, setChartData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -32,11 +36,12 @@ const QuitProgressChart = ({
         const sampleActual = [
             { date: '2024-01-01', actualCigarettes: 18, targetCigarettes: 20, mood: "good" },
             { date: '2024-01-02', actualCigarettes: 19, targetCigarettes: 20, mood: "challenging" },
-            { date: '2024-01-03', actualCigarettes: 17, targetCigarettes: 20, mood: "good" },
-        ];
+            { date: '2024-01-03', actualCigarettes: 17, targetCigarettes: 20, mood: "good" },        ];
 
         return { plan: samplePlan, actual: sampleActual };
-    };    // Tạo dữ liệu kế hoạch theo ngày dựa trên tuần
+    };
+    
+    // Tạo dữ liệu kế hoạch theo ngày dựa trên tuần
     const generateDailyPlanData = (plan) => {
         if (!plan || !plan.weeks || !Array.isArray(plan.weeks) || plan.weeks.length === 0) return [];
         const dailyPlan = [];
@@ -73,13 +78,15 @@ const QuitProgressChart = ({
                 phase: "Hoàn thành"
             });
         }
-        
-        return dailyPlan;
-    };    // Filter data based on timeFilter
+          return dailyPlan;
+    };
+      // Filter data based on timeFilter
     const filterDataByTime = (data, filter) => {
         const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
         let daysToShow = 30;
         
+        console.log(`FILTER DEBUG: Ngày hôm nay là ${todayStr}`);
         switch (filter) {
             case '7 ngày':
                 daysToShow = 7;
@@ -101,17 +108,53 @@ const QuitProgressChart = ({
         
         console.log(`Lọc dữ liệu: Hiển thị ${daysToShow} ngày gần nhất, từ ${cutoffDate.toLocaleDateString()}`);
         
-        // Make sure data is an array before filtering
+        // Log input data before filtering
+        console.log("FILTER DEBUG: Input data length:", data?.length);
+        if (data?.length > 0) {
+            console.log("FILTER DEBUG: Input data first item:", data[0]);
+            console.log("FILTER DEBUG: Input data last item:", data[data.length-1]);
+        }
+          // Make sure data is an array before filtering
         const filteredData = Array.isArray(data) ? data.filter(item => {
             if (!item || !item.date) return false;
+            
             const itemDate = new Date(item.date);
-            return !isNaN(itemDate) && itemDate >= cutoffDate;
+            
+            // Đối với dữ liệu thực tế (actualProgress), luôn giữ lại tất cả dữ liệu
+            // vì chúng ta đã được lọc từ ngày bắt đầu kế hoạch rồi
+            if (data.length <= 7) { // Nếu ít dữ liệu (người dùng mới bắt đầu)
+                console.log(`FILTER DEBUG: ✅ Giữ lại dữ liệu ${item.date} (người dùng mới bắt đầu)`);
+                return true;
+            }
+            
+            // Luôn giữ lại dữ liệu của ngày hôm nay bất kể filter nào
+            if (item.date === todayStr) {
+                console.log(`FILTER DEBUG: ✅ Giữ lại dữ liệu ngày hôm nay (${todayStr})`);
+                return true;
+            }
+            
+            const result = !isNaN(itemDate) && itemDate >= cutoffDate;
+            
+            // Log filter decision for recent data (debugging)
+            const daysDiff = Math.floor((today - itemDate) / (1000 * 60 * 60 * 24));
+            if (daysDiff <= 3) { // Log only recent data (now showing 3 days for more context)
+                console.log(`FILTER DEBUG: Date ${item.date} - Keep: ${result}, Days diff: ${daysDiff}`);
+            }
+            
+            return result;
         }) : [];
         
         console.log(`Kết quả lọc: ${filteredData.length} mục dữ liệu`);
-        return filteredData;
-    };useEffect(() => {
+        if (filteredData.length > 0) {
+            console.log("FILTER DEBUG: Filtered data first item:", filteredData[0]);
+            console.log("FILTER DEBUG: Filtered data last item:", filteredData[filteredData.length-1]);
+        }
+          return filteredData;
+    };
+      useEffect(() => {
         console.log("QuitProgressChart - Updating chart with:", { userPlan, actualProgress, timeFilter });
+        console.log("CHART DEBUG: actualProgress length:", actualProgress?.length);
+        console.log("CHART DEBUG: actualProgress data:", actualProgress);
         
         // Make sure we have valid data or generate sample data
         let data;
@@ -121,42 +164,52 @@ const QuitProgressChart = ({
                 plan: userPlan, 
                 actual: Array.isArray(actualProgress) ? actualProgress : [] 
             };
+            console.log("CHART DEBUG: ✅ Sử dụng dữ liệu thực tế từ props");
         } else {
             data = generateSampleData();
+            console.log("CHART DEBUG: ⚠️ Không có userPlan, sử dụng dữ liệu mẫu");
         }
 
         // Kiểm tra dữ liệu thực tế
         if (Array.isArray(data.actual) && data.actual.length > 0) {
-            console.log(`Có ${data.actual.length} bản ghi dữ liệu thực tế:`, 
+            console.log(`CHART DEBUG: ✅ Có ${data.actual.length} bản ghi dữ liệu thực tế:`, 
                 data.actual.map(a => `${a.date}: ${a.actualCigarettes}/${a.targetCigarettes}`));
         } else {
-            console.log("Không có dữ liệu thực tế hoặc dữ liệu không đúng định dạng");
+            console.log("CHART DEBUG: ❌ Không có dữ liệu thực tế - đường xanh lá sẽ không hiển thị");
         }
 
         // Tạo dữ liệu kế hoạch theo ngày
         const dailyPlanData = generateDailyPlanData(data.plan);
-        console.log(`Tạo được ${dailyPlanData.length} mục dữ liệu kế hoạch theo ngày`);
-        
-        // Filter dữ liệu theo timeFilter
+        console.log(`CHART DEBUG: Tạo được ${dailyPlanData.length} mục dữ liệu kế hoạch theo ngày`);        // Filter dữ liệu theo timeFilter
         const filteredPlanData = filterDataByTime(dailyPlanData || [], timeFilter);
         const filteredActualData = filterDataByTime(data.actual || [], timeFilter);
+        
+        console.log("CHART DEBUG: Filtered actual data:", filteredActualData);
+        console.log("CHART DEBUG: Filtered data length:", filteredActualData?.length);
+        
+        // Kiểm tra xem có dữ liệu thực tế không - nếu không có thì không hiển thị đường xanh lá
+        const hasRealActualData = Array.isArray(actualProgress) && actualProgress.length > 0;
+        if (!hasRealActualData) {
+            console.log("CHART DEBUG: ⚠️ Không có dữ liệu actualProgress thực tế từ props - sẽ ẩn đường xanh lá");
+        }
 
         // Tạo labels cho trục X (theo ngày)
         const labels = [];
         const planData = [];
         const actualData = [];
         
-        // Tạo map cho việc lookup nhanh
+        // Tạo map cho việc lookup nhanh - chỉ nếu có dữ liệu thực tế
         const actualMap = new Map();
-        if (Array.isArray(filteredActualData)) {
+        if (hasRealActualData && Array.isArray(filteredActualData)) {
             filteredActualData.forEach(item => {
                 if (item && item.date) {
                     actualMap.set(item.date, item.actualCigarettes);
+                    console.log(`CHART DEBUG: Adding to map - Date ${item.date}, Value ${item.actualCigarettes}`);
                 }
             });
         }
-
-        // Tạo dữ liệu cho chart
+        
+        console.log("CHART DEBUG: actualMap size:", actualMap.size);        // Tạo dữ liệu cho chart
         if (Array.isArray(filteredPlanData)) {
             filteredPlanData.forEach((planItem, index) => {
                 // Format ngày cho label (chỉ hiển thị ngày/tháng)
@@ -167,11 +220,30 @@ const QuitProgressChart = ({
                 // Dữ liệu kế hoạch
                 planData.push(planItem.targetCigarettes);
                 
-                // Dữ liệu thực tế (nếu có)
-                const actualValue = actualMap.get(planItem.date);
-                actualData.push(actualValue !== undefined ? actualValue : null);
+                // Dữ liệu thực tế (chỉ nếu có dữ liệu thực tế từ props)
+                if (hasRealActualData) {
+                    const actualValue = actualMap.get(planItem.date);
+                    actualData.push(actualValue !== undefined ? actualValue : null);
+                    
+                    // Log dữ liệu dòng xanh lá (debug)
+                    if (actualValue !== undefined) {
+                        console.log(`DEBUG CHART: Ngày ${planItem.date} có dữ liệu thực tế: ${actualValue} điếu`);
+                    }
+                } else {
+                    // Không có dữ liệu thực tế, push null để không hiển thị điểm nào
+                    actualData.push(null);
+                }
             });
-        }        const chartConfig = {
+              // Log tổng quan dữ liệu dòng xanh lá
+            if (hasRealActualData) {
+                console.log(`DEBUG CHART: ✅ Tổng số điểm dữ liệu thực tế: ${actualMap.size} điểm`);
+                console.log('DEBUG CHART: Dữ liệu dòng xanh lá:', actualData.filter(d => d !== null));
+            } else {
+                console.log('DEBUG CHART: ❌ Không hiển thị dòng xanh lá vì không có dữ liệu thực tế');
+            }
+        }
+        
+        const chartConfig = {
             labels,
             datasets: [
                 {
@@ -188,8 +260,7 @@ const QuitProgressChart = ({
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
                     pointStyle: 'circle'
-                },
-                {
+                },                {
                     label: 'Thực tế',
                     data: actualData,
                     borderColor: '#34a853', // Xanh lá
@@ -197,8 +268,8 @@ const QuitProgressChart = ({
                     borderWidth: 3,
                     fill: false,
                     tension: 0.1,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
+                    pointRadius: 6, // Tăng kích thước điểm
+                    pointHoverRadius: 8, // Tăng kích thước khi hover
                     pointBackgroundColor: '#34a853',
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
@@ -214,12 +285,21 @@ const QuitProgressChart = ({
                     borderDash: [5, 5],
                     fill: false,
                     pointRadius: 0,
-                    pointHoverRadius: 0
-                }
+                    pointHoverRadius: 0                }
             ]
-        };        setChartData(chartConfig);
+        };
+        
+        console.log("CHART DEBUG: Final chart data", {
+            labels, 
+            planDataPoints: planData.length, 
+            actualDataPoints: actualData.filter(d => d !== null).length,
+            nonNullActualData: actualData.filter(d => d !== null)
+        });
+          setChartData(chartConfig);
         setIsLoading(false);
-    }, [userPlan, actualProgress, timeFilter]);    const options = {
+    }, [userPlan, actualProgress, timeFilter]);
+    
+    const options = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -253,8 +333,7 @@ const QuitProgressChart = ({
                 callbacks: {
                     title: function (context) {
                         return context[0].label;
-                    },
-                    label: function (context) {
+                    },                    label: function (context) {
                         const value = context.parsed.y;
                         if (value === null) return null;
 
@@ -262,17 +341,28 @@ const QuitProgressChart = ({
                         if (context.dataset.label.includes('thực tế')) {
                             label += value + ' điếu/ngày';
 
-                            // Thêm thông tin mood nếu có
-                            const weekNum = context.dataIndex + 1;
-                            const actualWeek = actualProgress.find(a => a.week === weekNum);
-                            if (actualWeek && actualWeek.mood) {
+                            // Thêm thông tin mood nếu có - sử dụng date thay vì week
+                            const dataIndex = context.dataIndex;
+                            const dateLabel = context.chart.data.labels[dataIndex];
+                            
+                            // Tìm dữ liệu thực tế dựa trên date
+                            const actualData = actualProgress.find(a => {
+                                if (a.date) {
+                                    const date = new Date(a.date);
+                                    const formattedDate = `${date.getDate()}/${date.getMonth() + 1}`;
+                                    return formattedDate === dateLabel;
+                                }
+                                return false;
+                            });
+                            
+                            if (actualData && actualData.mood) {
                                 const moodText = {
                                     'easy': '😊 Dễ dàng',
                                     'good': '🙂 Tốt',
                                     'challenging': '😐 Hơi khó',
                                     'difficult': '😰 Khó khăn'
                                 };
-                                label += ` (${moodText[actualWeek.mood] || actualWeek.mood})`;
+                                label += ` (${moodText[actualData.mood] || actualData.mood})`;
                             }
                         } else {
                             label += value + ' điếu/ngày';
@@ -388,27 +478,7 @@ const QuitProgressChart = ({
                     data={chartData}
                     options={options}
                     height={height - 100} // Giảm chiều cao để đảm bảo không bị trồng chéo
-                />
-            </div>{/* Legend hiển thị dưới biểu đồ */}
-              {/* Thêm ghi chú cho biểu đồ */}            <div className="chart-notes" style={{
-                marginTop: '25px',
-                padding: '15px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                fontSize: '14px',
-                color: '#5f6368',
-                borderLeft: '4px solid #fbbc04',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-            }}>
-                <p style={{ margin: '0 0 10px 0', display: 'flex', alignItems: 'flex-start' }}>
-                    <span style={{ marginRight: '10px', fontSize: '18px', marginTop: '2px' }}>💡</span> 
-                    <span>Theo dõi tiến trình cai thuốc của bạn so với kế hoạch. Cố gắng giữ đường xanh lá (thực tế) ngang bằng hoặc thấp hơn đường xanh dương (kế hoạch).</span>
-                </p>
-                <p style={{ margin: '10px 0 0 0', display: 'flex', alignItems: 'flex-start' }}>
-                    <span style={{ marginRight: '10px', fontSize: '18px', marginTop: '2px' }}>🎯</span> 
-                    <span><strong>Mục tiêu cuối cùng</strong> là đạt <strong>0 điếu/ngày</strong> và duy trì lâu dài.</span>
-                </p>
-            </div>
+                />            </div>{/* Legend hiển thị dưới biểu đồ */}
         </div>
     );
 };
