@@ -64,7 +64,7 @@
 }
 
 h2 {
-  text-align: center;
+  /* text-align: center; */
   font-size: 36px;
   font-weight: 800;
   margin-bottom: 10px;
@@ -75,7 +75,7 @@ h2 {
   transform: translateX(-50%);
 }
 
-h2::after {
+/* h2::after {
   content: '';
   position: absolute;
   bottom: -10px;
@@ -85,7 +85,7 @@ h2::after {
   height: 3px;
   background: linear-gradient(90deg, #2570e8, #64b5f6);
   border-radius: 2px;
-}
+} */
 
 .pricing-subtitle {
   text-align: center;
