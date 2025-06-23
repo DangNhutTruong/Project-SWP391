@@ -80,10 +80,8 @@ function BookAppointment() {
       avatar: 'https://randomuser.me/api/portraits/men/64.jpg',
       available: true
     }
-  ];
-
-  // Available time slots
-  const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
+  ];  // Custom time selection
+  const [customTime, setCustomTime] = useState('');
 
   // Helper functions for calendar
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
@@ -139,15 +137,13 @@ function BookAppointment() {
     setSelectedDate(selectedDate);
     setStep(3);
   };
-
   const handleSelectTime = (time) => {
     setSelectedTime(time);
     
     // Sử dụng ID của lịch hẹn cũ nếu đang thay đổi lịch hẹn, ngược lại tạo ID mới
     const newAppointmentId = isRescheduling ? originalAppointment.id : Math.floor(Math.random() * 1000000);
     setAppointmentId(newAppointmentId);
-    
-    // Tạo đối tượng lịch hẹn mới
+      // Tạo đối tượng lịch hẹn mới
     const appointment = {
       id: newAppointmentId,
       coachId: selectedCoach.id,
@@ -156,7 +152,8 @@ function BookAppointment() {
       coachRole: selectedCoach.role,
       date: selectedDate.toISOString(),
       time: time,
-      status: 'confirmed',
+      status: 'confirmed', // Trạng thái: 'confirmed', 'completed', 'cancelled'
+      completed: false, // Trường để theo dõi việc hoàn thành (cần xác nhận thủ công)
       createdAt: new Date().toISOString()
     };
     
@@ -187,6 +184,27 @@ function BookAppointment() {
     setTimeout(() => {
       navigate('/profile');
     }, 3000);
+  };
+
+  const handleCustomTimeChange = (e) => {
+    setCustomTime(e.target.value);
+  };
+    const handleCustomTimeSubmit = (e) => {
+    e.preventDefault();
+    
+    if (customTime.trim()) {
+      // Extract hours and minutes
+      const [hours, minutes] = customTime.split(':').map(Number);
+      
+      // Basic validation for business hours (8:00 AM to 10:00 PM)
+      if ((hours >= 8 && hours < 22) || (hours === 22 && minutes === 0)) {
+        // Format time for display (HH:MM format)
+        const formattedTime = customTime;
+        handleSelectTime(formattedTime);
+      } else {
+        alert('Vui lòng chọn thời gian trong giờ làm việc (8:00 - 22:00)');
+      }
+    }
   };
 
   const renderCoachSelection = () => {
@@ -287,20 +305,22 @@ function BookAppointment() {
             <FaCalendarAlt />
             <span>{selectedDate.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
           </div>
-        </div>
-
-        <div className="time-slots-container">
-          <p>Khung giờ còn trống:</p>
-          <div className="time-slots">
-            {timeSlots.map(time => (
-              <button 
-                key={time} 
-                className={`time-slot ${selectedTime === time ? 'selected' : ''}`}
-                onClick={() => handleSelectTime(time)}
-              >
-                {time}
-              </button>
-            ))}
+        </div>        <div className="time-slots-container">          <div className="custom-time-container">
+            <p>Chọn giờ hẹn:</p>
+            <form onSubmit={handleCustomTimeSubmit} className="custom-time-form">
+              <input 
+                type="time" 
+                value={customTime} 
+                onChange={handleCustomTimeChange} 
+                className="custom-time-input"
+                min="08:00"
+                max="18:00"
+                step="900" // 15-minute intervals
+                required
+              />
+              <button type="submit" className="btn-submit-time">Xác nhận giờ hẹn</button>
+            </form>
+            <small className="time-helper-text">Giờ làm việc: 8:00 - 22:00</small>
           </div>
         </div>
       </div>
@@ -314,8 +334,7 @@ function BookAppointment() {
         <div className="success-icon">
           <FaCheck />
         </div>
-        <h2>{isRescheduling ? 'Thay đổi lịch thành công!' : 'Đặt lịch thành công!'}</h2>
-        <p>Bạn đã {isRescheduling ? 'thay đổi lịch hẹn' : 'đặt lịch hẹn'} với <strong>{selectedCoach.name}</strong></p>
+        <h2>{isRescheduling ? 'Thay đổi lịch thành công!' : 'Đặt lịch thành công!'}</h2>        <p>Bạn đã {isRescheduling ? 'thay đổi lịch hẹn' : 'đặt lịch hẹn'} với <strong>{selectedCoach.name}</strong></p>
         <p>Vào ngày <strong>{selectedDate.toLocaleDateString('vi-VN')}</strong> lúc <strong>{selectedTime}</strong></p>
         <p>Mã cuộc hẹn: <strong>#{appointmentId}</strong></p>
         <p className="redirect-message">Bạn sẽ được chuyển đến trang hồ sơ cá nhân để xem lịch hẹn của bạn...</p>

@@ -466,6 +466,66 @@
   transform: translateY(-2px);
 }
 
+/* Custom time selection styles */
+.custom-time-container {
+  margin-top: 10px;
+  padding-top: 0;
+}
+
+.custom-time-form {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.custom-time-input {
+  flex: 1;
+  padding: 14px 20px;
+  border: 2px solid #eaeaea;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  outline: none;
+  transition: all 0.3s ease;
+  background-color: #f9fbff;
+}
+
+.custom-time-input:focus {
+  border-color: #2570e8;
+  box-shadow: 0 0 0 3px rgba(37, 112, 232, 0.15);
+  background-color: #ffffff;
+}
+
+.btn-submit-time {
+  padding: 14px 25px;
+  background-color: #2570e8;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(37, 112, 232, 0.25);
+}
+
+.btn-submit-time:hover {
+  background-color: #1c5fc5;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(37, 112, 232, 0.3);
+}
+
+.time-helper-text {
+  display: block;
+  color: #555;
+  font-size: 1rem;
+  margin-top: 12px;
+  background-color: #f5f9ff;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border-left: 3px solid #2570e8;
+}
+
 /* Success Message */
 .appointment-success {
   max-width: 500px;
@@ -535,6 +595,16 @@
     flex-direction: column;
     gap: 10px;
     align-items: flex-start;
+  }
+  
+  .custom-time-form {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .custom-time-input, 
+  .btn-submit-time {
+    width: 100%;
   }
 }
 
