@@ -11,7 +11,6 @@ export default function Hero() {
     'quit-smoking-2.png',
     'quit-smoking-3.jpg',
     'quit-smoking-4.jpg',
-    'c.jpg',
     'd.jpg',
     'th.jpg'
   ];
