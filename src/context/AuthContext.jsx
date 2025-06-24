@@ -55,8 +55,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       localStorage.setItem('nosmoke_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('nosmoke_user');
     }
   }, [user]);
 
@@ -152,10 +150,12 @@ export const AuthProvider = ({ children }) => {
           // Không lưu mật khẩu vào coach session
           const { password, ...coachWithoutPassword } = foundCoach;
           
-          // Đặt user là coach
-          setUser({ ...coachWithoutPassword, role: 'coach' });
+          // Đặt user là coach và lưu vào localStorage
+          const coachUser = { ...coachWithoutPassword, role: 'coach' };
+          setUser(coachUser);
+          localStorage.setItem('nosmoke_user', JSON.stringify(coachUser));
           setLoading(false);
-          return { success: true, user: { ...coachWithoutPassword, role: 'coach' } };
+          return { success: true, user: coachUser };
         }
         
         throw new Error('Email hoặc mật khẩu không đúng');
@@ -170,6 +170,8 @@ export const AuthProvider = ({ children }) => {
   // Hàm đăng xuất
   const logout = () => {
     setUser(null);
+    // Xóa thông tin user khỏi localStorage
+    localStorage.removeItem('nosmoke_user');
     return { success: true };
   };
     // Đảm bảo rằng membership luôn là một giá trị hợp lệ

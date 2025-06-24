@@ -122,9 +122,21 @@ const router = createBrowserRouter([
     path: "/journey",
     element: (
       <Layout>
-        <JourneyStepper />
+        <ProtectedRoute>
+          <JourneyStepper />
+        </ProtectedRoute>
       </Layout>
     ), // Sử dụng JourneyStepper cho trang Công Cụ
+  },
+  {
+    path: "/plan",
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <JourneyStepper />
+        </ProtectedRoute>
+      </Layout>
+    ), // Route alias cho /journey
   },
   {
     path: "/blog",
@@ -258,7 +270,9 @@ const router = createBrowserRouter([
     path: "/membership",
     element: (
       <Layout>
-        <MembershipPackage />
+        <ProtectedRoute>
+          <MembershipPackage />
+        </ProtectedRoute>
       </Layout>
     ), // Đường dẫn đến trang gói thành viên
   },
@@ -350,7 +364,6 @@ export default function App() {
     <AuthProvider>
       <MembershipProvider>
         <RouterProvider router={router} />
-        <MembershipDebugger />
       </MembershipProvider>
     </AuthProvider>
   );
