@@ -99,18 +99,38 @@ export default function Header() {  const navigate = useNavigate();
                     )}
                   </span>
                 </button>                {isUserMenuOpen && (
-                  <div className="user-dropdown-menu">                    <button className="dropdown-item" onClick={() => {
-                      setIsUserMenuOpen(false);
-                      navigate('/profile');
-                    }}>
-                      <i className="fas fa-user"></i> Hồ sơ cá nhân
-                    </button>
-                    <button className="dropdown-item" onClick={() => {
-                      setIsUserMenuOpen(false);
-                      navigate('/settings');
-                    }}>
-                      <i className="fas fa-cog"></i> Cài đặt
-                    </button>
+                  <div className="user-dropdown-menu">
+                    {user.role === 'coach' ? (
+                      <>
+                        <button className="dropdown-item" onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/coach');
+                        }}>
+                          <i className="fas fa-tachometer-alt"></i> Dashboard
+                        </button>
+                        <button className="dropdown-item" onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/coach/bookings');
+                        }}>
+                          <i className="fas fa-calendar-alt"></i> Quản lý Booking
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="dropdown-item" onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/profile');
+                        }}>
+                          <i className="fas fa-user"></i> Hồ sơ cá nhân
+                        </button>
+                        <button className="dropdown-item" onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/settings');
+                        }}>
+                          <i className="fas fa-cog"></i> Cài đặt
+                        </button>
+                      </>
+                    )}
                     <button onClick={handleLogout} className="dropdown-item logout-btn">
                       <i className="fas fa-sign-out-alt"></i> Đăng xuất
                     </button>

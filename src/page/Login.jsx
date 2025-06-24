@@ -10,19 +10,23 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   // Get the redirect path from location state or default to profile
   const from = location.state?.from || '/profile';
   
-  // Redirect to profile if already logged in
+  // Redirect based on role if already logged in
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(from);
+    if (isAuthenticated && user) {
+      if (user.role === 'coach') {
+        navigate('/coach');
+      } else {
+        navigate(from);
+      }
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, user, navigate, from]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -31,7 +35,12 @@ export default function Login() {
     try {
       const result = await login(email, password, rememberMe);
       if (result.success) {
-        navigate(from);
+        // Redirect based on user role
+        if (result.user && result.user.role === 'coach') {
+          navigate('/coach');
+        } else {
+          navigate(from);
+        }
       } else {
         setError(result.error || 'Đăng nhập không thành công');
       }
