@@ -6,6 +6,7 @@ import MembershipPackage from '../page/MembershipPackage';
 import SettingsPage from '../page/Settings';
 import Pay from '../page/Pay';
 import PaymentSuccess from '../page/PaymentSuccess';
+import CoachBookings from '../page/coach/CoachBookings';
 
 /**
  * AppRoutes - Cung cấp cấu hình định tuyến (routing) cho toàn bộ ứng dụng
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
   },  {
     path: "/payment",
     element: <Layout><Pay /></Layout>,
+  },
+  {
+    path: "/coach",
+    element: <Layout><CoachBookings /></Layout>,
   },
   {
     path: "*",

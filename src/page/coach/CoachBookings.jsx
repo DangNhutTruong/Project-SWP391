@@ -7,7 +7,7 @@ function CoachBookings() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
-  const [filter, setFilter] = useState('all'); // 'all', 'upcoming', 'completed', 'cancelled'
+  const [filter, setFilter] = useState('all'); // 'all', 'pending', 'upcoming', 'completed', 'cancelled'
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,6 +51,9 @@ function CoachBookings() {
     const now = new Date();
 
     switch (filter) {
+      case 'pending':
+        filtered = bookings.filter(booking => booking.status === 'pending');
+        break;
       case 'upcoming':
         filtered = bookings.filter(booking => {
           const bookingDate = new Date(booking.date);
@@ -105,6 +108,8 @@ function CoachBookings() {
 
   const getStatusColor = (status) => {
     switch (status) {
+      case 'pending':
+        return '#ffc107'; // Màu vàng cho chờ xác nhận
       case 'confirmed':
         return '#007bff';
       case 'completed':
@@ -118,6 +123,8 @@ function CoachBookings() {
 
   const getStatusText = (status) => {
     switch (status) {
+      case 'pending':
+        return 'Chờ xác nhận';
       case 'confirmed':
         return 'Đã xác nhận';
       case 'completed':
@@ -166,6 +173,12 @@ function CoachBookings() {
           onClick={() => setFilter('all')}
         >
           Tất cả ({bookings.length})
+        </button>
+        <button
+          className={filter === 'pending' ? 'active' : ''}
+          onClick={() => setFilter('pending')}
+        >
+          Chờ xác nhận ({bookings.filter(b => b.status === 'pending').length})
         </button>
         <button
           className={filter === 'upcoming' ? 'active' : ''}
@@ -239,6 +252,24 @@ function CoachBookings() {
               </div>
 
               <div className="booking-actions">
+                {booking.status === 'pending' && (
+                  <>
+                    <button
+                      className="action-btn confirm-btn"
+                      onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                      title="Xác nhận lịch hẹn"
+                    >
+                      <FaCheck /> Xác nhận
+                    </button>
+                    <button
+                      className="action-btn cancel-btn"
+                      onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                      title="Từ chối lịch hẹn"
+                    >
+                      <FaTimes /> Từ chối
+                    </button>
+                  </>
+                )}
                 {booking.status === 'confirmed' && (
                   <>
                     <button

@@ -156,7 +156,7 @@ function BookAppointment() {
       coachRole: selectedCoach.role,
       date: selectedDate.toISOString(),
       time: time,
-      status: 'confirmed', // Trạng thái: 'confirmed', 'completed', 'cancelled'
+      status: 'pending', // Trạng thái: 'pending', 'confirmed', 'completed', 'cancelled'
       completed: false, // Trường để theo dõi việc hoàn thành (cần xác nhận thủ công)
       createdAt: new Date().toISOString()
     };
@@ -354,6 +354,10 @@ function BookAppointment() {
         <h2>{isRescheduling ? 'Thay đổi lịch thành công!' : 'Đặt lịch thành công!'}</h2>        <p>Bạn đã {isRescheduling ? 'thay đổi lịch hẹn' : 'đặt lịch hẹn'} với <strong>{selectedCoach.name}</strong></p>
         <p>Vào ngày <strong>{selectedDate.toLocaleDateString('vi-VN')}</strong> lúc <strong>{selectedTime}</strong></p>
         <p>Mã cuộc hẹn: <strong>#{appointmentId}</strong></p>
+        <div className="pending-status-info">
+          <p><strong>⏳ Trạng thái:</strong> Đang chờ coach xác nhận</p>
+          <p className="status-note">Coach sẽ xem xét và xác nhận lịch hẹn của bạn. Bạn sẽ nhận được thông báo khi lịch được xác nhận.</p>
+        </div>
         <p className="redirect-message">Bạn sẽ được chuyển đến trang hồ sơ cá nhân để xem lịch hẹn của bạn...</p>
       </div>
     );
