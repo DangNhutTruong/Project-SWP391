@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import QuitProgressChart from "./QuitProgressChart";
-// import apiService from "../utils/apiService"; // Không sử dụng
+import apiService from "../utils/apiService"; // Sử dụng apiService
 import { useAuth } from "../context/AuthContext";
 
 const ProgressDashboard = ({
@@ -22,7 +22,10 @@ const ProgressDashboard = ({
   const [dashboardStats, setDashboardStats] = useState(null);
   const [milestones, setMilestones] = useState([]); // Tính toán thống kê
   const [hoveredMilestone, setHoveredMilestone] = useState(null);
-  const { user: _ } = useAuth(); // Lấy thông tin người dùng từ context (không sử dụng)
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [userAchievements, setUserAchievements] = useState([]);
+  const { user } = useAuth(); // Lấy thông tin người dùng từ context
 
   // Ghi log để debug
   useEffect(() => {
@@ -33,6 +36,51 @@ const ProgressDashboard = ({
       console.warn("ProgressDashboard: completionDate is missing or invalid");
     }
   }, [userPlan, completionDate]);
+
+  // Load user achievements from API if user is logged in
+  useEffect(() => {
+    if (user && user.UserID) {
+      setIsLoading(true);
+      apiService.achievements
+        .getUserAchievements(user.UserID)
+        .then((response) => {
+          if (response.success && response.data) {
+            setUserAchievements(response.data);
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching user achievements:", error);
+          setError("Không thể tải dữ liệu thành tựu");
+          setIsLoading(false);
+        });
+    }
+  }, [user]);
+
+  // Load progress data from API if user is logged in
+  useEffect(() => {
+    if (user && user.UserID) {
+      setIsLoading(true);
+      apiService.progress
+        .getByUserId(user.UserID)
+        .then((response) => {
+          if (response.success && response.data && response.data.length > 0) {
+            // Process the progress data if needed
+            // This would depend on how you want to use the API data
+            console.log("Progress data from API:", response.data);
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching user progress:", error);
+          setError("Không thể tải dữ liệu tiến độ");
+          setIsLoading(false);
+
+          // Fallback to using localStorage data
+          console.log("Fallback to localStorage data for progress");
+        });
+    }
+  }, [user]);
 
   // Đảm bảo actualProgress luôn là mảng
   const safeActualProgress = useMemo(() => {
