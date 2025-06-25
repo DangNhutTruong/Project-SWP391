@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { FaCalendarAlt, FaUser, FaClock, FaCheck, FaTimes, FaEdit, FaComments } from 'react-icons/fa';
+import { FaCalendarAlt, FaUser, FaClock, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
 import '../../styles/CoachBookings.css';
 
 function CoachBookings() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'pending', 'upcoming', 'completed', 'cancelled'
@@ -92,18 +90,6 @@ function CoachBookings() {
     } catch (error) {
       console.error('Lỗi khi cập nhật trạng thái booking:', error);
     }
-  };
-
-  const handleChatWithMember = (booking) => {
-    // Điều hướng đến trang chat với member cụ thể
-    // Có thể truyền thông tin member qua state hoặc query params
-    navigate('/coach/chat', { 
-      state: { 
-        selectedMemberId: booking.userId,
-        memberName: booking.userName,
-        memberEmail: booking.userEmail 
-      } 
-    });
   };
 
   const formatDate = (dateString) => {
@@ -311,13 +297,6 @@ function CoachBookings() {
                     <FaEdit /> Khôi phục
                   </button>
                 )}
-                <button
-                  className="action-btn chat-btn"
-                  onClick={() => handleChatWithMember(booking)}
-                  title="Chat với member"
-                >
-                  <FaComments /> Nhắn tin
-                </button>
               </div>
 
               <div className="booking-footer">

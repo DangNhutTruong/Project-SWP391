@@ -7,6 +7,7 @@ import SettingsPage from '../page/Settings';
 import Pay from '../page/Pay';
 import PaymentSuccess from '../page/PaymentSuccess';
 import CoachBookings from '../page/coach/CoachBookings';
+import Chat from '../page/Chat';
 
 /**
  * AppRoutes - Cung cấp cấu hình định tuyến (routing) cho toàn bộ ứng dụng
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
   {
     path: "/coach",
     element: <Layout><CoachBookings /></Layout>,
+  },
+  {
+    path: "/chat",
+    element: <Layout><Chat /></Layout>,
   },
   {
     path: "*",

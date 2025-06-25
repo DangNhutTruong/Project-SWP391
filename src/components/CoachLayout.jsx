@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaSignOutAlt, FaCalendarAlt, FaTachometerAlt, FaUser } from 'react-icons/fa';
+import { FaSignOutAlt, FaCalendarAlt, FaTachometerAlt, FaUser, FaComments } from 'react-icons/fa';
 import '../styles/CoachLayout.css';
 
 function CoachLayout() {
@@ -60,6 +60,14 @@ function CoachLayout() {
                 className="nav-btn"
               >
                 <FaCalendarAlt /> Quản lý Booking
+              </button>
+            </li>
+            <li>
+              <button 
+                onClick={() => navigate('/coach/messages')}
+                className="nav-btn"
+              >
+                <FaComments /> Nhắn tin
               </button>
             </li>
           </ul>
