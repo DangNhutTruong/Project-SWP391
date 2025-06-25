@@ -62,14 +62,6 @@ function CoachLayout() {
                 <FaCalendarAlt /> Quản lý Booking
               </button>
             </li>
-            <li>
-              <button 
-                onClick={() => navigate('/coach/clients')}
-                className="nav-btn"
-              >
-                <FaUser /> Khách hàng
-              </button>
-            </li>
           </ul>
         </nav>
 

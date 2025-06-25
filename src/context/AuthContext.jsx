@@ -155,6 +155,10 @@ export const AuthProvider = ({ children }) => {
           setUser(coachUser);
           localStorage.setItem('nosmoke_user', JSON.stringify(coachUser));
           setLoading(false);
+          
+          // Redirect coach đến dashboard ngay lập tức
+          window.location.href = '/coach';
+          
           return { success: true, user: coachUser };
         }
         

@@ -16,6 +16,7 @@ import MembershipPackage from "./page/MembershipPackage.jsx"; // Import componen
 import BookAppointment from "./page/BookAppointment.jsx"; // Import component BookAppointment
 import ProtectedRoute from "./components/ProtectedRoute.jsx"; // Import ProtectedRoute
 import RoleBasedRoute from "./components/RoleBasedRoute.jsx"; // Import RoleBasedRoute
+import CoachRedirect from "./components/CoachRedirect.jsx"; // Import CoachRedirect
 import AccessDenied from "./page/AccessDenied.jsx"; // Import AccessDenied
 import UserProfile from "./page/User.jsx"; // Import UserProfile component
 import CoachLayout from "./components/CoachLayout.jsx"; // Import CoachLayout
@@ -62,7 +63,9 @@ const router = createBrowserRouter([
     path: "/",
     element: (
       <Layout>
-        <Home />
+        <CoachRedirect>
+          <Home />
+        </CoachRedirect>
       </Layout>
     ),
   },
@@ -77,7 +80,9 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <ProtectedRoute>
-          <UserProfile isStandalone={true} />
+          <CoachRedirect>
+            <UserProfile isStandalone={true} />
+          </CoachRedirect>
         </ProtectedRoute>
       </Layout>
     ),
@@ -87,7 +92,9 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <ProtectedRoute>
-          <ProfilePage />
+          <CoachRedirect>
+            <ProfilePage />
+          </CoachRedirect>
         </ProtectedRoute>
       </Layout>
     ),
@@ -97,7 +104,9 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <ProtectedRoute>
-          <ProgressPage />
+          <CoachRedirect>
+            <ProgressPage />
+          </CoachRedirect>
         </ProtectedRoute>
       </Layout>
     ),
