@@ -6,6 +6,40 @@ const AuthContext = createContext(null);
 // Hook tùy chỉnh để sử dụng AuthContext
 export const useAuth = () => useContext(AuthContext);
 
+// Hardcoded coach accounts
+const COACH_ACCOUNTS = [
+  {
+    id: 1,
+    name: 'Nguyên Văn A',
+    email: 'coach1@nosmoke.com',
+    password: 'coach123',
+    role: 'coach',
+    specialization: 'Coach cai thuốc chuyên nghiệp',
+    rating: 4.8,
+    avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+  },
+  {
+    id: 2,
+    name: 'Trần Thị B',
+    email: 'coach2@nosmoke.com',
+    password: 'coach123',
+    role: 'coach',
+    specialization: 'Chuyên gia tâm lý',
+    rating: 4.9,
+    avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
+  },
+  {
+    id: 3,
+    name: 'Phạm Minh C',
+    email: 'coach3@nosmoke.com',
+    password: 'coach123',
+    role: 'coach',
+    specialization: 'Bác sĩ phục hồi chức năng',
+    rating: 4.7,
+    avatar: 'https://randomuser.me/api/portraits/men/64.jpg'
+  }
+];
+
 // Provider component
 export const AuthProvider = ({ children }) => {
   // Khởi tạo trạng thái từ localStorage (nếu có)
@@ -21,8 +55,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       localStorage.setItem('nosmoke_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('nosmoke_user');
     }
   }, [user]);
 
@@ -112,6 +144,20 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         return { success: true, user: userWithoutPassword };
       } else {
+        // Kiểm tra trong danh sách coach hardcoded
+        const foundCoach = COACH_ACCOUNTS.find(coach => coach.email === email && coach.password === password);
+        if (foundCoach) {
+          // Không lưu mật khẩu vào coach session
+          const { password, ...coachWithoutPassword } = foundCoach;
+          
+          // Đặt user là coach và lưu vào localStorage
+          const coachUser = { ...coachWithoutPassword, role: 'coach' };
+          setUser(coachUser);
+          localStorage.setItem('nosmoke_user', JSON.stringify(coachUser));
+          setLoading(false);
+          return { success: true, user: coachUser };
+        }
+        
         throw new Error('Email hoặc mật khẩu không đúng');
       }
     } catch (err) {
@@ -124,6 +170,8 @@ export const AuthProvider = ({ children }) => {
   // Hàm đăng xuất
   const logout = () => {
     setUser(null);
+    // Xóa thông tin user khỏi localStorage
+    localStorage.removeItem('nosmoke_user');
     return { success: true };
   };
     // Đảm bảo rằng membership luôn là một giá trị hợp lệ

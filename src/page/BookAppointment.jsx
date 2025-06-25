@@ -143,9 +143,13 @@ function BookAppointment() {
     // Sử dụng ID của lịch hẹn cũ nếu đang thay đổi lịch hẹn, ngược lại tạo ID mới
     const newAppointmentId = isRescheduling ? originalAppointment.id : Math.floor(Math.random() * 1000000);
     setAppointmentId(newAppointmentId);
+    
     // Tạo đối tượng lịch hẹn mới
     const appointment = {
       id: newAppointmentId,
+      userId: user.id,
+      userName: user.fullName || user.name,
+      userEmail: user.email,
       coachId: selectedCoach.id,
       coachName: selectedCoach.name,
       coachAvatar: selectedCoach.avatar,
@@ -172,6 +176,19 @@ function BookAppointment() {
       // Nếu đang đặt lịch hẹn mới, thêm vào danh sách
       const updatedAppointments = [...existingAppointments, appointment];
       localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+    }
+
+    // Cập nhật thông tin coach cho user
+    if (user && !user.assignedCoachId) {
+      const updatedUser = { ...user, assignedCoachId: selectedCoach.id, assignedCoachName: selectedCoach.name };
+      
+      // Cập nhật user trong localStorage
+      const users = JSON.parse(localStorage.getItem('nosmoke_users') || '[]');
+      const updatedUsers = users.map(u => 
+        u.id === user.id ? { ...u, assignedCoachId: selectedCoach.id, assignedCoachName: selectedCoach.name } : u
+      );
+      localStorage.setItem('nosmoke_users', JSON.stringify(updatedUsers));
+      localStorage.setItem('nosmoke_user', JSON.stringify(updatedUser));
     }
 
     // Hiển thị thông báo thành công
