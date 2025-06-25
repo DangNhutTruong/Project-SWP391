@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
 import {
   FaTrophy,
   FaCalendarCheck,
@@ -9,128 +9,47 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import QuitProgressChart from "./QuitProgressChart";
-import apiService from "../utils/apiService";
+// import apiService from "../utils/apiService"; // Không sử dụng
 import { useAuth } from "../context/AuthContext";
 
-const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalStats, actualProgress = [], onDataReset }) => {
+const ProgressDashboard = ({
+  userPlan,
+  completionDate,
+  dashboardStats: externalStats,
+  actualProgress = [],
+}) => {
+  // Khởi tạo state với xử lý lỗi mặc định
   const [dashboardStats, setDashboardStats] = useState(null);
-  const [milestones, setMilestones] = useState([]);  // Tính toán thống kê
-  
-  // Tạo dữ liệu mẫu cho biểu đồ thực tế
-  const generateSampleActualData = (plan) => {
-    if (!plan || !plan.weeks || plan.weeks.length === 0) return [];
-    
-    const startDate = new Date(plan.startDate || new Date());
-    const result = [];
-    
-    // Tạo dữ liệu mẫu cho mỗi tuần trong kế hoạch
-    plan.weeks.forEach((week, weekIndex) => {
-      // Tạo dữ liệu cho 3-5 ngày mỗi tuần
-      const daysToGenerate = Math.floor(Math.random() * 3) + 3; // 3-5 ngày mỗi tuần
-      
-      for (let i = 0; i < daysToGenerate; i++) {
-        const dayOffset = Math.floor(Math.random() * 7); // Ngẫu nhiên trong tuần
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + (weekIndex * 7) + dayOffset);
-        
-        // Tạo số điếu thực tế, hơi lệch so với kế hoạch một chút
-        const deviation = Math.floor(Math.random() * 5) - 2; // -2 to +2
-        const actualCigs = Math.max(0, week.amount + deviation);
-        
-        // Các trạng thái tâm trạng có thể có
-        const moods = ["good", "challenging", "easy", "difficult"];
-        const randomMood = moods[Math.floor(Math.random() * moods.length)];
-        
-        result.push({
-          date: date.toISOString().split('T')[0],
-          actualCigarettes: actualCigs,
-          targetCigarettes: week.amount,
-          mood: randomMood
-        });
-      }
-    });
-    
-    // Sắp xếp theo ngày tăng dần
-    return result.sort((a, b) => new Date(a.date) - new Date(b.date));
-  };
-  
-  // Early return if required props are missing
-  if (!userPlan || !completionDate) {
-    return (
-      <div className="dashboard-error">
-        <p>Không thể hiển thị dashboard - thiếu dữ liệu cần thiết</p>
-      </div>
-    );
-  }
-  
-  const calculateDashboardStats = useCallback(() => {
-    if (!userPlan || !completionDate) return;
+  const [milestones, setMilestones] = useState([]); // Tính toán thống kê
+  const [hoveredMilestone, setHoveredMilestone] = useState(null);
+  const { user: _ } = useAuth(); // Lấy thông tin người dùng từ context (không sử dụng)
 
-    // Nếu có thống kê từ bên ngoài, sử dụng nó thay vì tính toán lại
-    if (externalStats && Object.keys(externalStats).length > 0) {
-      console.log("Sử dụng thống kê từ Progress.jsx:", externalStats);
-      setDashboardStats({
-        daysSincePlanCreation: externalStats.noSmokingDays || 0, 
-        cigarettesSaved: externalStats.savedCigarettes || 0,
-        moneySaved: externalStats.savedMoney || 0,
-        planDuration: userPlan.weeks ? userPlan.weeks.length : 0,
-        planName: userPlan.name || 'Kế hoạch cá nhân',
-        healthProgress: externalStats.healthProgress || 0
-      });
-      return;
+  // Ghi log để debug
+  useEffect(() => {
+    if (!userPlan) {
+      console.warn("ProgressDashboard: userPlan is missing or invalid");
     }
+    if (!completionDate) {
+      console.warn("ProgressDashboard: completionDate is missing or invalid");
+    }
+  }, [userPlan, completionDate]);
 
-    // Tính toán thông thường nếu không có thống kê từ bên ngoài
-    const startDate = new Date(completionDate);
-    const today = new Date();
-    const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-    
-    // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
-    const initialCigarettesPerDay = userPlan.weeks && userPlan.weeks.length > 0 ? 
-      userPlan.weeks[0]?.amount || 20 : 20;
-    const estimatedSaved = initialCigarettesPerDay * daysSinceStart;      // Tính tiền tiết kiệm dựa trên giá gói thuốc từ kế hoạch của người dùng
-    // Nếu có thống kê từ bên ngoài, sử dụng số tiền đã tính toán
-    let packPrice = 25000; // Giá mặc định nếu không tìm thấy
-    
-    // Lấy giá gói thuốc từ activePlan nếu không có thống kê từ bên ngoài
-    if (!externalStats || !externalStats.savedMoney) {
-      try {
-        const activePlanData = localStorage.getItem('activePlan');
-        if (activePlanData) {
-          const activePlan = JSON.parse(activePlanData);
-          if (activePlan && activePlan.packPrice) {
-            packPrice = activePlan.packPrice;
-            console.log(`[Dashboard] Lấy giá gói thuốc từ activePlan: ${packPrice.toLocaleString()}đ`);
-          }
-        }
-      } catch (error) {
-        console.error('[Dashboard] Lỗi khi đọc packPrice từ activePlan:', error);
-      }
-    }
-    
-    const pricePerCigarette = packPrice / 20; // Giả sử 1 gói = 20 điếu
-    const moneySaved = externalStats && externalStats.savedMoney ? 
-                     externalStats.savedMoney : 
-                     estimatedSaved * pricePerCigarette;
-    
-    setDashboardStats({
-      daysSincePlanCreation: daysSinceStart, 
-      cigarettesSaved: estimatedSaved,
-      moneySaved: moneySaved,
-      planDuration: userPlan.weeks ? userPlan.weeks.length : 0,
-      planName: userPlan.name || 'Kế hoạch cá nhân',
-      healthProgress: 0 // Giá trị mặc định
-    });
-  }, [userPlan, completionDate, externalStats]);
-  
-  const loadMilestones = useCallback(() => {
-    // Nếu không có dữ liệu đầy đủ, không thực hiện
-    if (!userPlan || !dashboardStats) {
-      return;
-    }
+  // Đảm bảo actualProgress luôn là mảng
+  const safeActualProgress = useMemo(() => {
+    return Array.isArray(actualProgress) ? actualProgress : [];
+  }, [actualProgress]);
 
-    // Milestone theo thời gian WHO
-    const healthMilestones = [
+  // Đảm bảo userPlan có cấu trúc hợp lệ cho các phép tính
+  const safePlanConfig = useMemo(() => {
+    return {
+      name: userPlan?.name || "Kế hoạch cá nhân",
+      weeks: Array.isArray(userPlan?.weeks) ? userPlan.weeks : [],
+    };
+  }, [userPlan]);
+
+  // Sử dụng useMemo cho healthMilestones để tránh re-render không cần thiết
+  const healthMilestones = useMemo(
+    () => [
       {
         days: 1,
         title: "24 giờ đầu tiên",
@@ -173,66 +92,193 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
         description: "Nguy cơ bệnh tim giảm 50%",
         achieved: false,
       },
-    ];
+    ],
+    []
+  ); // Tính toán thống kê dashboard
+  const calculateDashboardStats = useCallback(() => {
+    if (!userPlan || !completionDate) {
+      console.log(
+        "Missing userPlan or completionDate in calculateDashboardStats"
+      );
+      return;
+    }
+
+    // Nếu có thống kê từ bên ngoài, sử dụng nó thay vì tính toán lại
+    if (externalStats && Object.keys(externalStats).length > 0) {
+      console.log("Sử dụng thống kê từ Progress.jsx:", externalStats);
+      setDashboardStats({
+        daysSincePlanCreation: externalStats.noSmokingDays || 0,
+        cigarettesSaved: externalStats.savedCigarettes || 0,
+        moneySaved: externalStats.savedMoney || 0,
+        planDuration: userPlan.weeks ? userPlan.weeks.length : 0,
+        planName: userPlan.name || "Kế hoạch cá nhân",
+        healthProgress: externalStats.healthProgress || 0,
+      });
+      return;
+    }
+
+    // Tính toán thông thường nếu không có thống kê từ bên ngoài
+    const startDate = new Date(completionDate);
+    const today = new Date();
+    // Đảm bảo daysSinceStart không âm
+    const daysSinceStart = Math.max(
+      0,
+      Math.floor((today - startDate) / (1000 * 60 * 60 * 24))
+    );
+
+    // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
+    const initialCigarettesPerDay =
+      userPlan.weeks && userPlan.weeks.length > 0 && userPlan.weeks[0]
+        ? parseInt(userPlan.weeks[0]?.amount || 20, 10)
+        : 20;
+    const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
+
+    // Tính tiền tiết kiệm dựa trên giá gói thuốc
+    let packPrice = 25000; // Giá mặc định nếu không tìm thấy
+
+    // Lấy giá gói thuốc từ activePlan nếu không có thống kê từ bên ngoài
+    if (!externalStats || !externalStats.savedMoney) {
+      try {
+        // Kiểm tra xem localStorage có khả dụng không (có thể bị vô hiệu hóa trong private mode)
+        if (typeof localStorage !== "undefined") {
+          const activePlanData = localStorage.getItem("activePlan");
+          if (activePlanData) {
+            const activePlan = JSON.parse(activePlanData);
+            if (activePlan && activePlan.packPrice) {
+              packPrice = parseFloat(activePlan.packPrice) || 25000;
+              console.log(
+                `[Dashboard] Lấy giá gói thuốc từ activePlan: ${packPrice.toLocaleString()}đ`
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.error(
+          "[Dashboard] Lỗi khi đọc packPrice từ activePlan:",
+          error
+        );
+      }
+    }
+
+    // Đảm bảo packPrice là một số hợp lệ
+    packPrice = !isNaN(packPrice) && packPrice > 0 ? packPrice : 25000;
+    const pricePerCigarette = packPrice / 20; // Giả sử 1 gói = 20 điếu
+
+    // Đảm bảo không có giá trị NaN hoặc Infinity
+    const estimatedSavedMoney =
+      !isNaN(estimatedSaved) && isFinite(estimatedSaved)
+        ? estimatedSaved * pricePerCigarette
+        : 0;
+
+    const moneySaved =
+      externalStats &&
+      externalStats.savedMoney !== undefined &&
+      externalStats.savedMoney !== null
+        ? externalStats.savedMoney
+        : estimatedSavedMoney;
+
+    setDashboardStats({
+      daysSincePlanCreation: daysSinceStart,
+      cigarettesSaved: estimatedSaved,
+      moneySaved: moneySaved,
+      planDuration: userPlan.weeks ? userPlan.weeks.length : 0,
+      planName: userPlan.name || "Kế hoạch cá nhân",
+      healthProgress: 0, // Giá trị mặc định
+    });
+  }, [userPlan, completionDate, externalStats]);
+  const loadMilestones = useCallback(() => {
+    // Nếu không có dữ liệu đầy đủ, không thực hiện
+    if (!userPlan || !dashboardStats) {
+      console.log("Missing data in loadMilestones", {
+        userPlan,
+        dashboardStats,
+      });
+      return;
+    }
+
+    // Đảm bảo dashboardStats.daysSincePlanCreation là một số
+    const daysSincePlanCreation = dashboardStats.daysSincePlanCreation || 0;
 
     const updatedMilestones = healthMilestones.map((milestone) => ({
       ...milestone,
-      achieved: dashboardStats.daysSincePlanCreation >= milestone.days,
+      achieved: daysSincePlanCreation >= milestone.days,
     }));
     setMilestones(updatedMilestones);
-  }, [userPlan, dashboardStats]);
-
+  }, [userPlan, dashboardStats, healthMilestones]);
   // Cập nhật thống kê dashboard khi có dữ liệu kế hoạch
   useEffect(() => {
-    if (userPlan) {
-      calculateDashboardStats();
-    }
-  }, [userPlan, completionDate, calculateDashboardStats]);
-
+    calculateDashboardStats();
+  }, [calculateDashboardStats]);
   // Tải milestone sau khi đã có thống kê
   useEffect(() => {
     if (dashboardStats) {
       loadMilestones();
     }
-  }, [dashboardStats, loadMilestones]);  const getAchievementProgress = () => {
+  }, [dashboardStats, loadMilestones]);
+
+  // Định nghĩa hàm giúp lấy giá trị tiến độ sức khỏe
+  const getAchievementProgress = () => {
     // Nếu có giá trị từ bên ngoài, sử dụng nó
     if (dashboardStats && dashboardStats.healthProgress !== undefined) {
       return dashboardStats.healthProgress;
     }
-    
+
     // Nếu không, tính toán từ milestone
     if (!milestones || milestones.length === 0) return 0;
     const achieved = milestones.filter((m) => m.achieved).length;
-    return (achieved / milestones.length) * 100;
+    return Math.min((achieved / Math.max(1, milestones.length)) * 100, 100);
   };
 
-  // Add some debugging information
-  useEffect(() => {
-    console.log("Current dashboard stats:", dashboardStats);
-    console.log("Current milestones:", milestones);
-  }, [dashboardStats, milestones]);
+  // Xử lý trường hợp không có dữ liệu cần thiết
+  if (!userPlan || !completionDate) {
+    console.error("ProgressDashboard: Missing required data:", {
+      hasUserPlan: !!userPlan,
+      hasCompletionDate: !!completionDate,
+    });
+
+    return (
+      <div className="dashboard-error">
+        <p>Không thể hiển thị dashboard - thiếu dữ liệu cần thiết</p>
+        <small>Vui lòng kiểm tra thông tin kế hoạch của bạn</small>
+      </div>
+    );
+  }
 
   // Show loading state while dashboardStats is not set
   if (!dashboardStats) {
-    console.log("Dashboard stats not set yet, showing loading screen");
     return (
       <div className="dashboard-loading">
         <p>Đang tải dashboard...</p>
+        <div className="loading-spinner"></div>
       </div>
-    );  }
+    );
+  }
 
   const achievementProgress = getAchievementProgress();
 
-  // Thêm reset toàn bộ dữ liệu
-  const handleReset = () => {
-    if (window.confirm('Bạn có chắc muốn reset dữ liệu check-in?')) {
-      localStorage.removeItem('actualProgress');
-      localStorage.removeItem('dashboardStats');
-      if (onDataReset) {
-        onDataReset();
-      }
-      alert('Dữ liệu đã được reset');
-    }
+  // Chuẩn bị các giá trị hiển thị
+  const displayValues = {
+    daysSincePlanCreation: dashboardStats?.daysSincePlanCreation || 0,
+    cigarettesSaved:
+      externalStats && externalStats.savedCigarettes !== undefined
+        ? externalStats.savedCigarettes.toLocaleString()
+        : dashboardStats?.cigarettesSaved
+        ? dashboardStats.cigarettesSaved.toLocaleString()
+        : "0",
+    moneySaved: dashboardStats?.moneySaved
+      ? (dashboardStats.moneySaved / 1000).toFixed(0) + "K"
+      : "0",
+    healthProgress: isNaN(achievementProgress)
+      ? "0"
+      : achievementProgress.toFixed(0),
+  };
+  // Các hàm xử lý sự kiện cho milestone cards
+  const handleMilestoneMouseEnter = (index) => {
+    setHoveredMilestone(index);
+  };
+
+  const handleMilestoneMouseLeave = () => {
+    setHoveredMilestone(null);
   };
 
   return (
@@ -243,54 +289,53 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
         <div className="stat-card primary">
           <div className="stat-icon">
             <FaCalendarCheck />
-          </div>          <div className="stat-content">
-            <h3>{dashboardStats.daysSincePlanCreation}</h3>
+          </div>{" "}
+          <div className="stat-content">
+            <h3>{displayValues.daysSincePlanCreation}</h3>
             <p>Ngày theo dõi</p>
           </div>
-        </div>        <div className="stat-card success">
+        </div>{" "}
+        <div className="stat-card success">
           <div className="stat-icon">
             <FaLeaf />
-          </div>          <div className="stat-content">
-            <h3>{externalStats && externalStats.savedCigarettes ? externalStats.savedCigarettes.toLocaleString() : (dashboardStats.cigarettesSaved ? dashboardStats.cigarettesSaved.toLocaleString() : '0')}</h3>
-            <p>Điếu thuốc đã tránh</p>       
+          </div>{" "}
+          <div className="stat-content">
+            <h3>{displayValues.cigarettesSaved}</h3>
+            <p>Điếu thuốc đã tránh</p>
           </div>
         </div>
-
         <div className="stat-card money">
           <div className="stat-icon">
             <FaCoins />
-          </div>
+          </div>{" "}
           <div className="stat-content">
-            <h3>{(dashboardStats.moneySaved / 1000).toFixed(0)}K</h3>
+            <h3>{displayValues.moneySaved}</h3>
             <p>VNĐ đã tiết kiệm</p>
           </div>
         </div>
-
         <div className="stat-card health">
           <div className="stat-icon">
             <FaHeart />
           </div>
           <div className="stat-content">
-            <h3>{achievementProgress.toFixed(0)}%</h3>
+            <h3>{displayValues.healthProgress}%</h3>
             <p>Milestone sức khỏe</p>
           </div>
         </div>
-      </div>      {/* Progress Chart */}
+      </div>{" "}
+      {/* Progress Chart */}
       <div className="maintenance-section">
         <h2>
           <FaChartLine className="section-icon" />
           Kế hoạch của bạn
-        </h2>        <div className="maintenance-chart">
-          {console.log("DASHBOARD DEBUG: Trước khi render QuitProgressChart")}
-          {console.log("DASHBOARD DEBUG: userPlan:", userPlan)}
-          {console.log("DASHBOARD DEBUG: actualProgress:", actualProgress)}
+        </h2>{" "}
+        <div className="maintenance-chart">
           <QuitProgressChart
-            userPlan={userPlan || { weeks: [], name: 'Kế hoạch cá nhân' }}
-            actualProgress={actualProgress} // Sử dụng dữ liệu thực tế từ props
+            userPlan={safePlanConfig}
+            actualProgress={safeActualProgress}
             timeFilter="Tất cả"
             height={250}
           />
-          {console.log("DASHBOARD DEBUG: Sau khi render QuitProgressChart")}
         </div>
       </div>
       {/* Health Milestones */}
@@ -302,7 +347,9 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
               key={index}
               className={`milestone-card ${
                 milestone.achieved ? "achieved" : "pending"
-              }`}
+              } ${hoveredMilestone === index ? "hovered" : ""}`}
+              onMouseEnter={() => handleMilestoneMouseEnter(index)}
+              onMouseLeave={handleMilestoneMouseLeave}
             >
               <div className="milestone-indicator">
                 {milestone.achieved ? "✅" : "⏳"}
@@ -310,9 +357,14 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
               <div className="milestone-content">
                 <h4>{milestone.title}</h4>
                 <p>{milestone.description}</p>
-                {!milestone.achieved && (
+                {!milestone.achieved && dashboardStats && (
                   <span className="days-remaining">
-                    Còn {milestone.days - dashboardStats.daysSincePlanCreation}{" "}
+                    Còn{" "}
+                    {Math.max(
+                      0,
+                      milestone.days -
+                        (dashboardStats.daysSincePlanCreation || 0)
+                    )}{" "}
                     ngày
                   </span>
                 )}
@@ -320,10 +372,11 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
             </div>
           ))}
         </div>
-      </div>      {/* Tips section */}
+      </div>{" "}
+      {/* Tips section */}
       <div className="maintenance-tips-section">
         <h2>Lời khuyên duy trì</h2>
-        
+
         <div className="maintenance-tips">
           <h3>💡 Mẹo hữu ích</h3>
           <ul>
@@ -333,32 +386,53 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
             <li>Tìm kiếm hỗ trợ từ gia đình và bạn bè</li>
             <li>Nhắc nhở bản thân về lợi ích đã đạt được</li>
           </ul>
-        </div><div className="support-options">
+        </div>
+        <div className="support-options">
           <h3>🤝 Hỗ trợ thêm</h3>
           <div className="support-buttons">
-            <Link to="/blog" className="support-btn primary">
+            {" "}
+            <Link
+              to="/blog"
+              className="support-btn primary"
+              title="Tìm hiểu kinh nghiệm và chia sẻ của cộng đồng"
+            >
               Tham gia cộng đồng
             </Link>
-            <Link to="/appointment" className="support-btn tertiary">
+            <Link
+              to="/appointment"
+              className="support-btn tertiary"
+              title="Nhận tư vấn 1-1 với chuyên gia"
+            >
               Tư vấn chuyên gia
             </Link>
           </div>
         </div>
-      </div>      {/* Success Story */}
+      </div>{" "}
+      {/* Success Story */}
       <div className="success-story">
         <h2>🎉 Câu chuyện thành công của bạn</h2>
         <div className="story-content">
           <p>
-            Bạn đã lập thành công <strong>{userPlan?.name || 'Kế hoạch cá nhân'}</strong> và duy trì được{' '}
-            <strong>{dashboardStats.daysSincePlanCreation} ngày</strong> không hút thuốc.
-          </p>
+            Bạn đã lập thành công <strong>{safePlanConfig.name}</strong> và duy
+            trì được{" "}
+            <strong>
+              {dashboardStats?.daysSincePlanCreation !== undefined
+                ? dashboardStats.daysSincePlanCreation
+                : 0}{" "}
+              ngày
+            </strong>{" "}
+            không hút thuốc.
+          </p>{" "}
           <p>
             Trong thời gian này, bạn đã tiết kiệm được{" "}
             <strong>
-              {(dashboardStats.moneySaved / 1000).toFixed(0)}K VNĐ
+              {dashboardStats?.moneySaved
+                ? (dashboardStats.moneySaved / 1000).toFixed(0) + "K"
+                : "0"}{" "}
+              VNĐ
             </strong>{" "}
-            và tránh được <strong>{dashboardStats.cigarettesSaved}</strong> điếu
-            thuốc.
+            và tránh được{" "}
+            <strong>{dashboardStats?.cigarettesSaved || 0}</strong> điếu thuốc.
           </p>
           <p>
             Đây là một thành tích đáng tự hào! Hãy tiếp tục duy trì và truyền
@@ -370,4 +444,5 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
   );
 };
 
-export default ProgressDashboard;
+// Tối ưu với React.memo để tránh re-render không cần thiết
+export default memo(ProgressDashboard);

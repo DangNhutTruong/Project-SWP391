@@ -890,19 +890,18 @@ export default function JourneyStepper() {
                     if (circle) {
                       circle.classList.add("pulse");
                       setTimeout(() => circle.classList.remove("pulse"), 500);
-                    }
-
-                    // Tạm thời ẩn màn hình hoàn thành để xem chi tiết các bước
+                    }                    // Tạm thời ẩn màn hình hoàn thành để xem chi tiết các bước
                     if (isCompleted) {
                       setShowCompletionScreen(false);
                     }
                   }
                 }
-              }}
-            >
+              }
+            }>
               <div className="step-circle">
                 {currentStep > step.id || isCompleted ? '✓' : step.id}
-              </div>              <div className="step-name">{step.name}</div>
+              </div>
+              <div className="step-name">{step.name}</div>
             </div>
             </React.Fragment>
           ))}

@@ -20,7 +20,7 @@ import UserProfile from "./page/User.jsx"; // Import UserProfile component
 import { AuthProvider } from "./context/AuthContext.jsx"; // Import AuthProvider
 import { MembershipProvider } from "./context/MembershipContext.jsx"; // Import MembershipProvider
 import "./style.css";
-import JourneyStepper from "./components/JourneyStepper.jsx";
+import JourneyStepper from "./components/JourneyStepperTemp.jsx";
 import Notification from "./page/Notification.jsx"; // Import component Notification
 import SettingsPage from "./page/Settings.jsx"; // Import component Settings
 import Pay from "./page/Pay.jsx";
