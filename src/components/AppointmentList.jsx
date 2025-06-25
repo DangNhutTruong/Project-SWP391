@@ -599,13 +599,7 @@ function AppointmentList() {
                       <FaCheck className="complete-icon" /> Xác nhận hoàn thành
                     </button>
                     
-                    {/* Nút chat navigation - ở giữa */}
-                    <button 
-                      className="nav-chat-button"
-                      onClick={() => handleNavigateToChat(appointment)}
-                    >
-                      <FaComments className="nav-chat-icon" /> Chat Nav
-                    </button>
+
                   </>
                 )}                {getStatusClass(appointment) === 'completed' && (
                   <>
