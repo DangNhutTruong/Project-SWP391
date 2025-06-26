@@ -66,8 +66,23 @@ const ProgressDashboard = ({
         .then((response) => {
           if (response.success && response.data && response.data.length > 0) {
             // Process the progress data if needed
-            // This would depend on how you want to use the API data
             console.log("Progress data from API:", response.data);
+            // Cập nhật dashboardStats từ dữ liệu API nếu có
+            const latestProgress = response.data[response.data.length - 1];
+            if (latestProgress) {
+              // Cập nhật thông tin tiến độ từ API
+              setDashboardStats((prevStats) => ({
+                ...prevStats,
+                daysSincePlanCreation:
+                  latestProgress.daysSinceStart ||
+                  prevStats.daysSincePlanCreation,
+                cigarettesSaved:
+                  latestProgress.savedCigarettes || prevStats.cigarettesSaved,
+                moneySaved: latestProgress.savedMoney || prevStats.moneySaved,
+                healthProgress:
+                  latestProgress.healthProgress || prevStats.healthProgress,
+              }));
+            }
           }
           setIsLoading(false);
         })
@@ -76,8 +91,39 @@ const ProgressDashboard = ({
           setError("Không thể tải dữ liệu tiến độ");
           setIsLoading(false);
 
-          // Fallback to using localStorage data
+          // Fallback to using localStorage data for progress
           console.log("Fallback to localStorage data for progress");
+          try {
+            if (typeof localStorage !== "undefined") {
+              const progressData = localStorage.getItem("user_progress");
+              if (progressData) {
+                const parsedData = JSON.parse(progressData);
+                if (parsedData) {
+                  console.log(
+                    "Found progress data in localStorage:",
+                    parsedData
+                  );
+                  // Cập nhật từ localStorage
+                  setDashboardStats((prevStats) => ({
+                    ...prevStats,
+                    daysSincePlanCreation:
+                      parsedData.daysSinceStart ||
+                      prevStats.daysSincePlanCreation,
+                    cigarettesSaved:
+                      parsedData.savedCigarettes || prevStats.cigarettesSaved,
+                    moneySaved: parsedData.savedMoney || prevStats.moneySaved,
+                    healthProgress:
+                      parsedData.healthProgress || prevStats.healthProgress,
+                  }));
+                }
+              }
+            }
+          } catch (localStorageError) {
+            console.error(
+              "Error reading from localStorage:",
+              localStorageError
+            );
+          }
         });
     }
   }, [user]);
@@ -148,6 +194,14 @@ const ProgressDashboard = ({
       console.log(
         "Missing userPlan or completionDate in calculateDashboardStats"
       );
+      setDashboardStats({
+        daysSincePlanCreation: 0,
+        cigarettesSaved: 0,
+        moneySaved: 0,
+        planDuration: 0,
+        planName: "Chưa có kế hoạch",
+        healthProgress: 0,
+      });
       return;
     }
 
@@ -177,7 +231,7 @@ const ProgressDashboard = ({
     // Tính toán số điếu đã tiết kiệm được - đảm bảo userPlan.weeks tồn tại
     const initialCigarettesPerDay =
       userPlan.weeks && userPlan.weeks.length > 0 && userPlan.weeks[0]
-        ? parseInt(userPlan.weeks[0]?.amount || 20, 10)
+        ? parseInt(userPlan.weeks[0]?.amount || 20, 10) || 20 // Double-check for NaN
         : 20;
     const estimatedSaved = initialCigarettesPerDay * daysSinceStart;
 
@@ -191,12 +245,19 @@ const ProgressDashboard = ({
         if (typeof localStorage !== "undefined") {
           const activePlanData = localStorage.getItem("activePlan");
           if (activePlanData) {
-            const activePlan = JSON.parse(activePlanData);
-            if (activePlan && activePlan.packPrice) {
-              packPrice = parseFloat(activePlan.packPrice) || 25000;
-              console.log(
-                `[Dashboard] Lấy giá gói thuốc từ activePlan: ${packPrice.toLocaleString()}đ`
-              );
+            try {
+              const activePlan = JSON.parse(activePlanData);
+              if (activePlan && activePlan.packPrice) {
+                const parsedPrice = parseFloat(activePlan.packPrice);
+                packPrice =
+                  !isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : 25000;
+                console.log(
+                  `[Dashboard] Lấy giá gói thuốc từ activePlan: ${packPrice.toLocaleString()}đ`
+                );
+              }
+            } catch (jsonError) {
+              console.error("Lỗi parse activePlan:", jsonError);
+              packPrice = 25000;
             }
           }
         }
@@ -205,6 +266,7 @@ const ProgressDashboard = ({
           "[Dashboard] Lỗi khi đọc packPrice từ activePlan:",
           error
         );
+        packPrice = 25000;
       }
     }
 
@@ -221,7 +283,8 @@ const ProgressDashboard = ({
     const moneySaved =
       externalStats &&
       externalStats.savedMoney !== undefined &&
-      externalStats.savedMoney !== null
+      externalStats.savedMoney !== null &&
+      !isNaN(externalStats.savedMoney)
         ? externalStats.savedMoney
         : estimatedSavedMoney;
 

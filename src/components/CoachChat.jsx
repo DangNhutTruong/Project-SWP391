@@ -44,21 +44,48 @@ const CoachChat = ({ coach, appointment, isOpen, onClose }) => {
 
   // Fallback function to use localStorage data if API fails
   const fallbackToLocalStorage = () => {
-    if (appointment) {
-      const chatKey = `coach_chat_${appointment.id}`;
-      const savedMessages = JSON.parse(localStorage.getItem(chatKey)) || [];
+    try {
+      if (appointment && appointment.id) {
+        const chatKey = `coach_chat_${appointment.id}`;
+        const savedMessagesString = localStorage.getItem(chatKey);
 
-      if (savedMessages.length === 0) {
+        if (savedMessagesString) {
+          try {
+            const savedMessages = JSON.parse(savedMessagesString);
+            if (Array.isArray(savedMessages) && savedMessages.length > 0) {
+              setMessages(savedMessages);
+              return;
+            }
+          } catch (jsonError) {
+            console.error(
+              "Error parsing chat messages from localStorage:",
+              jsonError
+            );
+          }
+        }
+
+        // If we get here, either there were no messages or parsing failed
         const welcomeMessage = {
           id: 1,
-          text: `Xin chào! Tôi là ${coach.name}, coach hỗ trợ cai thuốc của bạn. Bạn có thể đặt câu hỏi hoặc chia sẻ trải nghiệm của mình về quá trình cai thuốc ở đây.`,
+          text: `Xin chào! Tôi là ${
+            coach?.name || "coach"
+          }, coach hỗ trợ cai thuốc của bạn. Bạn có thể đặt câu hỏi hoặc chia sẻ trải nghiệm của mình về quá trình cai thuốc ở đây.`,
           sender: "coach",
           timestamp: new Date(),
         };
         setMessages([welcomeMessage]);
-      } else {
-        setMessages(savedMessages);
       }
+    } catch (error) {
+      console.error("Error in fallbackToLocalStorage:", error);
+      // Display a minimal UI in worst case
+      setMessages([
+        {
+          id: 1,
+          text: "Xin chào! Bạn có thể đặt câu hỏi tại đây.",
+          sender: "coach",
+          timestamp: new Date(),
+        },
+      ]);
     }
   };
 
@@ -157,7 +184,21 @@ const CoachChat = ({ coach, appointment, isOpen, onClose }) => {
     }
   };
 
-  if (!isOpen || !appointment || !coach) return null;
+  if (!isOpen || !appointment || !coach) {
+    // Return null but log the reason
+    if (!isOpen) console.log("Chat is not open");
+    if (!appointment) console.log("Missing appointment data in CoachChat");
+    if (!coach) console.log("Missing coach data in CoachChat");
+    return null;
+  }
+
+  // Đảm bảo coach có đầy đủ thông tin hiển thị
+  const safeCoach = {
+    name: coach.name || "Coach",
+    avatar: coach.avatar || "https://via.placeholder.com/40",
+    role: coach.role || "Cố vấn cai thuốc",
+    id: coach.id,
+  };
 
   return (
     <div className="coach-chat-overlay">
@@ -165,12 +206,12 @@ const CoachChat = ({ coach, appointment, isOpen, onClose }) => {
         <div className="coach-chat-header">
           <div className="coach-chat-title">
             <div className="coach-avatar-small">
-              <img src={coach.avatar} alt={coach.name} />
+              <img src={safeCoach.avatar} alt={safeCoach.name} />
               <div className="coach-status online"></div>
             </div>
             <div>
-              <h3>{coach.name}</h3>
-              <p>{coach.role}</p>
+              <h3>{safeCoach.name}</h3>
+              <p>{safeCoach.role}</p>
             </div>
           </div>
           <button className="coach-chat-close" onClick={onClose}>
@@ -179,33 +220,41 @@ const CoachChat = ({ coach, appointment, isOpen, onClose }) => {
         </div>
 
         <div className="coach-chat-messages">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`message ${
-                message.sender === "coach" ? "coach-message" : "user-message"
-              }`}
-            >
-              {message.sender === "coach" && (
-                <div className="coach-avatar-mini">
-                  <img src={coach.avatar} alt={coach.name} />
-                </div>
-              )}
+          {isLoading ? (
+            <div className="chat-loading">Đang tải tin nhắn...</div>
+          ) : error ? (
+            <div className="chat-error">{error}</div>
+          ) : messages.length === 0 ? (
+            <div className="chat-empty">Chưa có tin nhắn nào</div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`message ${
+                  message.sender === "coach" ? "coach-message" : "user-message"
+                }`}
+              >
+                {message.sender === "coach" && (
+                  <div className="coach-avatar-mini">
+                    <img src={safeCoach.avatar} alt={safeCoach.name} />
+                  </div>
+                )}
 
-              <div className="message-content">
-                <p>{message.text}</p>
-                <span className="message-time">
-                  {formatTime(message.timestamp)}
-                </span>
+                <div className="message-content">
+                  <p>{message.text}</p>
+                  <span className="message-time">
+                    {formatTime(message.timestamp)}
+                  </span>
+                </div>
+
+                {message.sender === "user" && (
+                  <div className="user-avatar">
+                    <FaUser />
+                  </div>
+                )}
               </div>
-
-              {message.sender === "user" && (
-                <div className="user-avatar">
-                  <FaUser />
-                </div>
-              )}
-            </div>
-          ))}
+            ))
+          )}
 
           <div ref={messagesEndRef} />
         </div>
