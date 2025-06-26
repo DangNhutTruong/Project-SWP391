@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { FaCalendarAlt, FaUser, FaClock, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
+import { FaCalendarAlt, FaUser, FaClock, FaCheck, FaTimes, FaEdit, FaComments } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/CoachBookings.css';
 
 function CoachBookings() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'pending', 'upcoming', 'completed', 'cancelled'
@@ -90,6 +92,17 @@ function CoachBookings() {
     } catch (error) {
       console.error('Lỗi khi cập nhật trạng thái booking:', error);
     }
+  };
+
+  const handleSendMessage = (booking) => {
+    // Chuyển hướng đến trang chat với thông tin người dùng
+    navigate('/coach/chat', { 
+      state: { 
+        userId: booking.userId,
+        userName: booking.userName,
+        userEmail: booking.userEmail 
+      } 
+    });
   };
 
   const formatDate = (dateString) => {
@@ -286,7 +299,23 @@ function CoachBookings() {
                     >
                       <FaTimes /> Hủy
                     </button>
+                    <button
+                      className="action-btn message-btn"
+                      onClick={() => handleSendMessage(booking)}
+                      title="Gửi tin nhắn cho người dùng"
+                    >
+                      <FaComments /> Nhắn tin
+                    </button>
                   </>
+                )}
+                {booking.status === 'completed' && (
+                  <button
+                    className="action-btn message-btn"
+                    onClick={() => handleSendMessage(booking)}
+                    title="Gửi tin nhắn cho người dùng"
+                  >
+                    <FaComments /> Nhắn tin
+                  </button>
                 )}
                 {booking.status === 'cancelled' && (
                   <button
