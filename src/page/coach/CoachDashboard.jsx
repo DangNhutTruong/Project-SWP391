@@ -377,13 +377,6 @@ function CoachDashboard() {
               <span className="unread-badge">{getTotalUnreadMessages()}</span>
             )}
           </button>
-          <button 
-            className="tab-button initialize-btn"
-            onClick={initializeMessages}
-            title="Khởi tạo tin nhắn mẫu cho tất cả lịch hẹn"
-          >
-            <FaRobot /> Khởi tạo tin nhắn
-          </button>
         </div>
       </div>
 
