@@ -189,6 +189,45 @@ const HealthProfile = ({ healthData = {}, activePlan = null }) => {
       [field]: value,
     }));
   };
+
+  // Load health data from API if not provided as prop
+  useEffect(() => {
+    if (Object.keys(healthData).length === 0 && user && user.UserID) {
+      setIsLoading(true);
+      setError(null);
+
+      apiService.health
+        .getUserHealth(user.UserID)
+        .then((response) => {
+          if (response.success && response.data) {
+            setData(response.data.stats || data);
+          }
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error loading health data:", err);
+          setError("Không thể tải dữ liệu sức khỏe");
+          setIsLoading(false);
+
+          // Try to load from localStorage as fallback
+          try {
+            const savedHealthData = localStorage.getItem("user_health_data");
+            if (savedHealthData) {
+              const parsedData = JSON.parse(savedHealthData);
+              if (parsedData && parsedData.stats) {
+                setData(parsedData.stats);
+              }
+            }
+          } catch (storageError) {
+            console.error(
+              "Error reading health data from localStorage:",
+              storageError
+            );
+          }
+        });
+    }
+  }, [user, healthData, data]);
+
   return (
     <div className="health-profile">
       <div className="health-stats">
