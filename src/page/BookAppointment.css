@@ -872,6 +872,26 @@
   font-size: 16px;
 }
 
+.pending-status-info {
+  background: linear-gradient(135deg, #ffc107, #ff8f00);
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-left: 4px solid #ff8f00;
+}
+
+.pending-status-info p {
+  margin: 0.5rem 0;
+  color: white;
+  font-weight: 600;
+}
+
+.pending-status-info .status-note {
+  font-size: 0.9rem;
+  font-weight: normal;
+  opacity: 0.9;
+}
+
 .redirect-message {
   margin-top: 20px;
   color: #777;

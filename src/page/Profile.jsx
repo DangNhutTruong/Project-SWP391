@@ -192,7 +192,13 @@ export default function ProfilePage() {
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị  // Check if redirected from appointment booking
+  const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị  
+  
+  // Handle logout with navigation
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };// Check if redirected from appointment booking
   useEffect(() => {
     const savedTab = localStorage.getItem('activeProfileTab');
     if (savedTab) {
