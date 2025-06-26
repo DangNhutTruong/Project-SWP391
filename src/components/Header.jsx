@@ -104,9 +104,15 @@ export default function Header() {  const navigate = useNavigate();
                       <>
                         <button className="dropdown-item" onClick={() => {
                           setIsUserMenuOpen(false);
+                          navigate('/coach-dashboard');
+                        }}>
+                          <i className="fas fa-comments"></i> Dashboard & Tin nhắn
+                        </button>
+                        <button className="dropdown-item" onClick={() => {
+                          setIsUserMenuOpen(false);
                           navigate('/coach');
                         }}>
-                          <i className="fas fa-tachometer-alt"></i> Dashboard
+                          <i className="fas fa-tachometer-alt"></i> Dashboard Cũ
                         </button>
                         <button className="dropdown-item" onClick={() => {
                           setIsUserMenuOpen(false);
