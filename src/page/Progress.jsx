@@ -362,9 +362,39 @@ export default function Progress() {
   const recalculateStatistics = () => {
     console.log("======= BẮT ĐẦU TÍNH TOÁN THỐNG KÊ MỚI =======");
     
-    // Tính số ngày đã check-in (tính bằng số ngày đã lưu DailyCheckin)
-    const currentDate = new Date();
-    const noSmokingDays = actualProgress.length; // Số lần người dùng đã lưu DailyCheckin
+    // Tính số ngày theo dõi - CHỈ tính các ngày có thực sự checkin
+    let noSmokingDays = 0;
+    let planStartDate = null;
+    
+    // Lấy ngày bắt đầu từ activePlan
+    try {
+      const activePlanData = localStorage.getItem('activePlan');
+      if (activePlanData) {
+        const activePlan = JSON.parse(activePlanData);
+        if (activePlan && activePlan.startDate) {
+          planStartDate = new Date(activePlan.startDate);
+          console.log(`Ngày bắt đầu kế hoạch: ${activePlan.startDate}`);
+        }
+      }
+    } catch (error) {
+      console.error('Lỗi khi đọc ngày bắt đầu kế hoạch:', error);
+    }
+    
+    // Tính số ngày theo dõi dựa trên dữ liệu checkin thực tế
+    if (actualProgress.length > 0) {
+      // Số ngày theo dõi = số ngày có checkin thực tế
+      noSmokingDays = actualProgress.length;
+      console.log(`Ngày theo dõi: ${noSmokingDays} ngày (dựa trên số ngày có checkin thực tế)`);
+    } else if (planStartDate) {
+      // Nếu chưa có checkin nhưng có kế hoạch, tính từ ngày bắt đầu
+      const today = new Date();
+      const daysDiff = Math.floor((today - planStartDate) / (1000 * 60 * 60 * 24));
+      noSmokingDays = Math.max(0, daysDiff); // Không +1 vì chưa có checkin
+      console.log(`Ngày theo dõi: ${noSmokingDays} ngày (dựa trên ngày bắt đầu kế hoạch, chưa có checkin)`);
+    } else {
+      noSmokingDays = 0;
+      console.log(`Ngày theo dõi: 0 ngày (chưa có kế hoạch và chưa có checkin)`);
+    }
     
     // Hiển thị tất cả dữ liệu check-in hiện có
     console.log("Dữ liệu check-in hiện có:", actualProgress);
@@ -394,62 +424,39 @@ export default function Progress() {
     
     console.log(`Số điếu ban đầu được sử dụng: ${initialCigarettesPerDay} điếu/ngày`);
     
-    // Chỉ tìm check-in của hôm nay
-    const todayDateStr = new Date().toISOString().split('T')[0];
-    const todayRecord = actualProgress.find(day => day.date === todayDateStr);
-    
-    // Tính số điếu đã tránh tích lũy cho TẤT CẢ các ngày có check-in
+    // Tính số điếu đã tránh - CHỈ tính tích lũy cho các ngày thực sự giảm được
     let savedCigarettes = 0;
     let dailySavings = [];
     let detailedLog = '';
     
-    // Lấy số điếu ban đầu từ activePlan trong localStorage nếu có
-    let userInitialCigarettes = initialCigarettesPerDay;
-    try {
-      const activePlanData = localStorage.getItem('activePlan');
-      if (activePlanData) {
-        const activePlan = JSON.parse(activePlanData);
-        if (activePlan && activePlan.initialCigarettes) {
-          userInitialCigarettes = activePlan.initialCigarettes;
-          console.log(`Lấy số điếu ban đầu từ activePlan: ${userInitialCigarettes}`);
-        }
-      }
-    } catch (error) {
-      console.error('Lỗi khi đọc initialCigarettes từ activePlan:', error);
-    }
-    
-    // Biến để lưu số điếu đã tránh tích lũy
-    let totalSavedCigarettes = 0;
-    
     // Tính số điếu đã tránh cho TẤT CẢ các ngày có trong actualProgress
-    detailedLog = '';
-    
-    // Tính toán số điếu đã tránh cho mỗi ngày và tích lũy tổng số
     actualProgress.forEach(dayRecord => {
       // Số điếu đã tránh trong ngày = số điếu ban đầu - số điếu thực tế
-      const daySaved = Math.max(0, userInitialCigarettes - dayRecord.actualCigarettes);
-      totalSavedCigarettes += daySaved;
+      // CHỈ tính nếu thực sự giảm được (actual < initial)
+      const daySaved = Math.max(0, initialCigarettesPerDay - dayRecord.actualCigarettes);
+      
+      // Chỉ cộng vào tổng nếu thực sự tránh được điếu thuốc
+      if (daySaved > 0) {
+        savedCigarettes += daySaved;
+      }
       
       // Ghi chi tiết để debug
-      detailedLog += `\n- Ngày ${dayRecord.date}: ${userInitialCigarettes} - ${dayRecord.actualCigarettes} = ${daySaved} điếu`;
+      detailedLog += `\n- Ngày ${dayRecord.date}: ${initialCigarettesPerDay} - ${dayRecord.actualCigarettes} = ${daySaved} điếu${daySaved > 0 ? ' ✅' : ' (không tránh được)'}`;
       
       // Lưu thông tin chi tiết
       dailySavings.push({
         date: dayRecord.date,
         actual: dayRecord.actualCigarettes,
-        targetFromPlan: initialCigarettesPerDay,
-        userInitialCigarettes: userInitialCigarettes,
+        targetFromPlan: dayRecord.targetCigarettes,
+        userInitialCigarettes: initialCigarettesPerDay,
         saved: daySaved
       });
     });
     
-    // Thiết lập giá trị cuối cùng
-    savedCigarettes = totalSavedCigarettes;
-    
-    console.log(`Chi tiết điếu thuốc đã tránh theo ngày:${detailedLog}`);
-    console.log(`TỔNG SỐ ĐIẾU ĐÃ TRÁNH TÍCH LŨY: ${savedCigarettes} điếu`);
+    console.log(`Tổng số điếu đã tránh tích lũy: ${savedCigarettes} điếu`);
     console.log("Chi tiết các ngày:", dailySavings);
-      // Tính số tiền tiết kiệm dựa trên giá gói thuốc từ kế hoạch của người dùng
+    
+    // Tính tiền tiết kiệm dựa trên giá gói thuốc từ kế hoạch của người dùng
     let packPrice = 25000; // Giá mặc định nếu không tìm thấy
     
     // Lấy giá gói thuốc từ activePlan
@@ -469,30 +476,30 @@ export default function Progress() {
     const pricePerCigarette = packPrice / 20; // Giả sử 1 gói = 20 điếu
     const savedMoney = savedCigarettes * pricePerCigarette;
     
-    // Tính milestone sức khỏe đạt được
-    // Milestone theo thời gian WHO
+    // Tính milestone sức khỏe đạt được dựa trên số ngày có checkin thực tế
+    // Milestone theo thời gian WHO - chỉ tính các ngày thực sự tham gia checkin
     const healthMilestones = [
       { days: 1, title: '24 giờ đầu tiên', description: 'Carbon monoxide được loại bỏ khỏi cơ thể' },
       { days: 2, title: '48 giờ', description: 'Nicotine được loại bỏ, vị giác cải thiện' },
       { days: 3, title: '72 giờ', description: 'Đường hô hấp thư giãn, năng lượng tăng' },
+      { days: 7, title: '1 tuần', description: 'Vị giác và khứu giác cải thiện rõ rệt' },
       { days: 14, title: '2 tuần', description: 'Tuần hoàn máu cải thiện' },
       { days: 30, title: '1 tháng', description: 'Chức năng phổi tăng 30%' },
       { days: 90, title: '3 tháng', description: 'Ho và khó thở giảm đáng kể' },
       { days: 365, title: '1 năm', description: 'Nguy cơ bệnh tim giảm 50%' }
     ];
     
-    // Tìm ngày đầu tiên có check-in để tính số ngày đã bắt đầu
-    let daysInPlan = 0;
-    if (actualProgress.length > 0) {
-      const oldestRecord = new Date(actualProgress[0].date);
-      daysInPlan = Math.floor((currentDate - oldestRecord) / (1000 * 60 * 60 * 24)) + 1;
-    }
-    
-    // Đếm số milestone đã đạt được
-    const achievedMilestones = healthMilestones.filter(m => daysInPlan >= m.days).length;
+    // Tìm milestone sức khỏe đã đạt được dựa trên số ngày theo dõi thực tế
+    const achievedMilestones = healthMilestones.filter(m => noSmokingDays >= m.days).length;
     const healthProgress = Math.round((achievedMilestones / healthMilestones.length) * 100);
     
+    console.log(`Milestone sức khỏe: ${achievedMilestones}/${healthMilestones.length} (${healthProgress}%) dựa trên ${noSmokingDays} ngày theo dõi thực tế`);
+    
     console.log(`Thống kê mới: ${noSmokingDays} ngày không hút, ${savedCigarettes} điếu đã tránh, ${savedMoney.toFixed(0)}đ tiết kiệm, tiến độ sức khỏe ${healthProgress}%`);
+    
+    // Tìm dữ liệu hôm nay để debug
+    const todayDateStr = new Date().toISOString().split('T')[0];
+    const todayRecord = actualProgress.find(day => day.date === todayDateStr);
     
     // Cập nhật state với thống kê mới
     const newStats = {
@@ -511,7 +518,8 @@ export default function Progress() {
             actualCigarettes: todayRecord.actualCigarettes,
             targetCigarettes: todayRecord.targetCigarettes
           } : "Chưa có check-in hôm nay",
-          savedCalcDesc: `${initialCigarettesPerDay} - ${todayRecord?.actualCigarettes || 0} = ${savedCigarettes} điếu`
+          totalCheckinDays: actualProgress.length,
+          savedCalcDesc: `Tổng ${savedCigarettes} điếu đã tránh từ ${actualProgress.length} ngày checkin`
         }
       }
     };
