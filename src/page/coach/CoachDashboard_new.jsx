@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { FaCalendarAlt, FaUsers, FaCheckCircle, FaClock, FaChartBar, FaComments, FaSearch, FaBell, FaUserMd, FaCheck, FaPaperPlane, FaTimes, FaRobot } from 'react-icons/fa';
+import { FaCalendarAlt, FaUsers, FaCheckCircle, FaClock, FaChartBar, FaComments, FaSearch, FaBell, FaUserMd, FaCheck, FaPaperPlane, FaTimes } from 'react-icons/fa';
 import '../../styles/CoachDashboard.css';
-import { initializeCoachMessages } from '../../utils/coachMessages';
 
 function CoachDashboard() {
   const { user } = useAuth();
@@ -24,9 +23,6 @@ function CoachDashboard() {
   const [unreadCounts, setUnreadCounts] = useState({});
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
-  const [hasNewUserMessage, setHasNewUserMessage] = useState(false);
-  const pollingIntervalRef = useRef(null);
-  const lastMessageCountRef = useRef({});
 
   useEffect(() => {
     loadDashboardData();
@@ -37,13 +33,6 @@ function CoachDashboard() {
     if (user?.role === 'coach') {
       loadCoachAppointments();
       loadUnreadCounts();
-      
-      // Set up polling for unread counts every 3 seconds
-      const unreadPolling = setInterval(() => {
-        loadUnreadCounts();
-      }, 3000);
-      
-      return () => clearInterval(unreadPolling);
     }
   }, [user]);
 
@@ -58,14 +47,9 @@ function CoachDashboard() {
       const allAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
       
       // Lọc chỉ những appointments của coach hiện tại
-      const coachBookings = allAppointments.filter(appointment => {
-        try {
-          return appointment.coachName === user.fullName || appointment.coachName === user.name;
-        } catch (error) {
-          console.error('Error filtering coach appointments:', error);
-          return false;
-        }
-      });
+      const coachBookings = allAppointments.filter(appointment => 
+        appointment.coachName === user.fullName || appointment.coachName === user.name
+      );
 
       // Tính toán thống kê
       const now = new Date();
@@ -104,43 +88,31 @@ function CoachDashboard() {
 
   // New messaging functions
   const loadCoachAppointments = () => {
-    try {
-      const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
-      // Filter appointments for this coach based on coach name
-      const coachAppointments = storedAppointments.filter(
-        app => app && app.coachName && (app.coachName === user?.fullName || app.coachName === user?.name)
-      );
-      setAppointments(coachAppointments);
-    } catch (error) {
-      console.error('Error loading coach appointments:', error);
-      setAppointments([]);
-    }
+    const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
+    // Filter appointments for this coach based on coach name
+    const coachAppointments = storedAppointments.filter(
+      app => app.coachName === user?.fullName || app.coachName === user?.name
+    );
+    setAppointments(coachAppointments);
   };
 
   const loadUnreadCounts = () => {
-    try {
-      const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
-      const coachAppointments = storedAppointments.filter(
-        app => app && app.coachName && (app.coachName === user?.fullName || app.coachName === user?.name)
-      );
-      
-      const counts = {};
-      coachAppointments.forEach(appointment => {
-        if (appointment && appointment.id) {
-          const chatKey = `coach_chat_${appointment.id}`;
-          const messages = JSON.parse(localStorage.getItem(chatKey)) || [];
-          const unreadCount = messages.filter(msg => 
-            msg && msg.sender === 'user' && !msg.readByCoach
-          ).length;
-          counts[appointment.id] = unreadCount;
-        }
-      });
-      
-      setUnreadCounts(counts);
-    } catch (error) {
-      console.error('Error loading unread counts:', error);
-      setUnreadCounts({});
-    }
+    const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
+    const coachAppointments = storedAppointments.filter(
+      app => app.coachName === user?.fullName || app.coachName === user?.name
+    );
+    
+    const counts = {};
+    coachAppointments.forEach(appointment => {
+      const chatKey = `coach_chat_${appointment.id}`;
+      const messages = JSON.parse(localStorage.getItem(chatKey)) || [];
+      const unreadCount = messages.filter(msg => 
+        msg.sender === 'user' && !msg.readByCoach
+      ).length;
+      counts[appointment.id] = unreadCount;
+    });
+    
+    setUnreadCounts(counts);
   };
 
   const handleSendMessage = (appointmentId, messageText) => {
@@ -181,12 +153,20 @@ function CoachDashboard() {
     setSelectedAppointment(appointment);
     setShowMessaging(true);
     
-    // Initialize last message count for this appointment
+    // Load messages for this appointment
     const chatKey = `coach_chat_${appointment.id}`;
     const chatMessages = JSON.parse(localStorage.getItem(chatKey)) || [];
-    lastMessageCountRef.current[appointment.id] = chatMessages.length;
     
-    // Load messages will be handled by the polling effect
+    // Mark messages as read by coach
+    const updatedMessages = chatMessages.map(msg => ({
+      ...msg,
+      readByCoach: msg.sender === 'user' ? true : msg.readByCoach
+    }));
+    localStorage.setItem(chatKey, JSON.stringify(updatedMessages));
+    setMessages(updatedMessages);
+    
+    // Update unread counts
+    loadUnreadCounts();
   };
 
   const handleConfirmAppointment = (appointmentId) => {
@@ -213,22 +193,10 @@ function CoachDashboard() {
       reminder: "Nhắc nhở: Lịch hẹn của chúng ta sắp tới. Bạn đã chuẩn bị sẵn sàng chưa?",
       support: "Tôi hiểu rằng cai thuốc không dễ dàng. Hãy nhớ rằng tôi luôn ở đây để hỗ trợ bạn. Bạn có cảm thấy khó khăn gì không?",
       progress: "Hôm nay bạn cảm thấy thế nào? Hãy chia sẻ với tôi về tiến trình cai thuốc của bạn nhé!",
-      motivation: "Bạn đang làm rất tốt! Hãy tiếp tục kiên trì, mỗi ngày không hút thuốc là một chiến thắng! 💪",
-      greeting: "Xin chào! Bạn có khỏe không? Hôm nay tình hình của bạn thế nào?",
-      checkIn: "Bạn đã bao nhiều ngày không hút thuốc rồi? Hãy chia sẻ với tôi nhé!",
-      encouragement: "Bạn làm rất tốt! Tôi rất tự hào về bạn! 🌟",
-      advice: "Hãy nhớ uống nhiều nước và tập thể dục nhẹ để giảm căng thẳng nhé!"
+      motivation: "Bạn đang làm rất tốt! Hãy tiếp tục kiên trì, mỗi ngày không hút thuốc là một chiến thắng! 💪"
     };
     
     handleSendMessage(appointmentId, quickMessages[template]);
-  };
-
-  const initializeMessages = () => {
-    initializeCoachMessages();
-    // Reload the data to show the new messages
-    loadCoachAppointments();
-    loadUnreadCounts();
-    alert('Đã khởi tạo tin nhắn mẫu cho tất cả lịch hẹn!');
   };
 
   const getTotalUnreadMessages = () => {
@@ -248,89 +216,10 @@ function CoachDashboard() {
   };
 
   // Filter appointments for messaging tab
-  const filteredAppointments = appointments.filter(appointment => {
-    try {
-      const searchLower = searchTerm.toLowerCase();
-      const userNameMatch = appointment.userName && appointment.userName.toLowerCase().includes(searchLower);
-      const userEmailMatch = appointment.userEmail && appointment.userEmail.toLowerCase().includes(searchLower);
-      return userNameMatch || userEmailMatch;
-    } catch (error) {
-      console.error('Error filtering appointments:', error);
-      return true; // Return true to include the appointment if there's an error
-    }
-  });
-
-  // Function to load messages for active chat in real-time
-  const loadMessagesForActiveChat = () => {
-    if (!selectedAppointment) return;
-    
-    const chatKey = `coach_chat_${selectedAppointment.id}`;
-    const chatMessages = JSON.parse(localStorage.getItem(chatKey)) || [];
-    
-    // Check if there are new messages from user
-    const currentCount = chatMessages.length;
-    const lastCount = lastMessageCountRef.current[selectedAppointment.id] || 0;
-    
-    if (currentCount > lastCount) {
-      const newMessages = chatMessages.slice(lastCount);
-      const hasUserMessages = newMessages.some(msg => msg.sender === 'user');
-      
-      if (hasUserMessages) {
-        setHasNewUserMessage(true);
-        // Auto-hide the indicator after 3 seconds
-        setTimeout(() => setHasNewUserMessage(false), 3000);
-      }
-    }
-    
-    lastMessageCountRef.current[selectedAppointment.id] = currentCount;
-    
-    // Mark messages as read by coach
-    const updatedMessages = chatMessages.map(msg => ({
-      ...msg,
-      readByCoach: msg.sender === 'user' ? true : msg.readByCoach
-    }));
-    
-    // Only update if messages have changed
-    if (JSON.stringify(updatedMessages) !== JSON.stringify(messages)) {
-      localStorage.setItem(chatKey, JSON.stringify(updatedMessages));
-      setMessages(updatedMessages);
-      loadUnreadCounts();
-    }
-  };
-
-  // Real-time polling for active chat
-  useEffect(() => {
-    if (showMessaging && selectedAppointment) {
-      // Load messages immediately
-      loadMessagesForActiveChat();
-      
-      // Set up polling every 2 seconds
-      pollingIntervalRef.current = setInterval(() => {
-        loadMessagesForActiveChat();
-      }, 2000);
-      
-      return () => {
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-        }
-      };
-    } else {
-      // Clear polling when chat is closed
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    }
-  }, [showMessaging, selectedAppointment]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, []);
+  const filteredAppointments = appointments.filter(appointment =>
+    appointment.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    appointment.userEmail.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Guard clauses
   if (!user || user.role !== 'coach') {
@@ -431,10 +320,10 @@ function CoachDashboard() {
                 {recentBookings.map(booking => (
                   <div key={booking.id} className="booking-item">
                     <div className="booking-info">
-                      <h4>{booking.userName || 'Người dùng'}</h4>
-                      <p>{booking.userEmail || 'Email không có'}</p>
+                      <h4>{booking.userName}</h4>
+                      <p>{booking.userEmail}</p>
                       <span className="booking-date">
-                        {new Date(booking.date).toLocaleDateString('vi-VN')} - {booking.time || 'Chưa xác định'}
+                        {new Date(booking.date).toLocaleDateString('vi-VN')} - {booking.time}
                       </span>
                     </div>
                     <div className="booking-status">
@@ -477,9 +366,9 @@ function CoachDashboard() {
               >
                 <div className="appointment-info">
                   <h4>{appointment.userName || 'Người dùng'}</h4>
-                  <p>{appointment.userEmail || 'Email không có'}</p>
+                  <p>{appointment.userEmail}</p>
                   <div className="appointment-datetime">
-                    <span>{formatDate(appointment.date)} - {appointment.time || 'Chưa xác định'}</span>
+                    <span>{formatDate(appointment.date)} - {appointment.time}</span>
                   </div>
                 </div>
                 <div className="appointment-status">
@@ -516,11 +405,6 @@ function CoachDashboard() {
             <div className="chat-container">
               <div className="chat-header">
                 <h3>Nhắn tin với {selectedAppointment.userName}</h3>
-                {hasNewUserMessage && (
-                  <div className="new-user-message-indicator">
-                    Tin nhắn mới từ user!
-                  </div>
-                )}
                 <button className="close-chat" onClick={() => setShowMessaging(false)}>
                   <FaTimes />
                 </button>
@@ -558,29 +442,28 @@ function CoachDashboard() {
                 >
                   <FaPaperPlane />
                 </button>
-              </div>                <div className="quick-messages">
-                  <h4>Tin nhắn nhanh:</h4>
-                  <div className="quick-message-buttons">
-                    <button onClick={() => sendQuickMessage(selectedAppointment.id, 'greeting')}>
-                      Chào hỏi
-                    </button>
-                    <button onClick={() => sendQuickMessage(selectedAppointment.id, 'checkIn')}>
-                      Kiểm tra tình hình
-                    </button>
-                    <button onClick={() => sendQuickMessage(selectedAppointment.id, 'encouragement')}>
-                      Động viên
-                    </button>
-                    <button onClick={() => sendQuickMessage(selectedAppointment.id, 'advice')}>
-                      Lời khuyên
-                    </button>
-                    <button onClick={() => sendQuickMessage(selectedAppointment.id, 'support')}>
-                      Hỗ trợ
-                    </button>
-                    <button onClick={() => sendQuickMessage(selectedAppointment.id, 'reminder')}>
-                      Nhắc nhở
-                    </button>
-                  </div>
+              </div>
+              
+              <div className="quick-messages">
+                <h4>Tin nhắn nhanh:</h4>
+                <div className="quick-message-buttons">
+                  <button onClick={() => sendQuickMessage(selectedAppointment.id, 'welcome')}>
+                    Chào mừng
+                  </button>
+                  <button onClick={() => sendQuickMessage(selectedAppointment.id, 'reminder')}>
+                    Nhắc nhở
+                  </button>
+                  <button onClick={() => sendQuickMessage(selectedAppointment.id, 'support')}>
+                    Hỗ trợ
+                  </button>
+                  <button onClick={() => sendQuickMessage(selectedAppointment.id, 'progress')}>
+                    Tiến trình
+                  </button>
+                  <button onClick={() => sendQuickMessage(selectedAppointment.id, 'motivation')}>
+                    Động viên
+                  </button>
                 </div>
+              </div>
             </div>
           )}
 
