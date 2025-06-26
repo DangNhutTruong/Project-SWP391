@@ -14,19 +14,11 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get the redirect path from location state or default to profile
-  const from = location.state?.from || '/profile';
+  // Get the redirect path from location state or default to home
+  const from = location.state?.from || '/';
   
-  // Redirect based on role if already logged in
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'coach') {
-        navigate('/coach');
-      } else {
-        navigate(from);
-      }
-    }
-  }, [isAuthenticated, user, navigate, from]);
+  // Removed auto-redirect on mount to prevent issues with page reload
+  // Users will only be redirected when they actively submit the login form
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');

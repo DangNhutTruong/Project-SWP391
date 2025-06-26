@@ -176,6 +176,16 @@
   transform: translateY(-1px);
 }
 
+.confirm-btn {
+  background: #3498db;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
 .cancel-btn {
   background: #e74c3c;
   color: white;

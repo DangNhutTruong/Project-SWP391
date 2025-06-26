@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { FaCalendarAlt, FaUser, FaClock, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
+import { FaCalendarAlt, FaUser, FaClock, FaCheck, FaTimes, FaEdit, FaComments } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/CoachBookings.css';
 
 function CoachBookings() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
-  const [filter, setFilter] = useState('all'); // 'all', 'upcoming', 'completed', 'cancelled'
+  const [filter, setFilter] = useState('all'); // 'all', 'pending', 'upcoming', 'completed', 'cancelled'
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,6 +53,9 @@ function CoachBookings() {
     const now = new Date();
 
     switch (filter) {
+      case 'pending':
+        filtered = bookings.filter(booking => booking.status === 'pending');
+        break;
       case 'upcoming':
         filtered = bookings.filter(booking => {
           const bookingDate = new Date(booking.date);
@@ -89,6 +94,17 @@ function CoachBookings() {
     }
   };
 
+  const handleSendMessage = (booking) => {
+    // Chuyển hướng đến trang chat với thông tin người dùng
+    navigate('/coach/chat', { 
+      state: { 
+        userId: booking.userId,
+        userName: booking.userName,
+        userEmail: booking.userEmail 
+      } 
+    });
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
@@ -105,6 +121,8 @@ function CoachBookings() {
 
   const getStatusColor = (status) => {
     switch (status) {
+      case 'pending':
+        return '#ffc107'; // Màu vàng cho chờ xác nhận
       case 'confirmed':
         return '#007bff';
       case 'completed':
@@ -118,6 +136,8 @@ function CoachBookings() {
 
   const getStatusText = (status) => {
     switch (status) {
+      case 'pending':
+        return 'Chờ xác nhận';
       case 'confirmed':
         return 'Đã xác nhận';
       case 'completed':
@@ -166,6 +186,12 @@ function CoachBookings() {
           onClick={() => setFilter('all')}
         >
           Tất cả ({bookings.length})
+        </button>
+        <button
+          className={filter === 'pending' ? 'active' : ''}
+          onClick={() => setFilter('pending')}
+        >
+          Chờ xác nhận ({bookings.filter(b => b.status === 'pending').length})
         </button>
         <button
           className={filter === 'upcoming' ? 'active' : ''}
@@ -239,6 +265,24 @@ function CoachBookings() {
               </div>
 
               <div className="booking-actions">
+                {booking.status === 'pending' && (
+                  <>
+                    <button
+                      className="action-btn confirm-btn"
+                      onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                      title="Xác nhận lịch hẹn"
+                    >
+                      <FaCheck /> Xác nhận
+                    </button>
+                    <button
+                      className="action-btn cancel-btn"
+                      onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                      title="Từ chối lịch hẹn"
+                    >
+                      <FaTimes /> Từ chối
+                    </button>
+                  </>
+                )}
                 {booking.status === 'confirmed' && (
                   <>
                     <button
@@ -255,7 +299,23 @@ function CoachBookings() {
                     >
                       <FaTimes /> Hủy
                     </button>
+                    <button
+                      className="action-btn message-btn"
+                      onClick={() => handleSendMessage(booking)}
+                      title="Gửi tin nhắn cho người dùng"
+                    >
+                      <FaComments /> Nhắn tin
+                    </button>
                   </>
+                )}
+                {booking.status === 'completed' && (
+                  <button
+                    className="action-btn message-btn"
+                    onClick={() => handleSendMessage(booking)}
+                    title="Gửi tin nhắn cho người dùng"
+                  >
+                    <FaComments /> Nhắn tin
+                  </button>
                 )}
                 {booking.status === 'cancelled' && (
                   <button
