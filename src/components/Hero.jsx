@@ -2,31 +2,34 @@ import { Link } from 'react-router-dom';
 import { getHeroImagePath } from '../utils/imageUtils';
 import ScrollDown from './ScrollDown';
 import './Hero.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 export default function Hero() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    // Images to cycle through
-  const heroImages = [
+  
+  // Memoize images to prevent dependencies change on every render
+  const heroImages = useMemo(() => [
     'quit-smoking-2.png',
     'quit-smoking-3.jpg',
     'quit-smoking-4.jpg',
     'd.jpg',
     'th.jpg'
-  ];
-    // Debug: Log image paths being used
+  ], []);
+
+  // Debug: Log image paths being used
   useEffect(() => {
     console.log("Image slider initialized with images:", heroImages);
     
     // Remove debug logs in production
-    if (process.env.NODE_ENV !== 'production') {
+    if (import.meta.env.MODE !== 'production') {
       heroImages.forEach(img => {
         const path = getHeroImagePath(img);
         console.log(`Image path for ${img}:`, path);
       });
     }
-  }, []);
-    // Effect for cycling through images every 3 seconds
+  }, [heroImages]);
+
+  // Effect for cycling through images every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => {
@@ -38,7 +41,7 @@ export default function Hero() {
     
     // Clean up interval on unmount
     return () => clearInterval(interval);
-  }, []);
+  }, [heroImages.length]);
   
   return (
     <section className="hero nosmoke-hero">

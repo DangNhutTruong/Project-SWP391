@@ -96,7 +96,7 @@ const CommunityPost = ({ post, onLike, onComment, onShare, onDelete }) => {
           {/* Hiển thị huy hiệu nếu có */}
           {post.achievements && post.achievements.length > 0 && (
             <div className="post-achievements">
-              {post.achievements.map((achievement, index) => (
+              {post.achievements.map((achievement) => (
                 <div key={achievement.id} className="achievement-badge">
                   <span className="achievement-icon">{achievement.icon}</span>
                   <span className="achievement-name">{achievement.name}</span>

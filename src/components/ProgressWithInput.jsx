@@ -1,27 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import QuitProgressChart from './QuitProgressChart';
 import DailyProgressInput from './DailyProgressInput';
 
 const ProgressWithInput = ({ userPlan, timeFilter = '30 ngày' }) => {
     const [actualProgress, setActualProgress] = useState([]);
     const [todayTarget, setTodayTarget] = useState(0);
-
-    // Kiểm tra xem có kế hoạch thật không
-    if (!userPlan || !userPlan.weeks || !Array.isArray(userPlan.weeks) || userPlan.weeks.length === 0) {
-        return (
-            <div style={{
-                textAlign: 'center',
-                padding: '2rem',
-                background: 'white',
-                borderRadius: '12px',
-                margin: '2rem 0',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
-            }}>
-                <h3>⚠️ Không có kế hoạch để hiển thị</h3>
-                <p>Vui lòng tạo kế hoạch cai thuốc để có thể theo dõi tiến trình.</p>
-            </div>
-        );
-    }
 
     // Load data from localStorage on mount
     useEffect(() => {
@@ -98,21 +81,38 @@ const ProgressWithInput = ({ userPlan, timeFilter = '30 ngày' }) => {
 
     return (
         <div className="progress-with-input">
-            {/* Form nhập dữ liệu hàng ngày */}
-            <DailyProgressInput
-                onSubmit={handleProgressSubmit}
-                todayTarget={todayTarget}
-            />
+            {/* Kiểm tra xem có kế hoạch thật không */}
+            {(!userPlan || !userPlan.weeks || !Array.isArray(userPlan.weeks) || userPlan.weeks.length === 0) ? (
+                <div style={{
+                    textAlign: 'center',
+                    padding: '2rem',
+                    background: 'white',
+                    borderRadius: '12px',
+                    margin: '2rem 0',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+                }}>
+                    <h3>⚠️ Không có kế hoạch để hiển thị</h3>
+                    <p>Vui lòng tạo kế hoạch cai thuốc để có thể theo dõi tiến trình.</p>
+                </div>
+            ) : (
+                <>
+                    {/* Form nhập dữ liệu hàng ngày */}
+                    <DailyProgressInput
+                        onSubmit={handleProgressSubmit}
+                        todayTarget={todayTarget}
+                    />
 
-            {/* Biểu đồ tiến trình */}
-            <div style={{ marginTop: '20px' }}>
-                <QuitProgressChart
-                    userPlan={userPlan}
-                    actualProgress={actualProgress}
-                    timeFilter={timeFilter}
-                    onDataUpdate={handleDataUpdate}
-                />
-            </div>
+                    {/* Biểu đồ tiến trình */}
+                    <div style={{ marginTop: '20px' }}>
+                        <QuitProgressChart
+                            userPlan={userPlan}
+                            actualProgress={actualProgress}
+                            timeFilter={timeFilter}
+                            onDataUpdate={handleDataUpdate}
+                        />
+                    </div>
+                </>
+            )}
         </div>
     );
 };

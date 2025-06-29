@@ -222,8 +222,6 @@ const MoodTracking = ({ onMoodUpdate }) => {
     setIsSubmitted(false);
   };
 
-  const selectedMood = moodOptions.find((m) => m.id === moodData.mood);
-
   if (isLoading) {
     return (
       <div className="mood-tracking-container loading">

@@ -22,9 +22,7 @@ const ProgressDashboard = ({
   const [dashboardStats, setDashboardStats] = useState(null);
   const [milestones, setMilestones] = useState([]); // Tính toán thống kê
   const [hoveredMilestone, setHoveredMilestone] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [userAchievements, setUserAchievements] = useState([]);
   const { user } = useAuth(); // Lấy thông tin người dùng từ context
 
   // Ghi log để debug
@@ -40,19 +38,17 @@ const ProgressDashboard = ({
   // Load user achievements from API if user is logged in
   useEffect(() => {
     if (user && user.UserID) {
-      setIsLoading(true);
       apiService.achievements
         .getUserAchievements(user.UserID)
         .then((response) => {
           if (response.success && response.data) {
-            setUserAchievements(response.data);
+            // Achievement data loaded successfully
+            console.log('Achievement data loaded:', response.data);
           }
-          setIsLoading(false);
         })
         .catch((error) => {
           console.error("Error fetching user achievements:", error);
           setError("Không thể tải dữ liệu thành tựu");
-          setIsLoading(false);
         });
     }
   }, [user]);
@@ -60,7 +56,6 @@ const ProgressDashboard = ({
   // Load progress data from API if user is logged in
   useEffect(() => {
     if (user && user.UserID) {
-      setIsLoading(true);
       apiService.progress
         .getByUserId(user.UserID)
         .then((response) => {
@@ -84,12 +79,10 @@ const ProgressDashboard = ({
               }));
             }
           }
-          setIsLoading(false);
         })
         .catch((error) => {
           console.error("Error fetching user progress:", error);
           setError("Không thể tải dữ liệu tiến độ");
-          setIsLoading(false);
 
           // Fallback to using localStorage data for progress
           console.log("Fallback to localStorage data for progress");
@@ -394,7 +387,15 @@ const ProgressDashboard = ({
 
   return (
     <div className="progress-dashboard">
-      {" "}
+      {/* Show error message if any */}
+      {error && (
+        <div className="dashboard-error-notification">
+          <div className="error-icon">⚠️</div>
+          <p>{error}</p>
+          <button onClick={() => setError(null)}>Đóng</button>
+        </div>
+      )}
+      
       {/* Key Statistics */}
       <div className="dashboard-stats">
         <div className="stat-card primary">

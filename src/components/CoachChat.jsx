@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaTimes, FaPaperPlane, FaUser } from "react-icons/fa";
 import "../styles/CoachChat.css";
 import apiService from "../utils/apiService";
@@ -40,10 +40,10 @@ const CoachChat = ({ coach, appointment, isOpen, onClose }) => {
           fallbackToLocalStorage();
         });
     }
-  }, [isOpen, coach]);
+  }, [isOpen, coach, fallbackToLocalStorage]);
 
   // Fallback function to use localStorage data if API fails
-  const fallbackToLocalStorage = () => {
+  const fallbackToLocalStorage = useCallback(() => {
     try {
       if (appointment && appointment.id) {
         const chatKey = `coach_chat_${appointment.id}`;
@@ -87,7 +87,7 @@ const CoachChat = ({ coach, appointment, isOpen, onClose }) => {
         },
       ]);
     }
-  };
+  }, [appointment, coach]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {

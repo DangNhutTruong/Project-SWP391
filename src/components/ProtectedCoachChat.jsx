@@ -26,8 +26,9 @@ const ProtectedCoachChat = ({ coach, appointment, isOpen, onClose }) => {
               window.sessionStorage.setItem('membership_refresh_needed', 'true');
             }
           }
-        } catch (error) {
+        } catch (localStorageError) {
           // Xử lý lỗi khi đọc localStorage
+          console.warn('LocalStorage access failed:', localStorageError);
         }
       }
     }

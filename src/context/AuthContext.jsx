@@ -169,11 +169,6 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Email hoặc mật khẩu không đúng');
       }
     } catch (err) {
-      setError(err.message);
-      setLoading(false);
-
-      return { success: true, user: response.user };
-    } catch (err) {
       const errorMessage =
         err.response?.data?.message || err.message || "Đăng nhập thất bại";
       setError(errorMessage);
