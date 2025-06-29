@@ -181,7 +181,7 @@ export default function JourneyStepper() {
     setShowCompletionScreen(true);
   };
   // Function to update active steps
-  const animateProgressBar = (newStep) => {
+  const animateProgressBar = () => {
     // No longer need to animate step-line since it has been removed
     // Only update other elements if necessary
   };const handleSubmit = () => {
@@ -870,13 +870,14 @@ export default function JourneyStepper() {
         <h1 className="stepper-title">Kế Hoạch Cai Thuốc</h1>
         {/* Stepper header */}
         <div className="steps-container">
-          {steps.map((step, index) => (            <React.Fragment key={step.id}>
+          {steps.map((step) => (
+            <React.Fragment key={step.id}>
               <div 
                 className={`step-item ${currentStep >= step.id ? 'active' : ''} ${currentStep > step.id || isCompleted ? 'completed' : ''}`}
                 onClick={() => {
-                if (step.id <= currentStep || isCompleted) {
-                  // Add animation for progress bar and step changes
-                  setCurrentStep(step.id);
+                  if (step.id <= currentStep || isCompleted) {
+                    // Add animation for progress bar and step changes
+                    setCurrentStep(step.id);
 
                     // Nếu đã hoàn thành, có thể xem lại nhưng không đổi trạng thái hoàn thành
                     if (!isCompleted) {
@@ -890,19 +891,19 @@ export default function JourneyStepper() {
                     if (circle) {
                       circle.classList.add("pulse");
                       setTimeout(() => circle.classList.remove("pulse"), 500);
-                    }                    // Tạm thời ẩn màn hình hoàn thành để xem chi tiết các bước
+                    }
+                    // Tạm thời ẩn màn hình hoàn thành để xem chi tiết các bước
                     if (isCompleted) {
                       setShowCompletionScreen(false);
                     }
                   }
-                }
-              }
-            }>
-              <div className="step-circle">
-                {currentStep > step.id || isCompleted ? '✓' : step.id}
+                }}
+              >
+                <div className="step-circle">
+                  {currentStep > step.id || isCompleted ? '✓' : step.id}
+                </div>
+                <div className="step-name">{step.name}</div>
               </div>
-              <div className="step-name">{step.name}</div>
-            </div>
             </React.Fragment>
           ))}
         </div>{" "}

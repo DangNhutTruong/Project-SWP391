@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaCalendarCheck, FaSave } from 'react-icons/fa';
 
 const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
@@ -13,7 +13,7 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
     const [currentWeek, setCurrentWeek] = useState(1); // Tuần hiện tại
     const [streakDays, setStreakDays] = useState(0); // Số ngày liên tiếp đạt mục tiêu
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' }); // Thông báo dạng toast    // Tính target cigarettes dựa trên kế hoạch và ngày hiện tại
-    const calculateTodayTarget = () => {
+    const calculateTodayTarget = useCallback(() => {
         // Kiểm tra kỹ các trường hợp null/undefined
         if (!currentPlan) return 12;
         if (!currentPlan.weeks || !Array.isArray(currentPlan.weeks) || currentPlan.weeks.length === 0) return 12;
@@ -65,10 +65,10 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
             console.error("Lỗi khi tính toán mục tiêu hôm nay:", error);
             return 12; // Fallback an toàn nếu có lỗi
         }
-    };
+    }, [currentPlan]);
 
     // Tính streak days (chỉ tính từ ngày bắt đầu kế hoạch)
-    const calculateStreakDays = () => {
+    const calculateStreakDays = useCallback(() => {
         let streak = 0;
         const today = new Date();
         
@@ -117,7 +117,7 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
         
         console.log(`Streak days cuối cùng: ${streak}`);
         setStreakDays(streak);
-    };
+    }, [currentPlan]);
 
     // Cập nhật target khi component mount hoặc plan thay đổi
     useEffect(() => {
@@ -127,7 +127,7 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
             targetCigarettes: target
         }));
         calculateStreakDays();
-    }, [currentPlan]);    // Kiểm tra xem hôm nay đã checkin chưa
+    }, [currentPlan, calculateStreakDays, calculateTodayTarget]);    // Kiểm tra xem hôm nay đã checkin chưa
     useEffect(() => {
         const today = new Date().toISOString().split('T')[0];
         const savedData = localStorage.getItem(`checkin_${today}`);

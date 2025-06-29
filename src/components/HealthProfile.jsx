@@ -166,15 +166,40 @@ const HealthProfile = ({ healthData = {}, activePlan = null }) => {
     setEditableStats({ ...data });
     setIsEditingStats(true);
   };
-  const handleSaveStats = () => {
-    // Cập nhật dữ liệu thực tế
-    setData({ ...editableStats });
-    console.log("Lưu thông tin sức khỏe:", editableStats);
-    setIsEditingStats(false);
+  const handleSaveStats = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Cập nhật dữ liệu thực tế
+      setData({ ...editableStats });
+      console.log("Lưu thông tin sức khỏe:", editableStats);
+      
+      // Save to API if user is logged in
+      if (user && user.id) {
+        try {
+          await apiService.health.updateProfile(user.id, editableStats);
+          console.log("Health profile updated via API successfully");
+        } catch (apiError) {
+          console.error("Failed to update health profile via API:", apiError);
+          // Continue with localStorage only, no need to show error to user
+        }
+      }
+      
+      // Always save to localStorage as backup
+      localStorage.setItem('healthProfile', JSON.stringify(editableStats));
+      
+      setIsEditingStats(false);
 
-    // Callback lên component cha để cập nhật dữ liệu (nếu có)
-    if (typeof healthData.onUpdateStats === "function") {
-      healthData.onUpdateStats(editableStats);
+      // Callback lên component cha để cập nhật dữ liệu (nếu có)
+      if (typeof healthData.onUpdateStats === "function") {
+        healthData.onUpdateStats(editableStats);
+      }
+    } catch (error) {
+      console.error("Error saving health stats:", error);
+      setError("Không thể lưu thông tin sức khỏe. Vui lòng thử lại sau.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -230,6 +255,23 @@ const HealthProfile = ({ healthData = {}, activePlan = null }) => {
 
   return (
     <div className="health-profile">
+      {/* Show loading state */}
+      {isLoading && (
+        <div className="health-loading">
+          <div className="loading-spinner"></div>
+          <p>Đang tải dữ liệu sức khỏe...</p>
+        </div>
+      )}
+      
+      {/* Show error message if any */}
+      {error && (
+        <div className="health-error">
+          <div className="error-icon">⚠️</div>
+          <p>{error}</p>
+          <button onClick={() => setError(null)}>Đóng</button>
+        </div>
+      )}
+      
       <div className="health-stats">
         <div className="stats-header">
           <h3>Thông tin sức khỏe</h3>

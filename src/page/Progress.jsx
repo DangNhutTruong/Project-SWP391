@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useEffect, useCallback } from 'react';
 import QuitProgressChart from '../components/QuitProgressChart';
 import DailyCheckin from '../components/DailyCheckin';
 import MoodTracking from '../components/MoodTracking';
@@ -11,20 +10,13 @@ import '../styles/MoodTracking.css';
 import '../styles/ProgressDashboard.css';
 
 export default function Progress() {
-  const { user } = useAuth();
   const [activeTimeFilter, setActiveTimeFilter] = useState('30 ngày');
   const [showCompletionDashboard, setShowCompletionDashboard] = useState(false);
   const [completionData, setCompletionData] = useState(null);
   const [userPlan, setUserPlan] = useState(null);
-  const [userProgress, setUserProgress] = useState([]);
   const [actualProgress, setActualProgress] = useState([]);
-  const [moodData, setMoodData] = useState([]);
-  // Load user plan and progress from localStorage
-  useEffect(() => {
-    loadUserPlanAndProgress();
-  }, []);
 
-  const loadUserPlanAndProgress = () => {
+  const loadUserPlanAndProgress = useCallback(() => {
     // Load completion data từ JourneyStepper
     const savedCompletion = localStorage.getItem('quitPlanCompletion');
     if (savedCompletion) {
@@ -53,7 +45,12 @@ export default function Progress() {
 
     // Load actual progress từ daily check-ins
     loadActualProgressFromCheckins();
-  };
+  }, []);
+
+  // Load user plan and progress from localStorage
+  useEffect(() => {
+    loadUserPlanAndProgress();
+  }, [loadUserPlanAndProgress]);
   const getActivePlan = () => {
     // Kiểm tra nếu có kế hoạch đang thực hiện trong localStorage
     try {
@@ -148,7 +145,8 @@ export default function Progress() {
   const handleMoodUpdate = (newMoodData) => {
     console.log('Mood updated:', newMoodData);
     // Có thể thêm logic cập nhật mood data ở đây nếu cần
-    setMoodData(prev => [...prev, newMoodData]);
+    // Add mood data (removed since moodData state was removed)
+    console.log('Mood data added:', newMoodData);
   };
   
   // Check for plan completion data on component mount
@@ -166,7 +164,7 @@ export default function Progress() {
     console.log("actualProgress changed, recalculating statistics...");
     // Recalculate even if there's no data, to reset stats if needed
     recalculateStatistics();
-  }, [actualProgress]);
+  }, [actualProgress, recalculateStatistics]);
   
   // Không chuyển hướng tự động, chỉ hiển thị nút cho người dùng
   useEffect(() => {
@@ -177,7 +175,7 @@ export default function Progress() {
     }
   }, [userPlan]);
     // Tính toán lại tất cả các thống kê và cập nhật state
-  const recalculateStatistics = () => {
+  const recalculateStatistics = useCallback(() => {
     console.log("======= BẮT ĐẦU TÍNH TOÁN THỐNG KÊ MỚI =======");
     
     // Tính số ngày theo dõi - CHỈ tính các ngày có thực sự checkin
@@ -245,7 +243,7 @@ export default function Progress() {
     // Tính số điếu đã tránh - CHỈ tính tích lũy cho các ngày thực sự giảm được
     let savedCigarettes = 0;
     let dailySavings = [];
-    let detailedLog = '';
+    // Detailed logging for debugging (removed unused variable)
     
     // Tính số điếu đã tránh cho TẤT CẢ các ngày có trong actualProgress
     actualProgress.forEach(dayRecord => {
@@ -259,7 +257,8 @@ export default function Progress() {
       }
       
       // Ghi chi tiết để debug
-      detailedLog += `\n- Ngày ${dayRecord.date}: ${initialCigarettesPerDay} - ${dayRecord.actualCigarettes} = ${daySaved} điếu${daySaved > 0 ? ' ✅' : ' (không tránh được)'}`;
+      // Log detailed calculation for debugging
+      console.log(`Ngày ${dayRecord.date}: ${initialCigarettesPerDay} - ${dayRecord.actualCigarettes} = ${daySaved} điếu${daySaved > 0 ? ' ✅' : ' (không tránh được)'}`);
       
       // Lưu thông tin chi tiết
       dailySavings.push({
@@ -352,7 +351,7 @@ export default function Progress() {
     console.log("======= KẾT THÚC TÍNH TOÁN THỐNG KÊ =======");
     
     return newStats;
-  };
+  }, [actualProgress, userPlan]);
   
   if (!userPlan) {
     return (

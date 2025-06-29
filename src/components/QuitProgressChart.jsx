@@ -221,7 +221,7 @@ const QuitProgressChart = ({
         
         console.log("CHART DEBUG: actualMap size:", actualMap.size);        // Tạo dữ liệu cho chart
         if (Array.isArray(filteredPlanData)) {
-            filteredPlanData.forEach((planItem, index) => {
+            filteredPlanData.forEach((planItem) => {
                 // Format ngày cho label (chỉ hiển thị ngày/tháng)
                 const date = new Date(planItem.date);
                 const label = `${date.getDate()}/${date.getMonth() + 1}`;
@@ -308,127 +308,6 @@ const QuitProgressChart = ({
           setChartData(chartConfig);
         setIsLoading(false);
     }, [userPlan, actualProgress, timeFilter]);
-    
-    // Format date để hiển thị trên chart
-    const formatDateForDisplay = (dateString) => {
-        try {
-            const options = { day: '2-digit', month: '2-digit' };
-            return new Date(dateString).toLocaleDateString('vi-VN', options);
-        } catch (error) {
-            console.error("Error formatting date:", dateString, error);
-            return dateString;
-        }
-    };
-    
-    // Chuẩn bị dữ liệu cho biểu đồ
-    const prepareChartData = () => {
-        try {
-            let planToUse = userPlan;
-            let actualToUse = Array.isArray(actualProgress) ? actualProgress : [];
-
-            // Sử dụng dữ liệu mẫu nếu không có dữ liệu thực
-            if (!planToUse) {
-                console.warn("Không có kế hoạch, sử dụng dữ liệu mẫu");
-                const sampleData = generateSampleData();
-                planToUse = sampleData.plan;
-                
-                // Chỉ sử dụng actual mẫu nếu không có dữ liệu actual thực tế
-                if (actualToUse.length === 0) {
-                    actualToUse = sampleData.actual;
-                }
-            }
-
-            // Tạo dữ liệu kế hoạch theo ngày
-            const dailyPlan = generateDailyPlanData(planToUse);
-
-            // Lọc dữ liệu theo bộ lọc thời gian
-            const filteredPlanData = filterDataByTime(dailyPlan, timeFilter);
-            
-            // Chuẩn bị labels (ngày) và dữ liệu đích (targetData)
-            const labels = [];
-            const targetData = [];
-            
-            // Thêm các ngày và dữ liệu đích vào arrays
-            filteredPlanData.forEach((planItem) => {
-                const formattedDate = formatDateForDisplay(planItem.date);
-                labels.push(formattedDate);
-                targetData.push(planItem.targetCigarettes);
-            });
-
-            // Chuẩn bị dữ liệu thực tế
-            const actualData = [];
-            
-            // Map dữ liệu thực tế vào các ngày trong kế hoạch
-            filteredPlanData.forEach(planItem => {
-                const dateStr = planItem.date;
-                
-                // Tìm giá trị thực tế cho ngày này
-                const actualItem = actualToUse.find(item => {
-                    // Đảm bảo ngày được format đúng chuẩn YYYY-MM-DD
-                    const itemDateStr = typeof item.date === 'string' ? item.date : 
-                                        item.date instanceof Date ? item.date.toISOString().split('T')[0] : null;
-                    
-                    return itemDateStr === dateStr;
-                });
-                
-                // Thêm giá trị thực tế nếu có, null nếu không
-                if (actualItem) {
-                    const actualValue = actualItem.actualCigarettes;
-                    actualData.push(actualValue !== undefined ? actualValue : null);
-                } else {
-                    // Không có dữ liệu thực tế, push null để không hiển thị điểm nào
-                    actualData.push(null);
-                }
-            });
-
-            // Dữ liệu đã chuẩn bị sẵn sàng cho chart.js
-            return {
-                labels,
-                datasets: [
-                    {
-                        label: 'Kế hoạch',
-                        data: targetData,
-                        borderColor: '#4285f4',
-                        backgroundColor: 'rgba(66, 133, 244, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Thực tế',
-                        data: actualData,
-                        borderColor: '#34a853',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        pointBackgroundColor: '#34a853',
-                        pointRadius: 4,
-                        tension: 0.2
-                    }
-                ],
-                // Thêm metadata để debug nếu cần
-                meta: {
-                    planDataPoints: targetData.length,
-                    actualDataPoints: actualData.filter(d => d !== null).length,
-                    nonNullActualData: actualData.filter(d => d !== null)
-                }
-            };
-        } catch (error) {
-            console.error("Error preparing chart data:", error);
-            setError("Lỗi khi chuẩn bị dữ liệu biểu đồ");
-            
-            // Return a minimal valid chart data object in case of error
-            return {
-                labels: ['Lỗi'],
-                datasets: [
-                    {
-                        label: 'Kế hoạch',
-                        data: [0],
-                        borderColor: '#4285f4'
-                    }
-                ]
-            };
-        }
-    };
 
     const options = {
         responsive: true,
@@ -601,6 +480,34 @@ const QuitProgressChart = ({
                  justifyContent: 'center', alignItems: 'center', 
                  backgroundColor: 'rgba(240, 240, 240, 0.5)' }}>
                 <p>Đang tải biểu đồ...</p>
+            </div>
+        );
+    }
+    
+    // Show error state if any
+    if (error) {
+        return (
+            <div className="chart-error" style={{ height: height, display: 'flex', 
+                 justifyContent: 'center', alignItems: 'center', 
+                 backgroundColor: 'rgba(255, 245, 245, 0.8)' }}>
+                <div style={{ textAlign: 'center', color: '#d32f2f' }}>
+                    <div className="error-icon" style={{ fontSize: '24px', marginBottom: '10px' }}>⚠️</div>
+                    <p>{error}</p>
+                    <button 
+                        onClick={() => setError(null)}
+                        style={{ 
+                            marginTop: '10px', 
+                            padding: '5px 15px', 
+                            border: '1px solid #d32f2f', 
+                            background: 'white', 
+                            color: '#d32f2f',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Đóng
+                    </button>
+                </div>
             </div>
         );
     }    return (
