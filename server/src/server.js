@@ -21,6 +21,11 @@ import appointmentRoutes from './routes/appointments.js';
 import blogRoutes from './routes/blogs.js';
 import communityRoutes from './routes/community.js';
 import packageRoutes from './routes/packages.js';
+import dashboardRoutes from './routes/dashboard.js';
+import paymentRoutes from './routes/payments.js';
+import notificationRoutes from './routes/notifications.js';
+import smokingStatusRoutes from './routes/smoking-status.js';
+import settingsRoutes from './routes/settings.js';
 
 // Load environment variables
 dotenv.config();
@@ -131,6 +136,11 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/packages', packageRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/smoking-status', smokingStatusRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

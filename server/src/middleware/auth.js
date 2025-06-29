@@ -80,3 +80,4 @@ export const authorize = (...roles) => {
 
 // Alias for protect function  
 export const authenticateToken = protect;
+export const authenticate = protect;
