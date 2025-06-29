@@ -1,5 +1,7 @@
 import User from '../models/User.js';
 import { generateToken } from '../middleware/auth.js';
+import crypto from 'crypto';
+import { Op } from 'sequelize';
 
 // @desc    Đăng ký user mới
 // @route   POST /api/auth/register
@@ -10,16 +12,20 @@ export const registerUser = async (req, res) => {
       name,
       email,
       password,
+      age,
+      gender,
+      phone,
+      address,
       cigarettesPerDay,
       costPerPack,
       cigarettesPerPack
     } = req.body;
 
     // Kiểm tra các trường bắt buộc
-    if (!name || !email || !password || !cigarettesPerDay || !costPerPack) {
+    if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Vui lòng điền đầy đủ thông tin bắt buộc'
+        message: 'Vui lòng điền đầy đủ thông tin bắt buộc (tên, email, mật khẩu)'
       });
     }
 
@@ -42,22 +48,26 @@ export const registerUser = async (req, res) => {
 
     // Tạo user mới
     const userData = {
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      password,
-      cigarettesPerDay: parseInt(cigarettesPerDay),
-      costPerPack: parseInt(costPerPack),
-      cigarettesPerPack: parseInt(cigarettesPerPack) || 20,
-      startDate: new Date(),
-      daysWithoutSmoking: 0,
-      membership: 'free'
+      Name: name.trim(),
+      Email: email.toLowerCase().trim(),
+      Password: password,
+      Age: age ? parseInt(age) : null,
+      Gender: gender,
+      Phone: phone,
+      Address: address,
+      CigarettesPerDay: cigarettesPerDay ? parseInt(cigarettesPerDay) : null,
+      CostPerPack: costPerPack ? parseFloat(costPerPack) : null,
+      CigarettesPerPack: cigarettesPerPack ? parseInt(cigarettesPerPack) : 20,
+      StartDate: cigarettesPerDay ? new Date() : null,
+      DaysWithoutSmoking: 0,
+      Membership: 'free',
+      EmailVerificationToken: crypto.randomBytes(32).toString('hex')
     };
 
-    const user = new User(userData);
-    await user.save();
+    const user = await User.create(userData);
 
     // Tạo JWT token
-    const token = generateToken(user._id);
+    const token = generateToken(user.UserID);
 
     // Cập nhật thông tin login
     await user.updateLoginInfo();
@@ -66,6 +76,7 @@ export const registerUser = async (req, res) => {
       success: true,
       message: 'Đăng ký thành công',
       data: {
+        userId: user.UserID,
         user: user.toJSON(),
         token,
         expiresIn: process.env.JWT_EXPIRE || '7d'
@@ -75,13 +86,20 @@ export const registerUser = async (req, res) => {
   } catch (error) {
     console.error('Register error:', error);
     
-    // Xử lý lỗi validation của mongoose
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(err => err.message);
+    // Xử lý lỗi validation của Sequelize
+    if (error.name === 'SequelizeValidationError') {
+      const messages = error.errors.map(err => err.message);
       return res.status(400).json({
         success: false,
         message: 'Dữ liệu không hợp lệ',
         errors: messages
+      });
+    }
+
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Email đã được sử dụng'
       });
     }
 
@@ -107,10 +125,10 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // Tìm user và include password để so sánh
-    const user = await User.findByEmail(email).select('+password');
+    // Tìm user theo email
+    const user = await User.findByEmail(email);
     
-    if (!user || !user.isActive) {
+    if (!user || !user.IsActive) {
       return res.status(401).json({
         success: false,
         message: 'Email hoặc mật khẩu không đúng'
@@ -118,7 +136,7 @@ export const loginUser = async (req, res) => {
     }
 
     // Kiểm tra password
-    const isPasswordCorrect = await user.comparePassword(password);
+    const isPasswordCorrect = await user.matchPassword(password);
     
     if (!isPasswordCorrect) {
       return res.status(401).json({
@@ -128,22 +146,18 @@ export const loginUser = async (req, res) => {
     }
 
     // Tạo JWT token
-    const tokenExpiry = rememberMe ? '30d' : (process.env.JWT_EXPIRE || '7d');
-    const token = generateToken(user._id);
+    const token = generateToken(user.UserID);
 
     // Cập nhật thông tin login
     await user.updateLoginInfo();
 
-    // Xóa password khỏi response
-    const userResponse = user.toJSON();
-
-    res.json({
+    res.status(200).json({
       success: true,
       message: 'Đăng nhập thành công',
       data: {
-        user: userResponse,
+        user: user.toJSON(),
         token,
-        expiresIn: tokenExpiry
+        expiresIn: rememberMe ? '30d' : (process.env.JWT_EXPIRE || '7d')
       }
     });
 
@@ -161,9 +175,9 @@ export const loginUser = async (req, res) => {
 // @access  Private
 export const getCurrentUser = async (req, res) => {
   try {
-    // req.user đã được set bởi authenticateToken middleware
-    const user = await User.findById(req.user._id).select('-password');
-    
+    // req.user đã được set trong auth middleware
+    const user = req.user;
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -173,9 +187,7 @@ export const getCurrentUser = async (req, res) => {
 
     res.json({
       success: true,
-      data: {
-        user: user.toJSON()
-      }
+      data: user.toJSON()
     });
 
   } catch (error) {
@@ -192,14 +204,16 @@ export const getCurrentUser = async (req, res) => {
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.UserID;
     const allowedUpdates = [
-      'name',
-      'cigarettesPerDay',
-      'costPerPack',
-      'cigarettesPerPack',
-      'quitPlan',
-      'settings'
+      'Name',
+      'Age',
+      'Gender',
+      'Phone',
+      'Address',
+      'CigarettesPerDay',
+      'CostPerPack',
+      'CigarettesPerPack'
     ];
 
     // Lọc chỉ những field được phép update
@@ -218,39 +232,30 @@ export const updateProfile = async (req, res) => {
     }
 
     // Cập nhật user
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: updates },
-      { new: true, runValidators: true }
-    ).select('-password');
+    const [updatedRowsCount] = await User.update(updates, {
+      where: { UserID: userId }
+    });
 
-    if (!user) {
+    if (updatedRowsCount === 0) {
       return res.status(404).json({
         success: false,
         message: 'User không tồn tại'
       });
     }
 
+    // Lấy thông tin user đã cập nhật
+    const updatedUser = await User.findOne({
+      where: { UserID: userId }
+    });
+
     res.json({
       success: true,
       message: 'Cập nhật thông tin thành công',
-      data: {
-        user: user.toJSON()
-      }
+      data: updatedUser.toJSON()
     });
 
   } catch (error) {
     console.error('Update profile error:', error);
-    
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json({
-        success: false,
-        message: 'Dữ liệu không hợp lệ',
-        errors: messages
-      });
-    }
-
     res.status(500).json({
       success: false,
       message: 'Lỗi server khi cập nhật thông tin'
@@ -279,11 +284,11 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    // Lấy user với password
-    const user = await User.findById(req.user._id).select('+password');
+    // Lấy user hiện tại từ middleware
+    const user = req.user;
 
     // Kiểm tra mật khẩu hiện tại
-    const isCurrentPasswordCorrect = await user.comparePassword(currentPassword);
+    const isCurrentPasswordCorrect = await user.matchPassword(currentPassword);
     
     if (!isCurrentPasswordCorrect) {
       return res.status(400).json({
@@ -292,8 +297,8 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    // Cập nhật mật khẩu mới
-    user.password = newPassword;
+    // Cập nhật mật khẩu mới (Sequelize sẽ tự động hash trong hook)
+    user.Password = newPassword;
     await user.save();
 
     res.json({
@@ -345,11 +350,11 @@ export const deleteAccount = async (req, res) => {
       });
     }
 
-    // Lấy user với password
-    const user = await User.findById(req.user._id).select('+password');
+    // Lấy user hiện tại
+    const user = req.user;
 
     // Kiểm tra mật khẩu
-    const isPasswordCorrect = await user.comparePassword(password);
+    const isPasswordCorrect = await user.matchPassword(password);
     
     if (!isPasswordCorrect) {
       return res.status(400).json({
@@ -358,8 +363,8 @@ export const deleteAccount = async (req, res) => {
       });
     }
 
-    // Soft delete - chỉ đánh dấu isActive = false
-    user.isActive = false;
+    // Soft delete - chỉ đánh dấu IsActive = false
+    user.IsActive = false;
     await user.save();
 
     res.json({
@@ -372,6 +377,152 @@ export const deleteAccount = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Lỗi server khi xóa tài khoản'
+    });
+  }
+};
+
+// @desc    Quên mật khẩu - gửi email reset
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng nhập email'
+      });
+    }
+
+    const user = await User.findByEmail(email);
+
+    if (!user) {
+      // Không tiết lộ email có tồn tại hay không vì lý do bảo mật
+      return res.json({
+        success: true,
+        message: 'Nếu email tồn tại, link reset mật khẩu đã được gửi'
+      });
+    }
+
+    // Tạo reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
+
+    user.PasswordResetToken = resetToken;
+    user.PasswordResetExpires = resetTokenExpires;
+    await user.save();
+
+    // TODO: Gửi email với reset token
+    // Hiện tại chỉ trả về token cho testing
+    res.json({
+      success: true,
+      message: 'Link reset mật khẩu đã được gửi đến email',
+      resetToken: resetToken // Chỉ để testing, production nên gửi qua email
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi server khi xử lý quên mật khẩu'
+    });
+  }
+};
+
+// @desc    Reset mật khẩu
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng nhập mật khẩu mới'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mật khẩu mới phải có ít nhất 6 ký tự'
+      });
+    }
+
+    // Tìm user với token hợp lệ và chưa hết hạn
+    const user = await User.findOne({
+      where: {
+        PasswordResetToken: token,
+        PasswordResetExpires: {
+          [Op.gt]: new Date()
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token không hợp lệ hoặc đã hết hạn'
+      });
+    }
+
+    // Cập nhật mật khẩu mới
+    user.Password = newPassword;
+    user.PasswordResetToken = null;
+    user.PasswordResetExpires = null;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Reset mật khẩu thành công'
+    });
+
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi server khi reset mật khẩu'
+    });
+  }
+};
+
+// @desc    Xác thực email
+// @route   GET /api/auth/verify-email/:token
+// @access  Public
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({
+      where: {
+        EmailVerificationToken: token
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token xác thực không hợp lệ'
+      });
+    }
+
+    user.EmailVerified = true;
+    user.EmailVerificationToken = null;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Email đã được xác thực thành công'
+    });
+
+  } catch (error) {
+    console.error('Verify email error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi server khi xác thực email'
     });
   }
 };

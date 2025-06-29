@@ -6,9 +6,12 @@ import {
   updateProfile,
   changePassword,
   logoutUser,
-  deleteAccount
+  deleteAccount,
+  forgotPassword,
+  resetPassword,
+  verifyEmail
 } from '../controllers/authController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { protect } from '../middleware/auth.js';
 import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
@@ -37,12 +40,15 @@ const registerLimiter = rateLimit({
 // Public routes
 router.post('/register', registerLimiter, registerUser);
 router.post('/login', authLimiter, loginUser);
+router.post('/forgot-password', authLimiter, forgotPassword);
+router.post('/reset-password/:token', resetPassword);
+router.get('/verify-email/:token', verifyEmail);
 
 // Protected routes (cần authentication)
-router.get('/me', authenticateToken, getCurrentUser);
-router.put('/profile', authenticateToken, updateProfile);
-router.put('/change-password', authenticateToken, changePassword);
-router.post('/logout', authenticateToken, logoutUser);
-router.delete('/delete-account', authenticateToken, deleteAccount);
+router.get('/me', protect, getCurrentUser);
+router.put('/profile', protect, updateProfile);
+router.put('/change-password', protect, changePassword);
+router.post('/logout', protect, logoutUser);
+router.delete('/delete-account', protect, deleteAccount);
 
 export default router;

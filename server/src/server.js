@@ -8,15 +8,14 @@ import rateLimit from 'express-rate-limit';
 import process from 'process';
 
 // Import configurations
-import connectDB from './config/database-mysql.js';
+import sequelize from './config/database.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
-import appointmentRoutes from './routes/appointments.js';
-import checkinRoutes from './routes/checkins.js';
 import userRoutes from './routes/users.js';
-import membershipRoutes from './routes/membership.js';
-// import adminRoutes from './routes/admin.js';
+import planRoutes from './routes/plans.js';
+import progressRoutes from './routes/progress.js';
+import achievementRoutes from './routes/achievements.js';
 
 // Load environment variables
 dotenv.config();
@@ -24,8 +23,23 @@ dotenv.config();
 // Khởi tạo Express app
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Kết nối database MySQL với Sequelize
+const connectDatabase = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Kết nối MySQL thành công!');
+    
+    // Sync models với database (tạo bảng nếu chưa có)
+    await sequelize.sync({ alter: true });
+    console.log('✅ Đồng bộ models với database thành công!');
+  } catch (error) {
+    console.error('❌ Lỗi kết nối database:', error);
+    process.exit(1);
+  }
+};
+
+// Kết nối database
+connectDatabase();
 
 // Trust proxy để có thể lấy real IP khi deploy
 app.set('trust proxy', 1);
@@ -102,11 +116,10 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/checkins', checkinRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/membership', membershipRoutes);
-// app.use('/api/admin', adminRoutes);
+app.use('/api/plans', planRoutes);
+app.use('/api/progress', progressRoutes);
+app.use('/api/achievements', achievementRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
