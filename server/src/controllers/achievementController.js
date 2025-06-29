@@ -1,4 +1,4 @@
-import { Achievement, UserAchievement } from '../models/Achievement.js';
+import Achievement, { UserAchievement } from '../models/Achievement.js';
 import Progress from '../models/Progress.js';
 import { Op } from 'sequelize';
 
