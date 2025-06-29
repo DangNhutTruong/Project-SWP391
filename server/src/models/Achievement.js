@@ -8,7 +8,7 @@ const Achievement = sequelize.define('Achievement', {
     autoIncrement: true
   },
   Name: {
-    type: DataTypes.STRING(200),
+    type: DataTypes.STRING(100),
     allowNull: false
   },
   Description: {
@@ -19,23 +19,30 @@ const Achievement = sequelize.define('Achievement', {
     type: DataTypes.STRING(100),
     allowNull: true
   },
-  Type: {
-    type: DataTypes.ENUM('milestone', 'streak', 'challenge', 'special'),
+  BadgeColor: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    defaultValue: 'blue'
+  },
+  Category: {
+    type: DataTypes.ENUM('time_based', 'milestone', 'behavior', 'health', 'social'),
     allowNull: false,
     defaultValue: 'milestone'
   },
-  Category: {
-    type: DataTypes.STRING(100),
-    allowNull: false
-  },
-  Condition: {
+  Criteria: {
     type: DataTypes.JSON,
-    allowNull: false
+    allowNull: false,
+    comment: 'JSON object containing achievement criteria'
   },
   Points: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 10
+  },
+  Rarity: {
+    type: DataTypes.ENUM('common', 'rare', 'epic', 'legendary'),
+    allowNull: false,
+    defaultValue: 'common'
   },
   IsActive: {
     type: DataTypes.BOOLEAN,
@@ -59,6 +66,7 @@ const Achievement = sequelize.define('Achievement', {
   updatedAt: 'UpdatedAt'
 });
 
+// User Achievement junction table
 const UserAchievement = sequelize.define('UserAchievement', {
   UserAchievementID: {
     type: DataTypes.INTEGER,
@@ -86,25 +94,23 @@ const UserAchievement = sequelize.define('UserAchievement', {
     allowNull: false,
     defaultValue: DataTypes.NOW
   },
+  Progress: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+    validate: {
+      min: 0,
+      max: 100
+    }
+  },
   IsShared: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false
-  },
-  SharedAt: {
-    type: DataTypes.DATE,
-    allowNull: true
-  },
-  CreatedAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'UserAchievement',
-  timestamps: true,
-  createdAt: 'CreatedAt',
-  updatedAt: false,
+  timestamps: false,
   indexes: [
     {
       unique: true,
@@ -113,23 +119,31 @@ const UserAchievement = sequelize.define('UserAchievement', {
   ]
 });
 
-// Instance methods
+// Instance methods for Achievement
 Achievement.prototype.toJSON = function() {
   const values = Object.assign({}, this.get());
   
-  if (typeof values.Condition === 'string') {
+  // Parse criteria nếu là string
+  if (typeof values.Criteria === 'string') {
     try {
-      values.Condition = JSON.parse(values.Condition);
+      values.Criteria = JSON.parse(values.Criteria);
     } catch (e) {
-      values.Condition = {};
+      values.Criteria = {};
     }
   }
   
   return values;
 };
 
-// Static methods
-Achievement.findByCategory = async function(category) {
+// Static methods for Achievement
+Achievement.getActiveAchievements = async function() {
+  return await this.findAll({
+    where: { IsActive: true },
+    order: [['Category', 'ASC'], ['Points', 'ASC']]
+  });
+};
+
+Achievement.getByCategory = async function(category) {
   return await this.findAll({
     where: { 
       Category: category,
@@ -139,24 +153,36 @@ Achievement.findByCategory = async function(category) {
   });
 };
 
-Achievement.findOrCreateAchievement = async function(achievementData) {
-  const [achievement, created] = await this.findOrCreate({
-    where: { Name: achievementData.Name },
-    defaults: achievementData
+// Static methods for UserAchievement
+UserAchievement.getUserAchievements = async function(userId) {
+  return await this.findAll({
+    where: { UserID: userId },
+    include: [{
+      model: Achievement,
+      required: true
+    }],
+    order: [['UnlockedAt', 'DESC']]
   });
-  
-  return { achievement, isNew: created };
 };
 
-UserAchievement.grantAchievement = async function(userId, achievementId) {
+UserAchievement.checkUserHasAchievement = async function(userId, achievementId) {
+  const record = await this.findOne({
+    where: {
+      UserID: userId,
+      AchievementID: achievementId
+    }
+  });
+  return !!record;
+};
+
+UserAchievement.unlockAchievement = async function(userId, achievementId) {
   const [userAchievement, created] = await this.findOrCreate({
     where: {
       UserID: userId,
       AchievementID: achievementId
     },
     defaults: {
-      UserID: userId,
-      AchievementID: achievementId,
+      Progress: 100,
       UnlockedAt: new Date()
     }
   });
