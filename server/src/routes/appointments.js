@@ -1,39 +1,26 @@
 import express from 'express';
 import {
-  getUserAppointments,
   createAppointment,
+  getUserAppointments,
+  getCoachAppointments,
+  getAppointmentById,
   updateAppointment,
   cancelAppointment,
-  rateAppointment,
-  getAvailableSlots,
-  getAppointmentStats
+  completeAppointment,
+  getAvailableSlots
 } from '../controllers/appointmentController.js';
-import { authenticateToken } from '../middleware/auth.js';
-import rateLimit from 'express-rate-limit';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Rate limiting cho appointment routes
-const appointmentLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 giờ
-  max: 10, // Tối đa 10 appointments mỗi giờ
-  message: {
-    success: false,
-    message: 'Quá nhiều lần đặt lịch hẹn, vui lòng thử lại sau'
-  }
-});
-
-// Tất cả routes đều cần authentication
-router.use(authenticateToken);
-
-// Appointment routes
-router.get('/', getUserAppointments);
-// router.get('/upcoming', getUpcomingAppointments);  // TODO: Implement
-// router.get('/statistics', getAppointmentStatistics);  // TODO: Implement
-// router.get('/:id', getAppointmentById);  // TODO: Implement
-router.post('/', appointmentLimiter, createAppointment);
-router.put('/:id', updateAppointment);
-router.delete('/:id', cancelAppointment);
-router.post('/:id/rating', rateAppointment);
+// Protected routes (all appointment routes require authentication)
+router.post('/', protect, createAppointment);                           // POST /api/appointments
+router.get('/', protect, getUserAppointments);                          // GET /api/appointments
+router.get('/coach/:id', protect, getCoachAppointments);                // GET /api/appointments/coach/:id
+router.get('/available-slots/:coachId', protect, getAvailableSlots);    // GET /api/appointments/available-slots/:coachId
+router.get('/:id', protect, getAppointmentById);                        // GET /api/appointments/:id
+router.put('/:id', protect, updateAppointment);                         // PUT /api/appointments/:id
+router.patch('/:id/cancel', protect, cancelAppointment);                // PATCH /api/appointments/:id/cancel
+router.patch('/:id/complete', protect, completeAppointment);            // PATCH /api/appointments/:id/complete
 
 export default router;

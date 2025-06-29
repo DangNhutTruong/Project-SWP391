@@ -16,6 +16,11 @@ import userRoutes from './routes/users.js';
 import planRoutes from './routes/plans.js';
 import progressRoutes from './routes/progress.js';
 import achievementRoutes from './routes/achievements.js';
+import coachRoutes from './routes/coaches.js';
+import appointmentRoutes from './routes/appointments.js';
+import blogRoutes from './routes/blogs.js';
+import communityRoutes from './routes/community.js';
+import packageRoutes from './routes/packages.js';
 
 // Load environment variables
 dotenv.config();
@@ -33,8 +38,9 @@ const connectDatabase = async () => {
     await sequelize.sync({ alter: true });
     console.log('✅ Đồng bộ models với database thành công!');
   } catch (error) {
-    console.error('❌ Lỗi kết nối database:', error);
-    process.exit(1);
+    console.warn('⚠️  MySQL connection failed:', error.message);
+    console.log('🔄 Server will continue running without database...');
+    // Don't exit, let server continue without database
   }
 };
 
@@ -120,6 +126,11 @@ app.use('/api/users', userRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/achievements', achievementRoutes);
+app.use('/api/coaches', coachRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/community', communityRoutes);
+app.use('/api/packages', packageRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
