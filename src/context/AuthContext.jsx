@@ -7,6 +7,40 @@ const AuthContext = createContext(null);
 // Hook tùy chỉnh để sử dụng AuthContext
 export const useAuth = () => useContext(AuthContext);
 
+// Hardcoded coach accounts
+const COACH_ACCOUNTS = [
+  {
+    id: 1,
+    name: 'Nguyên Văn A',
+    email: 'coach1@nosmoke.com',
+    password: 'coach123',
+    role: 'coach',
+    specialization: 'Coach cai thuốc chuyên nghiệp',
+    rating: 4.8,
+    avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+  },
+  {
+    id: 2,
+    name: 'Trần Thị B',
+    email: 'coach2@nosmoke.com',
+    password: 'coach123',
+    role: 'coach',
+    specialization: 'Chuyên gia tâm lý',
+    rating: 4.9,
+    avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
+  },
+  {
+    id: 3,
+    name: 'Phạm Minh C',
+    email: 'coach3@nosmoke.com',
+    password: 'coach123',
+    role: 'coach',
+    specialization: 'Bác sĩ phục hồi chức năng',
+    rating: 4.7,
+    avatar: 'https://randomuser.me/api/portraits/men/64.jpg'
+  }
+];
+
 // Provider component
 export const AuthProvider = ({ children }) => {
   // Khởi tạo trạng thái từ localStorage (nếu có)
@@ -48,9 +82,7 @@ export const AuthProvider = ({ children }) => {
   // Lưu user vào localStorage khi thay đổi
   useEffect(() => {
     if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("user");
+      localStorage.setItem('nosmoke_user', JSON.stringify(user));
     }
   }, [user]);
 
@@ -87,15 +119,57 @@ export const AuthProvider = ({ children }) => {
     setError(null);
 
     try {
-      // Gọi API đăng nhập
-      const response = await apiService.auth.login({ email, password });
-
-      // Lưu token vào localStorage
-      localStorage.setItem("token", response.token);
-      setToken(response.token);
-
-      // Lưu thông tin người dùng
-      setUser(response.user);
+      // Mô phỏng API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Lấy danh sách user từ localStorage
+      const users = JSON.parse(localStorage.getItem('nosmoke_users') || '[]');
+      
+      // Tìm user với email và password tương ứng
+      const foundUser = users.find(user => user.email === email && user.password === password);
+        if (foundUser) {
+        // Không lưu mật khẩu vào user session
+        const { password, ...userWithoutPassword } = foundUser;
+          // Đảm bảo user có trường membership và đó là một giá trị hợp lệ
+        if (!userWithoutPassword.membership || !['free', 'premium', 'pro'].includes(userWithoutPassword.membership)) {
+          userWithoutPassword.membership = 'free';
+          
+          // Cập nhật lại danh sách users
+          const updatedUsers = users.map(user => 
+            user.email === email ? { ...user, membership: 'free' } : user
+          );
+          localStorage.setItem('nosmoke_users', JSON.stringify(updatedUsers));
+        }
+        
+        // Lưu vào localStorage để đảm bảo tính nhất quán
+        localStorage.setItem('nosmoke_user', JSON.stringify(userWithoutPassword));
+        
+        setUser(userWithoutPassword);
+        setLoading(false);
+        return { success: true, user: userWithoutPassword };
+      } else {
+        // Kiểm tra trong danh sách coach hardcoded
+        const foundCoach = COACH_ACCOUNTS.find(coach => coach.email === email && coach.password === password);
+        if (foundCoach) {
+          // Không lưu mật khẩu vào coach session
+          const { password, ...coachWithoutPassword } = foundCoach;
+          
+          // Đặt user là coach và lưu vào localStorage
+          const coachUser = { ...coachWithoutPassword, role: 'coach' };
+          setUser(coachUser);
+          localStorage.setItem('nosmoke_user', JSON.stringify(coachUser));
+          setLoading(false);
+          
+          // Redirect coach đến dashboard ngay lập tức
+          window.location.href = '/coach';
+          
+          return { success: true, user: coachUser };
+        }
+        
+        throw new Error('Email hoặc mật khẩu không đúng');
+      }
+    } catch (err) {
+      setError(err.message);
       setLoading(false);
 
       return { success: true, user: response.user };
@@ -111,9 +185,8 @@ export const AuthProvider = ({ children }) => {
   // Hàm đăng xuất
   const logout = () => {
     setUser(null);
-    setToken(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    // Xóa thông tin user khỏi localStorage
+    localStorage.removeItem('nosmoke_user');
     return { success: true };
   };
   // Đảm bảo rằng membership luôn là một giá trị hợp lệ

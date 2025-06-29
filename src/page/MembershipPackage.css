@@ -524,67 +524,102 @@ h2 {
   border-color: #adb5bd;
 }
 
-/* Responsive Styles */
-@media (max-width: 992px) {
-  .pricing-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
+/* Toast Notification Styles */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 300px;
+  max-width: 400px;
+  animation: slideInRight 0.3s ease-out;
+  border-left: 4px solid;
+}
+
+.toast-error {
+  border-left-color: #ff4757;
+  background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+}
+
+.toast-success {
+  border-left-color: #2ed573;
+  background: linear-gradient(135deg, #fff 0%, #f0fff4 100%);
+}
+
+.toast-warning {
+  border-left-color: #ffa502;
+  background: linear-gradient(135deg, #fff 0%, #fffbf0 100%);
+}
+
+.toast-info {
+  border-left-color: #3742fa;
+  background: linear-gradient(135deg, #fff 0%, #f0f5ff 100%);
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  color: #7f8c8d;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 12px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.toast-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #2c3e50;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
   }
-  
-  .pricing-card.highlight {
-    transform: scale(1);
-  }
-  
-  .pricing-card.highlight:hover {
-    transform: translateY(-15px) rotateX(5deg);
-  }
-  
-  .hero-title {
-    font-size: 28px;
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 
-@media (max-width: 767px) {
-  .pricing-section {
-    padding: 60px 0;
+@media (max-width: 768px) {
+  .toast-container {
+    left: 20px;
+    right: 20px;
+    top: 20px;
   }
   
-  .hero-title {
-    font-size: 24px;
-  }
-  
-  .pricing-card {
-    padding: 30px 20px;
-  }
-  
-  h2 {
-    font-size: 28px;
-  }
-  
-  .pricing-subtitle {
-    margin-bottom: 40px;
-    font-size: 16px;
-  }
-  
-  .membership-hero-image {
-    max-width: 280px;
-  }
-}
-
-@media (max-width: 480px) {
-  .pricing-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .pricing-card {
-    margin-bottom: 20px;
-  }
-  
-  .pricing-header h3 {
-    font-size: 24px;
-  }
-  
-  .pricing-price .price {
-    font-size: 36px;
+  .toast {
+    min-width: auto;
+    max-width: none;
   }
 }

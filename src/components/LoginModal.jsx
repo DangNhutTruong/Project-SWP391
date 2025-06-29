@@ -21,7 +21,7 @@ const LoginModal = ({ isOpen, onClose }) => {
       const result = await login(email, password, rememberMe);
       if (result.success) {
         onClose();
-        navigate('/profile'); // Chuyển hướng đến trang profile sau khi đăng nhập
+        navigate('/'); // Chuyển hướng đến trang home sau khi đăng nhập
       } else {
         setError(result.error || 'Đăng nhập không thành công');
       }

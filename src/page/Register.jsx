@@ -8,9 +8,6 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [cigarettesPerDay, setCigarettesPerDay] = useState(10);
-  const [costPerPack, setCostPerPack] = useState(25000);
-  const [cigarettesPerPack, setCigarettesPerPack] = useState(20);
   
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -42,17 +39,11 @@ export default function Register() {
     }
     
     setIsLoading(true);
-    
-    try {
+      try {
       const userData = {
         name,
         email,
-        password,
-        cigarettesPerDay: parseInt(cigarettesPerDay),
-        costPerPack: parseInt(costPerPack),
-        cigarettesPerPack: parseInt(cigarettesPerPack),
-        startDate: new Date().toISOString(),
-        daysWithoutSmoking: 0
+        password
       };
       
       const result = await register(userData);
@@ -73,10 +64,9 @@ export default function Register() {
   return (
     <div className="register-page">
       <div className="register-container">
-        <div className="register-card">
-          <div className="register-header">
+        <div className="register-card">          <div className="register-header">
             <h1>Đăng ký tài khoản</h1>
-            <p>Bắt đầu hành trình cai thuốc lá của bạn</p>
+            <p>Tạo tài khoản để bắt đầu hành trình cai thuốc lá</p>
           </div>
 
           <form onSubmit={handleSubmit} className="register-form">
@@ -132,57 +122,8 @@ export default function Register() {
                 placeholder="Nhập lại mật khẩu"
                 disabled={isLoading}
                 required
-              />
-            </div>
+              />            </div>
             
-            <div className="form-divider">
-              <span>Thông tin về thói quen hút thuốc</span>
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="cigarettesPerDay">Số điếu thuốc mỗi ngày</label>
-              <input
-                type="number"
-                id="cigarettesPerDay"
-                value={cigarettesPerDay}
-                onChange={(e) => setCigarettesPerDay(e.target.value)}
-                min="1"
-                max="100"
-                disabled={isLoading}
-                required
-              />
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="costPerPack">Giá một gói thuốc (VNĐ)</label>
-                <input
-                  type="number"
-                  id="costPerPack"
-                  value={costPerPack}
-                  onChange={(e) => setCostPerPack(e.target.value)}
-                  min="1000"
-                  step="1000"
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="cigarettesPerPack">Số điếu trong một gói</label>
-                <input
-                  type="number"
-                  id="cigarettesPerPack"
-                  value={cigarettesPerPack}
-                  onChange={(e) => setCigarettesPerPack(e.target.value)}
-                  min="1"
-                  max="50"
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-            </div>
-
             <div className="terms-privacy">
               <input type="checkbox" id="terms" required />
               <label htmlFor="terms">
@@ -203,11 +144,10 @@ export default function Register() {
             <p>Đã có tài khoản? <Link to="/login" className="login-link">Đăng nhập ngay</Link></p>
           </div>
         </div>
-        
-        <div className="register-info">
+          <div className="register-info">
           <h2>Lợi ích khi đăng ký tài khoản NoSmoke</h2>
           <ul className="benefits-list">
-            <li>Theo dõi tiến trình cai thuốc lá của bạn</li>
+            <li>Tạo và theo dõi kế hoạch cai thuốc lá cá nhân</li>
             <li>Tính toán số tiền tiết kiệm được</li>
             <li>Nhận thông báo động viên hàng ngày</li>
             <li>Tham gia cộng đồng những người cùng cai thuốc</li>

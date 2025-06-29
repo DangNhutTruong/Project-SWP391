@@ -501,6 +501,22 @@ function AppointmentList() {
     }, 3000);
   };
 
+  // Handle navigate to chat in navigation
+  const handleNavigateToChat = (appointment) => {
+    // Store chat info for navigation
+    const chatInfo = {
+      appointmentId: appointment.id,
+      coachName: appointment.coachName,
+      coachAvatar: appointment.coachAvatar,
+      coachRole: appointment.coachRole
+    };
+    
+    localStorage.setItem('navChatInfo', JSON.stringify(chatInfo));
+    
+    // Navigate to chat section (assuming there's a chat page/section)
+    navigate('/chat');
+  };
+
   return (
     <div className="appointments-container">
       <div className="appointments-header">
@@ -631,71 +647,60 @@ function AppointmentList() {
                     )}
                   </div>
                 </div>
-                <div className="appointment-footer">
-                  {" "}
-                  {getStatusClass(appointment) === "confirmed" && (
-                    <>
-                      <button
-                        className={`chat-button ${
-                          !user?.membership || user?.membership === "free"
-                            ? "premium-feature"
-                            : ""
-                        }`}
-                        onClick={() => handleOpenChat(appointment)}
-                      >
-                        <FaComments className="chat-button-icon" />
-                        Chat với Coach
-                        {(!user?.membership || user?.membership === "free") && (
-                          <span className="premium-badge">Premium</span>
-                        )}
-                        {hasUnreadMessages(appointment.id) && (
-                          <span className="chat-notification">!</span>
-                        )}
-                      </button>
-                      <button
-                        className="reschedule-button"
-                        onClick={() => handleRescheduleAppointment(appointment)}
-                      >
-                        Thay đổi lịch
-                      </button>
-                      <button
-                        className="cancel-button"
-                        onClick={() => openCancelModal(appointment.id)}
-                      >
-                        Hủy lịch hẹn
-                      </button>
-                    </>
-                  )}{" "}
-                  {getStatusClass(appointment) === "completed" && (
-                    <>
-                      <button
-                        className="chat-button"
-                        onClick={() => handleOpenChat(appointment)}
-                      >
-                        <FaComments className="chat-button-icon" />
-                        Chat với Coach
-                        {hasUnreadMessages(appointment.id) && (
-                          <span className="chat-notification">!</span>
-                        )}
-                      </button>{" "}
-                      <button
-                        className="feedback-button"
-                        onClick={() => openRatingModal(appointment)}
-                      >
-                        {appointment.rating
-                          ? "Cập nhật đánh giá"
-                          : "Đánh giá Coach"}
-                      </button>
-                      <button
-                        className="rebook-button"
-                        onClick={() => openRebookModal(appointment)}
-                      >
-                        Đặt lại lịch hẹn
-                      </button>
-                    </>
-                  )}
-                  {getStatusClass(appointment) === "cancelled" && (
-                    <button
+              </div>                <div className="appointment-footer">                {getStatusClass(appointment) === 'confirmed' && (
+                  <>
+                    <button 
+                      className="reschedule-button"
+                      onClick={() => handleRescheduleAppointment(appointment)}
+                    >
+                      Thay đổi lịch
+                    </button>
+                    
+                    <button 
+                      className="cancel-button"
+                      onClick={() => openCancelModal(appointment.id)}
+                    >
+                      Hủy lịch hẹn
+                    </button>
+                    
+                    <button 
+                      className={`chat-button ${(!user?.membership || user?.membership === 'free') ? 'premium-feature' : ''}`}
+                      onClick={() => handleOpenChat(appointment)}
+                    >
+                      <FaComments className="chat-button-icon" /> 
+                      Nhắn tin
+                      {(!user?.membership || user?.membership === 'free') && (
+                        <span className="premium-badge">Premium</span>
+                      )}
+                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
+                    </button>
+                    
+                    {/* Nút xác nhận hoàn thành */}
+                    <button 
+                      className="complete-button"
+                      onClick={() => handleCompleteAppointment(appointment.id)}
+                    >
+                      <FaCheck className="complete-icon" /> Xác nhận hoàn thành
+                    </button>
+                    
+
+                  </>
+                )}                {getStatusClass(appointment) === 'completed' && (
+                  <>
+                    <button 
+                      className="chat-button"
+                      onClick={() => handleOpenChat(appointment)}
+                    >
+                      <FaComments className="chat-button-icon" /> 
+                      Chat với Coach
+                      {hasUnreadMessages(appointment.id) && <span className="chat-notification">!</span>}
+                    </button>                    <button 
+                      className="feedback-button"
+                      onClick={() => openRatingModal(appointment)}
+                    >
+                      {appointment.rating ? 'Cập nhật đánh giá' : 'Đánh giá Coach'}
+                    </button>
+                    <button 
                       className="rebook-button"
                       onClick={() => openRebookModal(appointment)}
                     >
