@@ -32,7 +32,7 @@ const CommunityComment = sequelize.define('CommunityComment', {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'CommunityComment',
+      model: 'community_comments',
       key: 'CommentID'
     },
     onDelete: 'CASCADE'

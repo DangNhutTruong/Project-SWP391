@@ -318,20 +318,20 @@ const router = createBrowserRouter([
   {
     path: "/coach",
     element: (
-      <RoleBasedRoute allowedRoles={['coach']}>
+      <RoleBasedRoute allowedRoles={["coach"]}>
         <CoachLayout />
       </RoleBasedRoute>
     ),
     children: [
       {
         index: true,
-        element: <CoachDashboard />
+        element: <CoachDashboard />,
       },
       {
         path: "bookings",
-        element: <CoachBookings />
-      }
-    ]
+        element: <CoachBookings />,
+      },
+    ],
   },
   {
     path: "/access-denied",
