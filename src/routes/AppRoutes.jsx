@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import Home from '../page/Home';
 import Tools from '../page/Tools';
@@ -8,6 +8,8 @@ import Pay from '../page/Pay';
 import PaymentSuccess from '../page/PaymentSuccess';
 import CoachBookings from '../page/coach/CoachBookings';
 import Chat from '../page/Chat';
+import EmailVerification from '../page/EmailVerification';
+import Register from '../page/Register';
 
 /**
  * AppRoutes - Cung cấp cấu hình định tuyến (routing) cho toàn bộ ứng dụng
