@@ -12,8 +12,12 @@ import TestPage from "./page/TestPage.jsx"; // Thêm trang test đơn giản
 import Blog from "./page/Blog.jsx"; // Import component Blog
 import Login from "./page/Login.jsx"; // Import component Login
 import Register from "./page/Register.jsx"; // Import component Register
+import ForgotPassword from "./page/ForgotPassword.jsx"; // Import component ForgotPassword
+import ResetPassword from "./page/ResetPassword.jsx"; // Import component ResetPassword
+import ChangePassword from "./page/ChangePassword.jsx"; // Import component ChangePassword
 import MembershipPackage from "./page/MembershipPackage.jsx"; // Import component MembershipPackage
 import BookAppointment from "./page/BookAppointment.jsx"; // Import component BookAppointment
+import BackendConnectionTest from "./components/BackendConnectionTest.jsx"; // Import BackendConnectionTest
 import ProtectedRoute from "./components/ProtectedRoute.jsx"; // Import ProtectedRoute
 import RoleBasedRoute from "./components/RoleBasedRoute.jsx"; // Import RoleBasedRoute
 import CoachRedirect from "./components/CoachRedirect.jsx"; // Import CoachRedirect
@@ -252,6 +256,22 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/forgot-password",
+    element: (
+      <Layout>
+        <ForgotPassword />
+      </Layout>
+    ),
+  },
+  {
+    path: "/reset-password",
+    element: (
+      <Layout>
+        <ResetPassword />
+      </Layout>
+    ),
+  },
+  {
     path: "/payment",
     element: (
       <Layout>
@@ -296,6 +316,16 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/change-password",
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <ChangePassword />
+        </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
     path: "/appointment",
     element: (
       <Layout>
@@ -323,6 +353,14 @@ const router = createBrowserRouter([
         element: <CoachBookings />
       }
     ]
+  },
+  {
+    path: "/api-test",
+    element: (
+      <Layout>
+        <BackendConnectionTest />
+      </Layout>
+    ),
   },
   {
     path: "/access-denied",

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import membershipApi from '../utils/membershipApi';
 
 // Tạo context cho quản lý membership
 const MembershipContext = createContext(null);
@@ -73,28 +74,34 @@ export const MembershipProvider = ({ children }) => {
     }
     
     try {
-      // Cập nhật membership của người dùng
-      const result = await updateUser({ membership: targetMembership });
+      // Gọi API để nâng cấp membership
+      const response = await membershipApi.upgradeMembership(targetMembership);
       
-      if (result.success) {
-        // Thêm transaction vào lịch sử
-        const transactions = JSON.parse(localStorage.getItem('membership_transactions') || '[]');
-        transactions.push({
-          id: Date.now().toString(),
-          userId: user.id,
-          membershipType: targetMembership,
-          amount: membershipTiers[targetMembership].price,
-          date: new Date().toISOString(),
-          status: 'completed'
-        });
-        localStorage.setItem('membership_transactions', JSON.stringify(transactions));
-        
-        return { success: true };
-      } else {
-        return result; // Trả về kết quả từ updateUser
+      if (!response.success) {
+        throw new Error(response.message || 'Không thể nâng cấp gói thành viên');
       }
+      
+      // Sử dụng updateUser từ AuthContext để cập nhật thông tin người dùng trong state
+      await updateUser({ membership: targetMembership, membershipType: targetMembership });
+      
+      return { success: true };
     } catch (error) {
-      return { success: false, error: 'Có lỗi xảy ra khi nâng cấp gói thành viên' };
+      console.error('Upgrade membership error:', error);
+      
+      // Nếu API không hoạt động, thử fallback bằng updateUser trực tiếp
+      try {
+        const result = await updateUser({ membership: targetMembership });
+        if (result.success) {
+          return { success: true };
+        }
+      } catch (fallbackError) {
+        console.error('Fallback upgrade failed:', fallbackError);
+      }
+      
+      return { 
+        success: false, 
+        error: error.message || 'Có lỗi xảy ra khi nâng cấp gói thành viên' 
+      };
     }
   };
     // Kiểm tra xem người dùng có quyền truy cập tính năng không
