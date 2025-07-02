@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import QuitProgressChart from '../components/QuitProgressChart';
 import DailyCheckin from '../components/DailyCheckin';
-import MoodTracking from '../components/MoodTracking';
 import ProgressDashboard from '../components/ProgressDashboard';
-import ResetCheckinData from '../components/ResetCheckinData';
 import './Progress.css';
 import '../styles/DailyCheckin.css';
-import '../styles/MoodTracking.css';
 import '../styles/ProgressDashboard.css';
 
 export default function Progress() {
   const { user } = useAuth();
-  const [activeTimeFilter, setActiveTimeFilter] = useState('30 ngày');
   const [showCompletionDashboard, setShowCompletionDashboard] = useState(false);
   const [completionData, setCompletionData] = useState(null);
   const [userPlan, setUserPlan] = useState(null);
   const [userProgress, setUserProgress] = useState([]);
   const [actualProgress, setActualProgress] = useState([]);
-  const [moodData, setMoodData] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
   // Load user plan and progress from localStorage
   useEffect(() => {
     loadUserPlanAndProgress();
@@ -349,6 +344,9 @@ export default function Progress() {
     localStorage.removeItem('dashboardStats');
     localStorage.setItem('dashboardStats', JSON.stringify(newStats));
     
+    // Cập nhật state dashboardStats
+    setDashboardStats(newStats);
+    
     console.log("======= KẾT THÚC TÍNH TOÁN THỐNG KÊ =======");
     
     return newStats;
@@ -477,99 +475,15 @@ export default function Progress() {
         />
       ) : (
         <>
-          {/* Enhanced Progress Chart with Chart.js */}
-          <QuitProgressChart 
+
+          {/* Progress Dashboard Section - Thay thế MoodTracking */}
+          <ProgressDashboard 
             userPlan={userPlan}
+            completionDate={userPlan?.startDate || new Date().toISOString().split('T')[0]}
+            dashboardStats={dashboardStats}
             actualProgress={actualProgress}
-            timeFilter={activeTimeFilter}
-            height={350}
+            onDataReset={loadUserPlanAndProgress}
           />
-          
-          {/* Time Filter Controls */}
-          <div className="time-filters">
-            <button 
-              className={`time-filter ${activeTimeFilter === '7 ngày' ? 'active' : ''}`}
-              onClick={() => setActiveTimeFilter('7 ngày')}
-            >
-              7 ngày
-            </button>
-            <button 
-              className={`time-filter ${activeTimeFilter === '14 ngày' ? 'active' : ''}`}
-              onClick={() => setActiveTimeFilter('14 ngày')}
-            >
-              14 ngày
-            </button>
-            <button 
-              className={`time-filter ${activeTimeFilter === '30 ngày' ? 'active' : ''}`}
-              onClick={() => setActiveTimeFilter('30 ngày')}
-            >
-              30 ngày
-            </button>
-            <button 
-              className={`time-filter ${activeTimeFilter === 'Tất cả' ? 'active' : ''}`}
-              onClick={() => setActiveTimeFilter('Tất cả')}
-            >
-              Tất cả
-            </button>
-          </div>
-
-          {/* Mood Tracking Section - Phần tâm trạng */}
-          <MoodTracking 
-            onMoodUpdate={handleMoodUpdate}
-          />
-
-          {/* Plan Information */}
-          <div className="plan-info-section">
-            <h2>Kế hoạch hiện tại: {userPlan.name}</h2>
-            <div className="plan-summary">
-              <div className="summary-item">
-                <span className="label">Thời gian:</span>
-                <span className="value">{userPlan.weeks.length} tuần</span>
-              </div>
-              <div className="summary-item">
-                <span className="label">Mục tiêu cuối:</span>
-                <span className="value">0 điếu/ngày</span>
-              </div>
-              <div className="summary-item">
-                <span className="label">Bắt đầu từ:</span>
-                <span className="value">{userPlan.initialCigarettes || userPlan.weeks[0]?.amount || 20} điếu/ngày</span>
-              </div>
-            </div>
-          </div>          {/* Progress Statistics */}
-          {actualProgress.length > 0 && (
-            <div className="progress-stats">
-              <h2>Thống kê tiến trình</h2>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-value">{actualProgress.length}</div>
-                  <div className="stat-label">Ngày đã check-in</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">
-                    {actualProgress.filter(p => p.actualCigarettes <= p.targetCigarettes).length}
-                  </div>
-                  <div className="stat-label">Ngày đạt mục tiêu</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">
-                    {actualProgress.length > 0 ? 
-                      Math.round(actualProgress.reduce((sum, p) => sum + p.actualCigarettes, 0) / actualProgress.length) 
-                      : (userPlan.initialCigarettes || (userPlan.weeks && userPlan.weeks[0]?.amount) || 20)}
-                  </div>
-                  <div className="stat-label">Trung bình điếu/ngày</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">
-                    {Math.round((actualProgress.filter(p => p.actualCigarettes <= p.targetCigarettes).length / actualProgress.length) * 100)}%
-                  </div>
-                  <div className="stat-label">Tỷ lệ thành công</div>
-                </div>
-              </div>
-              
-              {/* Công cụ Reset dữ liệu */}
-              <ResetCheckinData />
-            </div>
-          )}
         </>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FaBell } from 'react-icons/fa';
 import { useState, useEffect, useRef } from 'react';
 import LoginModal from './LoginModal';
@@ -7,10 +7,11 @@ import { formatMembershipName } from '../utils/membershipUtils';
 import './Header.css';
 
 export default function Header() {
-  const navigate = useNavigate();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0); // Add this state for notification count
+  const [avatarClass, setAvatarClass] = useState('');
+  const prevAvatarRef = useRef('');
   const { user, logout } = useAuth();
 
   // Thêm useRef để theo dõi dropdown menu
@@ -34,7 +35,9 @@ export default function Header() {
   const handleLoginClick = (e) => {
     e.preventDefault();
     setIsLoginModalOpen(true);
-  }; const handleLogout = () => {
+  };
+
+  const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
   };
@@ -62,6 +65,49 @@ export default function Header() {
     };
   }, [isUserMenuOpen]);
 
+  // Theo dõi thay đổi avatar để thêm hiệu ứng
+  useEffect(() => {
+    if (user?.profile_image && user.profile_image !== prevAvatarRef.current) {
+      console.log('Header - Avatar changed:', user.profile_image);
+      setAvatarClass('avatar-updated');
+      prevAvatarRef.current = user.profile_image;
+      
+      // Xóa class hiệu ứng sau khi hoàn thành
+      const timer = setTimeout(() => {
+        setAvatarClass('');
+      }, 600);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [user?.profile_image]);
+  
+  // Lắng nghe sự kiện cập nhật avatar từ các `component` khác
+  useEffect(() => {
+    const handleAvatarUpdate = (event) => {
+      console.log('Header - Avatar update event received:', event.detail);
+      
+      // Force re-render khi có sự kiện avatar-updated
+      if (event.detail.avatarUrl) {
+        setAvatarClass('avatar-updated');
+        
+        // Xóa class hiệu ứng sau khi hoàn thành
+        const timer = setTimeout(() => {
+          setAvatarClass('');
+        }, 600);
+        
+        return () => clearTimeout(timer);
+      }
+    };
+    
+    // Đăng ký lắng nghe sự kiện
+    window.addEventListener('avatar-updated', handleAvatarUpdate);
+    
+    // Hủy đăng ký khi component unmount
+    return () => {
+      window.removeEventListener('avatar-updated', handleAvatarUpdate);
+    };
+  }, []);
+
   return (
     <header className="nosmoke-header">
       <div className="container">
@@ -80,14 +126,36 @@ export default function Header() {
               <Link to="/notifications" className="nav-item notification-nav-item">
                 <FaBell /> Thông báo
                 {notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}
-              </Link>              <div className={`user-menu-container ${isUserMenuOpen ? 'menu-open' : ''}`} ref={userMenuRef}>                <button className="user-menu-button" onClick={toggleUserMenu}>
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name || 'User'} className="user-avatar-header" />
+              </Link>              <div className="user-menu-container" ref={userMenuRef}>                <button className="user-menu-button" onClick={toggleUserMenu}>
+                {user.profile_image ? (
+                  <div className="user-avatar-container">
+                    <img 
+                      key={user.profile_image} // Key helps React recognize when to re-render
+                      src={
+                        // Handle avatar URL correctly based on format
+                        user.profile_image && user.profile_image.startsWith('http') 
+                          ? user.profile_image 
+                          : `http://localhost:5000${user.profile_image || ''}`
+                      } 
+                      alt="Avatar" 
+                      className={`user-avatar ${avatarClass}`}
+                      onError={(e) => {
+                        console.error("Avatar couldn't load:", e.target.src);
+                        // Fallback to user initial
+                        e.target.onerror = null; // Prevent infinite loop
+                        e.target.style.display = 'none';
+                        const initialSpan = document.createElement('span');
+                        initialSpan.className = 'user-initial';
+                        initialSpan.textContent = (user.fullName || user.name || 'U').charAt(0);
+                        e.target.parentNode.appendChild(initialSpan);
+                      }}
+                    />
+                  </div>
                 ) : (
-                  <span className="user-initial">{user.name ? user.name.charAt(0) : 'U'}</span>
+                  <span className={`user-initial ${avatarClass}`}>{(user.fullName || user.name || 'U').charAt(0)}</span>
                 )}
                 <span className="user-name">
-                  {user.name || 'User'}
+                  {user.fullName || user.name || 'User'}
                   {/* Kiểm tra cả hai trường hợp để hiển thị nhãn thành viên */}
                   {(user.membership && user.membership !== 'free') ? (
                     <span className={`membership-label ${user.membership}`}>
@@ -101,37 +169,12 @@ export default function Header() {
                 </span>
               </button>                {isUserMenuOpen && (
                 <div className="user-dropdown-menu">
-                  {user.role === 'coach' ? (
-                    <>
-                      <button className="dropdown-item" onClick={() => {
-                        setIsUserMenuOpen(false);
-                        navigate('/coach');
-                      }}>
-                        <i className="fas fa-tachometer-alt"></i> Dashboard
-                      </button>
-                      <button className="dropdown-item" onClick={() => {
-                        setIsUserMenuOpen(false);
-                        navigate('/coach/bookings');
-                      }}>
-                        <i className="fas fa-calendar-alt"></i> Quản lý Booking
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button className="dropdown-item" onClick={() => {
-                        setIsUserMenuOpen(false);
-                        navigate('/profile');
-                      }}>
-                        <i className="fas fa-user"></i> Hồ sơ cá nhân
-                      </button>
-                      <button className="dropdown-item" onClick={() => {
-                        setIsUserMenuOpen(false);
-                        navigate('/settings');
-                      }}>
-                        <i className="fas fa-cog"></i> Cài đặt
-                      </button>
-                    </>
-                  )}
+                  <Link to="/profile" className="dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                    <i className="fas fa-user"></i> Hồ sơ cá nhân
+                  </Link>
+                  <Link to="/settings" className="dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                    <i className="fas fa-cog"></i> Cài đặt
+                  </Link>
                   <button onClick={handleLogout} className="dropdown-item logout-btn">
                     <i className="fas fa-sign-out-alt"></i> Đăng xuất
                   </button>

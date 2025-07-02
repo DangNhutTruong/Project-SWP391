@@ -47,7 +47,7 @@ const MembershipDebugger = () => {
   };
   
   // Chỉ hiển thị trong môi trường phát triển
-  if (process.env.NODE_ENV !== 'development' && !window.location.hostname.includes('localhost')) {
+  if (import.meta.env.MODE !== 'development' && !window.location.hostname.includes('localhost')) {
     return null;
   }
   
