@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import QuitProgressChart from '../components/QuitProgressChart';
 import DailyCheckin from '../components/DailyCheckin';
-import MoodTracking from '../components/MoodTracking';
 import ProgressDashboard from '../components/ProgressDashboard';
 import ResetCheckinData from '../components/ResetCheckinData';
 import '../styles/Progress.css';
 import '../styles/DailyCheckin.css';
-import '../styles/MoodTracking.css';
 import '../styles/ProgressDashboard.css';
 
 export default function Progress() {
   const { user } = useAuth();
-  const [activeTimeFilter, setActiveTimeFilter] = useState('30 ngày');
   const [showCompletionDashboard, setShowCompletionDashboard] = useState(false);
   const [completionData, setCompletionData] = useState(null);
   const [userPlan, setUserPlan] = useState(null);
   const [userProgress, setUserProgress] = useState([]);
   const [actualProgress, setActualProgress] = useState([]);
-  const [moodData, setMoodData] = useState([]);
   // Load user plan and progress from localStorage
   useEffect(() => {
     loadUserPlanAndProgress();
@@ -480,6 +475,8 @@ export default function Progress() {
           {/* Enhanced Progress Chart with Chart.js */}
           <QuitProgressChart
             userPlan={userPlan}
+            completionDate={completionData?.date || userPlan?.startDate || new Date().toISOString().split('T')[0]}
+            dashboardStats={calculateOverallStats()}
             actualProgress={actualProgress}
             timeFilter={activeTimeFilter}
             height={350}
