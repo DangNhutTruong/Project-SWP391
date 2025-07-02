@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaSmile, FaMeh, FaFrown, FaTired } from 'react-icons/fa';
 
-// DEPRECATED: Component này đã được thay thế bằng ProgressDashboard
-// Chức năng theo dõi mood hiện tại được tích hợp trong ProgressDashboard
 const MoodTracking = ({ onMoodUpdate }) => {
     const [moodData, setMoodData] = useState({
         date: new Date().toISOString().split('T')[0],
