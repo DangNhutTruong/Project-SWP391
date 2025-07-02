@@ -1,4 +1,10 @@
 // Utility to ensure all required tables exist on backend startup
-import { ensureTablesExist } from './controllers/authController.js';
+import { ensureTablesExist as ensureAuthTables } from './controllers/authController.js';
+import { ensurePackagesTable } from './models/Package.js';
 
-export default ensureTablesExist;
+const ensureAllTables = async () => {
+  await ensureAuthTables();
+  await ensurePackagesTable();
+};
+
+export default ensureAllTables;

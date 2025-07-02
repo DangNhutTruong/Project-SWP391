@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './MembershipPackage.css';
 import { FaCheck, FaTimes, FaCrown, FaLeaf, FaRocket, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,34 @@ export default function MembershipPackage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [toasts, setToasts] = useState([]);
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Lấy dữ liệu các gói từ API
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/packages');
+        const result = await response.json();
+        
+        if (result.success) {
+          setPackages(result.data);
+          console.log('Packages loaded:', result.data);
+        } else {
+          console.error('Failed to load packages:', result.message);
+          addToast('Không thể tải dữ liệu gói thành viên', 'error');
+        }
+      } catch (error) {
+        console.error('Error fetching packages:', error);
+        addToast('Lỗi kết nối đến server', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPackages();
+  }, []);
   
   // Hàm tạo toast notification
   const addToast = (message, type = 'error') => {
@@ -21,45 +49,65 @@ export default function MembershipPackage() {
     }, 5000);
   };
   
-  // Định nghĩa thông tin cho từng gói (đặt ngoài hàm để có thể truy cập từ bất kỳ đâu trong component)
-  const packageDetails = {
-    free: {
-      name: "Free",
-      price: 0,
-      period: "tháng",
-      membershipType: "free",
-      features: [
-        "Theo dõi cai thuốc",
-        "Lập kế hoạch cá nhân"
-      ]
-    },
-    premium: {
-      name: "Premium",
-      price: 99000,
-      period: "tháng",
-      membershipType: "premium",
-      features: [
-        "Theo dõi cai thuốc",
-        "Lập kế hoạch cá nhân",
-        "Huy hiệu & cộng đồng",
-        "Chat huấn luyện viên",
-        "Video call tư vấn"
-      ]
-    },
-    pro: {
-      name: "Pro",
-      price: 999000,
-      period: "năm",
-      membershipType: "pro",
-      features: [
-        "Theo dõi cai thuốc",
-        "Lập kế hoạch cá nhân",
-        "Huy hiệu & cộng đồng",
-        "Chat huấn luyện viên",
-        "Video call tư vấn"
-      ]
+  // Chuyển đổi dữ liệu packages từ API thành định dạng để sử dụng trong component
+  const packageDetails = useMemo(() => {
+    if (packages.length === 0) {
+      // Sử dụng dữ liệu mặc định khi chưa load được từ API
+      return {
+        free: {
+          name: "Free",
+          price: 0,
+          period: "tháng",
+          membershipType: "free",
+          features: [
+            "Theo dõi cai thuốc",
+            "Lập kế hoạch cá nhân"
+          ]
+        },
+        premium: {
+          name: "Premium",
+          price: 99000,
+          period: "tháng",
+          membershipType: "premium",
+          features: [
+            "Theo dõi cai thuốc",
+            "Lập kế hoạch cá nhân",
+            "Huy hiệu & cộng đồng",
+            "Chat huấn luyện viên",
+            "Video call tư vấn"
+          ]
+        },
+        pro: {
+          name: "Pro",
+          price: 999000,
+          period: "năm",
+          membershipType: "pro",
+          features: [
+            "Theo dõi cai thuốc",
+            "Lập kế hoạch cá nhân",
+            "Huy hiệu & cộng đồng",
+            "Chat huấn luyện viên",
+            "Video call tư vấn"
+          ]
+        }
+      };
     }
-  };
+    
+    // Chuyển đổi từ array sang object với key là id
+    const packageDetailsObj = {};
+    packages.forEach(pkg => {
+      packageDetailsObj[pkg.id] = {
+        name: pkg.name,
+        price: pkg.price,
+        period: pkg.period,
+        membershipType: pkg.id,
+        features: pkg.features || [],
+        disabledFeatures: pkg.disabledFeatures || []
+      };
+    });
+    
+    return packageDetailsObj;
+  }, [packages]);
     // Kiểm tra xem người dùng có thể mua gói này hay không
   const canPurchasePackage = (packageType) => {
     if (!user) return true; // Người dùng chưa đăng nhập có thể xem tất cả các gói

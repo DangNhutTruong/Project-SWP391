@@ -6,6 +6,7 @@ import { testConnection } from './config/database.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import healthRoutes from './routes/health.js';
+import packageRoutes from './routes/packages.js';
 import ensureTablesExist from './ensureTables.js';
 import path from 'path';
 
@@ -75,6 +76,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', healthRoutes);
+app.use('/api/packages', packageRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
