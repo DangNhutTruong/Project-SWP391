@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import DailyCheckin from '../components/DailyCheckin';
 import ProgressDashboard from '../components/ProgressDashboard';
 import ResetCheckinData from '../components/ResetCheckinData';
+import QuitProgressChart from '../components/QuitProgressChart';
+import MoodTracking from '../components/MoodTracking';
 import '../styles/Progress.css';
 import '../styles/DailyCheckin.css';
 import '../styles/ProgressDashboard.css';
@@ -14,6 +16,8 @@ export default function Progress() {
   const [userPlan, setUserPlan] = useState(null);
   const [userProgress, setUserProgress] = useState([]);
   const [actualProgress, setActualProgress] = useState([]);
+  const [moodData, setMoodData] = useState([]);
+  const [activeTimeFilter, setActiveTimeFilter] = useState('7 ngày');
   // Load user plan and progress from localStorage
   useEffect(() => {
     loadUserPlanAndProgress();
@@ -347,6 +351,22 @@ export default function Progress() {
     console.log("======= KẾT THÚC TÍNH TOÁN THỐNG KÊ =======");
 
     return newStats;
+  };
+
+  // Calculate overall statistics
+  const calculateOverallStats = () => {
+    // Lấy thống kê đã tính từ localStorage hoặc tính toán mới
+    const savedStats = localStorage.getItem('dashboardStats');
+    if (savedStats) {
+      try {
+        return JSON.parse(savedStats);
+      } catch (error) {
+        console.error('Error parsing saved stats:', error);
+      }
+    }
+    
+    // Nếu không có dữ liệu đã lưu, tính toán mới
+    return recalculateStatistics();
   };
 
   if (!userPlan) {
