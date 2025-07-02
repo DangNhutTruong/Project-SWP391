@@ -381,14 +381,13 @@ export default function ProfilePage() {
   const [isPlanEditOpen, setIsPlanEditOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
-  // Notification count would be used when implementing notification features
-  // const notificationCount = 0;
-
-  // State để lưu trữ kế hoạch cai thuốc từ localStorage
-  const [quitPlanData, setQuitPlanData] = useState(null);
-  const [completionDate, setCompletionDate] = useState(null);
-
-  // Check if redirected from appointment booking
+  const notificationCount = 0; // nếu bạn có biến này thì replace theo đúng giá trị  
+  
+  // Handle logout with navigation
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };// Check if redirected from appointment booking
   useEffect(() => {
     const savedTab = localStorage.getItem('activeProfileTab');
     if (savedTab) {
@@ -757,40 +756,54 @@ export default function ProfilePage() {
       alert("Có lỗi xảy ra khi lưu kế hoạch. Vui lòng thử lại sau.");
     }
   };
-
   return (
     <div className="profile-container">
       {/* Sidebar */}
       <div className="profile-sidebar">
-        <div className="user-info">          <div className="user-avatar">
-          <span className="user-initial">{userData.name ? userData.name.charAt(0) : 'U'}</span>
-        </div><div className="user-details">
-            <h3>
-              {userData.name}
+        <div className="user-info">
+          <div className="avatar-circle">
+            <div className="user-initial-container">
+              <span className="user-initial">{userData.name ? userData.name.charAt(0) : 'U'}</span>
+            </div>
+          </div>
+          <div className="user-details">
+            <div className="user-name-wrapper">
+              <h3 className="user-name">{userData.name}</h3>
               {userData.membershipType && userData.membershipType !== 'free' && (
                 <span className={`membership-label ${userData.membershipType}`}>
                   {userData.membershipType === 'premium' ? 'Premium' : 'Pro'}
                 </span>
               )}
-            </h3>
-            <p><span className="status-dot"></span> Đang cai thuốc: <span className="day-count">{userData.daysWithoutSmoking}</span> ngày</p>
+            </div>
+            <div className="quit-status-container">
+              <div className="quit-status-text">
+                <span className="status-dot"></span>
+                Đang cai thuốc
+              </div>
+              <div className="quit-days-display">
+                <span className="day-count">{userData.daysWithoutSmoking || 5}</span>
+                <span className="day-text">ngày</span>
+              </div>
+            </div>
           </div>
-        </div>        <nav className="profile-nav">          <Link
-          to="#"
-          className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
-          onClick={() => {
-            setActiveTab("profile");
-            // Scroll to the top of the content area
-            const profileContent = document.querySelector('.profile-content');
-            if (profileContent) {
-              setTimeout(() => {
-                profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 10);
-            }
-          }}
-        >
-          <FaUserAlt /> Hồ sơ cá nhân
-        </Link>
+        </div>
+        <nav className="profile-nav">
+          <Link
+            to="#"
+            className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
+            onClick={() => {
+              setActiveTab("profile");
+              // Scroll to the top of the content area
+              const profileContent = document.querySelector('.profile-content');
+              if (profileContent) {
+                setTimeout(() => {
+                  profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 10);
+              }
+            }}
+          >
+            <FaUserAlt /> Hồ sơ cá nhân
+          </Link>
 
           <Link
             to="#"
@@ -808,28 +821,35 @@ export default function ProfilePage() {
           >
             <FaCalendarAlt /> Lịch hẹn Coach
           </Link>
-          <Link
-            to="#" className={`nav-item ${activeTab === "achievements" ? "active" : ""
-              }`}
-            onClick={() => setActiveTab("achievements")}
-          >
-            <FaTrophy /> Huy hiệu
+            <Link
+            to="#"
+            className={`nav-item ${
+              activeTab === "achievements" ? "active" : ""
+            }`}
+            onClick={() => {
+              setActiveTab("achievements");
+              // Scroll to the top of the content area
+              const profileContent = document.querySelector('.profile-content');
+              if (profileContent) {
+                setTimeout(() => {
+                  profileContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 10);
+              }
+            }}
+          >            <FaTrophy /> Huy hiệu
           </Link>
+          <button onClick={logout} className="nav-item logout-btn">
+            <FaSignOutAlt /> Đăng xuất
+          </button>
         </nav>
       </div>
 
-      {/* Main content */}      <div className="profile-content">        {activeTab === "profile" && (
-        <div className="profile-overview">
-          <div className="section-header">
-            <h1>Hồ sơ</h1>
-          </div>
-
-          <div className="profile-sections">
-            {/* Thông tin cá nhân - sử dụng component UserProfile */}
-            <div className="profile-main-content">
-              <UserProfile isStandalone={false} />
-              <div className="action-buttons-container">
-              </div>
+      {/* Main content */}
+      <div className="profile-content">
+        {activeTab === "profile" && (
+          <div className="profile-overview">
+            <div className="section-header">
+              <h1>Hồ sơ</h1>
             </div>
 
             <div className="profile-collapsible-sections">

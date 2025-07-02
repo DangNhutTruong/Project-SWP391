@@ -70,29 +70,55 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
         }
     };
 
-    // Tính streak days
+    // Tính streak days (chỉ tính từ ngày bắt đầu kế hoạch)
     const calculateStreakDays = () => {
         let streak = 0;
         const today = new Date();
-
-        for (let i = 0; i < 30; i++) {
+        
+        // Nếu có kế hoạch, chỉ tính từ ngày bắt đầu kế hoạch
+        let startDate = today;
+        if (currentPlan && currentPlan.startDate) {
+            const planStartDate = new Date(currentPlan.startDate);
+            if (!isNaN(planStartDate.getTime())) {
+                startDate = planStartDate;
+            }
+        }
+        
+        // Tính số ngày từ start date đến hôm nay
+        const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+        const maxDaysToCheck = Math.min(daysSinceStart + 1, 30); // Không quá 30 ngày và không quá số ngày từ khi bắt đầu
+        
+        console.log(`Tính streak từ ${startDate.toISOString().split('T')[0]} (${maxDaysToCheck} ngày để kiểm tra)`);
+        
+        for (let i = 0; i < maxDaysToCheck; i++) {
             const checkDate = new Date(today);
             checkDate.setDate(checkDate.getDate() - i);
+            
+            // Không kiểm tra những ngày trước khi bắt đầu kế hoạch
+            if (checkDate < startDate) {
+                console.log(`Bỏ qua ngày ${checkDate.toISOString().split('T')[0]} vì trước ngày bắt đầu kế hoạch`);
+                break;
+            }
+            
             const dateStr = checkDate.toISOString().split('T')[0];
-
             const savedData = localStorage.getItem(`checkin_${dateStr}`);
+            
             if (savedData) {
                 const data = JSON.parse(savedData);
                 if (data.actualCigarettes <= data.targetCigarettes) {
                     streak++;
+                    console.log(`✅ Ngày ${dateStr}: ${data.actualCigarettes}/${data.targetCigarettes} - Streak: ${streak}`);
                 } else {
+                    console.log(`❌ Ngày ${dateStr}: ${data.actualCigarettes}/${data.targetCigarettes} - Streak bị phá`);
                     break; // Streak bị phá
                 }
             } else {
+                console.log(`⚪ Ngày ${dateStr}: Không có dữ liệu - Streak dừng`);
                 break; // Không có dữ liệu
             }
         }
-
+        
+        console.log(`Streak days cuối cùng: ${streak}`);
         setStreakDays(streak);
     };    // Load dữ liệu cho ngày được chọn
     const loadDataForDate = (dateStr) => {
@@ -229,36 +255,23 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
     
     return (
         <div className="daily-checkin">
-            <div className="checkin-header">
-                <div className="header-content">
-                    <FaCalendarCheck className="header-icon" />                    <div className="header-text">
-                        <h2>{isToday ? 'Checkin hôm nay' : 'Checkin ngày đã chọn'}</h2>
-                        <p>Ghi nhận tiến trình cai thuốc ngày {new Date(selectedDate).toLocaleDateString('vi-VN')}</p>
-                        {currentPlan && (
-                            <p className="plan-week-info">
-                                Tuần {currentWeek} - Mục tiêu: {todayData.targetCigarettes} điếu/ngày
-                            </p>
-                        )}
+            <div className="checkin-header">                <div className="header-content">
+                    <div className="header-icon">
+                        <FaCalendarCheck />
+                    </div>
+                    <div className="header-text">
+                        <h2>Ghi nhận hôm nay</h2>
+                        <p>Ghi nhận tiến trình cai thuốc ngày {new Date().toLocaleDateString('vi-VN')}</p>
                     </div>
                 </div>
 
-                <div className="header-actions">
-                    {/* Calendar button */}
-                    <button
-                        className="calendar-button"
-                        onClick={() => setShowCalendar(true)}
-                        title="Chọn ngày khác"
-                    >
-                        <FaCalendarAlt />
-                    </button>
-
-                    {/* Streak counter */}
-                    <div className="streak-badge">
-                        <span className="streak-number">{streakDays}</span>
-                        <span className="streak-text">ngày liên tiếp</span>
-                    </div>
+                {/* Streak counter */}                <div className="streak-badge">
+                    <span className="streak-number">{streakDays}</span>
+                    <span className="streak-text">ngày liên tiếp</span>
                 </div>
             </div>
+            
+            <div className="checkin-separator"></div>
             
             {/* Toast Notification */}
             {toast.show && (
@@ -334,42 +347,8 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
                             <FaSave className="btn-icon" />
                             Cập nhật số điếu hôm nay
                         </button>
-                    )}
-
-                    {isSubmitted && (
-                        <button
-                            onClick={handleEdit}
-                            className="edit-btn"
-                        >
-                            Chỉnh sửa
-                        </button>
-                    )}
-                </div>                {/* Summary Card */}
-                {isSubmitted && (
-                    <div className="checkin-summary">
-                        <h3>Tóm tắt ngày {new Date(selectedDate).toLocaleDateString('vi-VN')}</h3>
-                        <div className="summary-grid">
-                            <div className="summary-item">
-                                <span className="label">Mục tiêu:</span>
-                                <span className="value">{todayData.targetCigarettes} điếu</span>
-                            </div>
-                            <div className="summary-item">
-                                <span className="label">Thực tế:</span>
-                                <span className="value">{todayData.actualCigarettes} điếu</span>
-                            </div>
-                            <div className="summary-item">
-                                <span className="label">Kết quả:</span>
-                                <span className={`value ${isTargetAchieved ? 'success' : 'warning'}`}>
-                                    {isTargetAchieved ? 'Đạt mục tiêu' : 'Chưa đạt'}
-                                </span>
-                            </div>
-                            <div className="summary-item">
-                                <span className="label">Tuần:</span>
-                                <span className="value">Tuần {currentWeek}</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    )}                </div>
+                {/* Summary Card đã được xóa vì dư thừa */}
             </div>
         </div>
     );

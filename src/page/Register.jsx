@@ -9,11 +9,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [gender, setGender] = useState('');
-  const [role, setRole] = useState('user');
-  const [dateOfBirth, setDateOfBirth] = useState('');
-
+  
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,22 +36,17 @@ export default function Register() {
     if (password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự');
       return;
-    } setIsLoading(true);
-
-    try {
-      // Xử lý dữ liệu gửi đi: chỉ gửi gender và dateOfBirth nếu có giá trị
+    }
+    
+    setIsLoading(true);
+      try {
       const userData = {
         username,
         fullName,
         email,
-        password,
-        confirmPassword,
-        phone,
-        role,
-        ...(gender ? { gender } : {}),
-        ...(dateOfBirth ? { dateOfBirth } : {}),
-      }; console.log('🔍 Sending userData:', userData); // Debug log
-
+        password
+      };
+      
       const result = await register(userData);
       console.log('📋 Register result:', result); // Debug log
 
@@ -86,10 +77,9 @@ export default function Register() {
   return (
     <div className="register-page">
       <div className="register-container">
-        <div className="register-card">
-          <div className="register-header">
+        <div className="register-card">          <div className="register-header">
             <h1>Đăng ký tài khoản</h1>
-            <p>Bắt đầu hành trình cai thuốc lá của bạn</p>
+            <p>Tạo tài khoản để bắt đầu hành trình cai thuốc lá</p>
           </div>
 
           <form onSubmit={handleSubmit} className="register-form">
@@ -187,33 +177,8 @@ export default function Register() {
                 placeholder="Nhập lại mật khẩu"
                 disabled={isLoading}
                 required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="role">Vai trò</label>
-              <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                disabled={isLoading}
-                required
-              >
-                <option value="user">Người dùng</option>
-                <option value="coach">Chuyên gia</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="dateOfBirth">Ngày sinh (tuỳ chọn)</label>
-              <input
-                type="date"
-                id="dateOfBirth"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
+              />            </div>
+            
             <div className="terms-privacy">
               <input type="checkbox" id="terms" required />
               <label htmlFor="terms">
@@ -234,11 +199,10 @@ export default function Register() {
             <p>Đã có tài khoản? <Link to="/login" className="login-link">Đăng nhập ngay</Link></p>
           </div>
         </div>
-
-        <div className="register-info">
+          <div className="register-info">
           <h2>Lợi ích khi đăng ký tài khoản NoSmoke</h2>
           <ul className="benefits-list">
-            <li>Theo dõi tiến trình cai thuốc lá của bạn</li>
+            <li>Tạo và theo dõi kế hoạch cai thuốc lá cá nhân</li>
             <li>Tính toán số tiền tiết kiệm được</li>
             <li>Nhận thông báo động viên hàng ngày</li>
             <li>Tham gia cộng đồng những người cùng cai thuốc</li>
