@@ -117,15 +117,80 @@ export const purchasePackage = async (userId, packageId, paymentMethod) => {
       VALUES (?, ?, ?, ?, 'completed')
     `, [userId, packageId, packageData.price, paymentMethod]);
     
-    // Cập nhật user.membership_id nếu có trường này
+    // Cập nhật user.membership_id và membership
     try {
-      await connection.execute(`
-        UPDATE users 
-        SET membership_id = ?, membership_updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `, [packageId, userId]);
+      // Lấy tên gói từ packageData để đặt giá trị membership chính xác
+      let membershipValue = 'free';
+      
+      if (packageData.name) {
+        const packageName = packageData.name.toLowerCase();
+        if (packageName.includes('pro')) {
+          membershipValue = 'pro';
+        } else if (packageName.includes('premium')) {
+          membershipValue = 'premium';
+        } else if (packageId !== 1) { // Nếu không phải gói free (id=1) và không xác định được tên
+          membershipValue = 'premium'; // Mặc định là premium cho các gói trả phí
+        }
+      } else {
+        // Fallback nếu không có tên gói
+        membershipValue = packageId === 1 ? 'free' : 'premium';
+      }
+      
+      console.log(`🔄 Đang cập nhật user ${userId} membership thành "${membershipValue}" (gói "${packageData.name}") và membership_id thành ${packageId}`);
+      
+      // Kiểm tra xem cột membership có phải là ENUM không
+      try {
+        const [userColumns] = await connection.execute('DESCRIBE users');
+        const membershipColumn = userColumns.find(col => col.Field === 'membership');
+        
+        if (membershipColumn && membershipColumn.Type.toLowerCase().includes('enum')) {
+          const enumValues = membershipColumn.Type.match(/'([^']*)'/g).map(v => v.replace(/'/g, ''));
+          console.log('Các giá trị hợp lệ cho cột membership:', enumValues);
+          
+          // Nếu giá trị không nằm trong danh sách ENUM, chuyển về giá trị mặc định
+          if (!enumValues.includes(membershipValue)) {
+            console.log(`⚠️ Giá trị "${membershipValue}" không có trong ENUM, chuyển về "premium"`);
+            membershipValue = 'premium';
+            
+            // Nếu premium cũng không có trong ENUM
+            if (!enumValues.includes('premium') && enumValues.length > 0) {
+              console.log(`⚠️ "premium" cũng không có trong ENUM, sử dụng giá trị đầu tiên: "${enumValues[0]}"`);
+              membershipValue = enumValues[0] !== 'free' ? enumValues[0] : (enumValues.length > 1 ? enumValues[1] : 'free');
+            }
+          }
+        }
+      } catch (enumCheckError) {
+        console.log('⚠️ Không thể kiểm tra các giá trị ENUM:', enumCheckError.message);
+      }
+      
+      // Thử cập nhật từng cột riêng để tăng khả năng thành công
+      try {
+        await connection.execute(`UPDATE users SET membership = ? WHERE id = ?`, [membershipValue, userId]);
+        console.log(`✅ Đã cập nhật thành công cột membership thành "${membershipValue}"`);
+      } catch (membershipError) {
+        console.error('❌ Lỗi cập nhật cột membership:', membershipError);
+      }
+      
+      try {
+        await connection.execute(`UPDATE users SET membership_id = ? WHERE id = ?`, [packageId, userId]);
+        console.log(`✅ Đã cập nhật thành công cột membership_id thành "${packageId}"`);
+      } catch (membershipIdError) {
+        console.error('❌ Lỗi cập nhật cột membership_id:', membershipIdError);
+      }
+      
+      try {
+        await connection.execute(`UPDATE users SET membership_updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [userId]);
+      } catch (timestampError) {
+        console.error('❌ Lỗi cập nhật cột membership_updated_at:', timestampError);
+      }
+      
+      // Kiểm tra kết quả cập nhật
+      const [updatedUser] = await connection.execute('SELECT id, membership, membership_id FROM users WHERE id = ?', [userId]);
+      console.log('✅ Thông tin user sau khi cập nhật:', updatedUser[0]);
+      
     } catch (updateError) {
-      console.log('Skipping user.membership_id update, column might not exist');
+      console.error('❌ Lỗi tổng thể khi cập nhật user membership:', updateError);
+      // Không ném lỗi để tiếp tục xử lý
     }
     
     await connection.commit();

@@ -17,6 +17,12 @@
         "decode-token": "node src/scripts/decode-token.js",
         "test-simple": "node src/scripts/test-purchase-simple.js",
         "test-token-fix": "node src/scripts/test-token-fix.js",
+        "check-membership": "node src/scripts/check-membership-status.js",
+        "check-users-membership": "node src/scripts/check-users-membership.js",
+        "test-direct-purchase": "node src/scripts/test-direct-purchase.js",
+        "fix-membership-column": "node src/scripts/fix-membership-column.js",
+        "check-packages": "node src/scripts/check-packages.js",
+        "extend-membership": "node src/scripts/extend-membership-enum.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
