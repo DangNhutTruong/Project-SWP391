@@ -543,7 +543,7 @@ export default function ProfilePage() {
     <div className="profile-container">
       {/* Sidebar */}
       <div className="profile-sidebar">
-        <div className="user-info">
+        {/* <div className="user-info">
           <div className="avatar-circle">
             <div className="user-initial-container">
               <span className="user-initial">{userData.name ? userData.name.charAt(0) : 'U'}</span>
@@ -569,7 +569,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
         <nav className="profile-nav">
           <Link
             to="#"

@@ -18,16 +18,22 @@ const LoginModal = ({ isOpen, onClose }) => {
     setIsLoading(true);
     
     try {
+      console.log('LoginModal - Starting login attempt for:', email);
+      
       const result = await login(email, password, rememberMe);
+      console.log('LoginModal - Login result:', result);
+      
       if (result.success) {
+        console.log('LoginModal - Login successful, redirecting');
         onClose();
         navigate('/'); // Chuyển hướng đến trang home sau khi đăng nhập
       } else {
+        console.error('LoginModal - Login failed:', result.error);
         setError(result.error || 'Đăng nhập không thành công');
       }
     } catch (err) {
+      console.error('LoginModal - Exception during login:', err);
       setError('Có lỗi xảy ra, vui lòng thử lại');
-      console.error(err);
     } finally {
       setIsLoading(false);
     }

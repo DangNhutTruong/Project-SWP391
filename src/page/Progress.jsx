@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import DailyCheckin from '../components/DailyCheckin';
 import ProgressDashboard from '../components/ProgressDashboard';
-import ResetCheckinData from '../components/ResetCheckinData';
 import './Progress.css';
 import '../styles/DailyCheckin.css';
 import '../styles/ProgressDashboard.css';
@@ -14,6 +13,7 @@ export default function Progress() {
   const [userPlan, setUserPlan] = useState(null);
   const [userProgress, setUserProgress] = useState([]);
   const [actualProgress, setActualProgress] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
   // Load user plan and progress from localStorage
   useEffect(() => {
     loadUserPlanAndProgress();
@@ -137,6 +137,13 @@ export default function Progress() {
     
     // Cập nhật state để trigger re-render của biểu đồ
     setActualProgress(actualData);
+  };
+  
+  // Xử lý cập nhật tâm trạng từ Mood Tracking
+  const handleMoodUpdate = (newMoodData) => {
+    console.log('Mood updated:', newMoodData);
+    // Có thể thêm logic cập nhật mood data ở đây nếu cần
+    setMoodData(prev => [...prev, newMoodData]);
   };
   
   // Check for plan completion data on component mount
@@ -337,72 +344,14 @@ export default function Progress() {
     localStorage.removeItem('dashboardStats');
     localStorage.setItem('dashboardStats', JSON.stringify(newStats));
     
+    // Cập nhật state dashboardStats
+    setDashboardStats(newStats);
+    
     console.log("======= KẾT THÚC TÍNH TOÁN THỐNG KÊ =======");
     
     return newStats;
   };
   
-  // Calculate overall statistics for ProgressDashboard
-  const calculateOverallStats = () => {
-    if (!userPlan || !actualProgress.length) {
-      return {};
-    }
-
-    // Tính số ngày không hút thuốc
-    const noSmokingDays = actualProgress.filter(p => p.actualCigarettes === 0).length;
-    
-    // Tính số điếu đã tiết kiệm
-    const savedCigarettes = actualProgress.reduce((total, progress) => {
-      const saved = Math.max(0, progress.targetCigarettes - progress.actualCigarettes);
-      return total + saved;
-    }, 0);
-
-    // Tính tiền tiết kiệm
-    let packPrice = 25000;
-    try {
-      const activePlanData = localStorage.getItem('activePlan');
-      if (activePlanData) {
-        const activePlan = JSON.parse(activePlanData);
-        if (activePlan && activePlan.packPrice) {
-          packPrice = activePlan.packPrice;
-        }
-      }
-    } catch (error) {
-      console.error('Error reading packPrice:', error);
-    }
-    
-    const pricePerCigarette = packPrice / 20;
-    const savedMoney = savedCigarettes * pricePerCigarette;
-
-    // Tính health progress dựa trên milestone
-    const daysSinceStart = actualProgress.length;
-    const healthMilestones = [
-      { days: 1 }, { days: 2 }, { days: 3 }, { days: 14 }, 
-      { days: 30 }, { days: 90 }, { days: 365 }
-    ];
-    const achievedMilestones = healthMilestones.filter(m => daysSinceStart >= m.days).length;
-    const healthProgress = (achievedMilestones / healthMilestones.length) * 100;
-
-    return {
-      noSmokingDays,
-      savedCigarettes,
-      savedMoney,
-      healthProgress
-    };
-  };
-
-  // Reset data function for ProgressDashboard
-  const resetData = () => {
-    if (window.confirm('Bạn có chắc muốn reset tất cả dữ liệu tiến trình?')) {
-      localStorage.removeItem('actualProgress');
-      localStorage.removeItem('quitPlanCompletion');
-      setActualProgress([]);
-      setCompletionData(null);
-      setShowCompletionDashboard(false);
-      alert('Dữ liệu đã được reset thành công!');
-    }
-  };
-
   if (!userPlan) {
     return (
       <div className="progress-container">
@@ -497,8 +446,7 @@ export default function Progress() {
   }
 
   return (
-    <div className="progress-container">
-      <h1 className="page-title">
+    <div className="progress-container">      <h1 className="page-title">
         {showCompletionDashboard ? 'Chúc mừng! Bạn đã lập kế hoạch cai thuốc' : 'Tiến trình cai thuốc hiện tại'}
       </h1>        {/* Daily Checkin Section - Luôn hiển thị để người dùng có thể nhập số điếu đã hút */}
       <DailyCheckin 
@@ -527,16 +475,15 @@ export default function Progress() {
         />
       ) : (
         <>
-          {/* Progress Dashboard Section - Thay thế cho Mood Tracking */}
-          <ProgressDashboard
-            userPlan={userPlan}
-            completionDate={completionData?.date || userPlan?.startDate || new Date().toISOString().split('T')[0]}
-            dashboardStats={calculateOverallStats()}
-            actualProgress={actualProgress}
-            onDataReset={resetData}
-          />
 
-                   
+          {/* Progress Dashboard Section - Thay thế MoodTracking */}
+          <ProgressDashboard 
+            userPlan={userPlan}
+            completionDate={userPlan?.startDate || new Date().toISOString().split('T')[0]}
+            dashboardStats={dashboardStats}
+            actualProgress={actualProgress}
+            onDataReset={loadUserPlanAndProgress}
+          />
         </>
       )}
     </div>
