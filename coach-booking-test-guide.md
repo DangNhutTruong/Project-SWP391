@@ -147,3 +147,286 @@ Khi user book coach, thông tin user sẽ được cập nhật:
 - User cần Premium/Pro membership để book appointment
 - Mỗi coach chỉ thấy booking của riêng mình
 - Booking status có thể được cập nhật bởi coach
+
+## 🔧 Troubleshooting
+
+### ❓ "Ngày theo dõi, số điếu đã tránh, milestone đang tính sai?"
+**ĐƯỢC SỬA CHỮA!** Đã cập nhật logic tính toán cho chính xác hơn:
+
+#### **1. Ngày theo dõi (No Smoking Days)**
+- **Cũ**: Tính từ ngày bắt đầu kế hoạch đến hôm nay (kể cả khi chưa checkin)
+- **Mới**: Tính dựa trên số ngày thực tế có checkin 
+- **Lý do**: Chỉ nên tính các ngày người dùng thực sự tham gia theo dõi
+
+```javascript
+// Kiểm tra ngày theo dõi:
+const activePlan = JSON.parse(localStorage.getItem('activePlan'));
+console.log('Ngày bắt đầu kế hoạch:', activePlan?.startDate);
+
+// Đếm số ngày có checkin:
+let checkinDays = 0;
+for (let i = 0; i < 30; i++) {
+  const date = new Date();
+  date.setDate(date.getDate() - i);
+  const dateStr = date.toISOString().split('T')[0];
+  if (localStorage.getItem(`checkin_${dateStr}`)) {
+    checkinDays++;
+    console.log(`${dateStr}: Có checkin`);
+  }
+}
+console.log('Tổng số ngày có checkin:', checkinDays);
+```
+
+#### **2. Số điếu thuốc đã tránh (Saved Cigarettes)**
+- **Cũ**: Có thể tính sai hoặc trùng lặp
+- **Mới**: Chỉ tính tích lũy các ngày thực sự giảm được (actual < initial)
+
+```javascript
+// Kiểm tra số điếu đã tránh:
+const activePlan = JSON.parse(localStorage.getItem('activePlan'));
+const initialCigs = activePlan?.initialCigarettes || 22;
+let totalSaved = 0;
+
+for (let i = 0; i < 30; i++) {
+  const date = new Date();
+  date.setDate(date.getDate() - i);
+  const dateStr = date.toISOString().split('T')[0];
+  const checkinData = localStorage.getItem(`checkin_${dateStr}`);
+  
+  if (checkinData) {
+    const data = JSON.parse(checkinData);
+    const saved = Math.max(0, initialCigs - data.actualCigarettes);
+    if (saved > 0) {
+      totalSaved += saved;
+      console.log(`${dateStr}: ${initialCigs} - ${data.actualCigarettes} = ${saved} điếu`);
+    }
+  }
+}
+console.log('Tổng số điếu đã tránh:', totalSaved);
+```
+
+#### **3. Milestone sức khỏe (Health Progress)**
+- **Cũ**: Dựa trên số ngày từ startDate (có thể sai)
+- **Mới**: Dựa trên số ngày thực tế có checkin
+
+```javascript
+// Kiểm tra milestone:
+const healthMilestones = [
+  { days: 1, title: '24 giờ đầu tiên' },
+  { days: 2, title: '48 giờ' },
+  { days: 3, title: '72 giờ' },
+  { days: 7, title: '1 tuần' },
+  { days: 14, title: '2 tuần' },
+  { days: 30, title: '1 tháng' },
+  { days: 90, title: '3 tháng' },
+  { days: 365, title: '1 năm' }
+];
+
+const checkinDays = 5; // Số ngày có checkin thực tế
+const achieved = healthMilestones.filter(m => checkinDays >= m.days).length;
+const progress = Math.round((achieved / healthMilestones.length) * 100);
+console.log(`Milestone: ${achieved}/${healthMilestones.length} (${progress}%)`);
+```
+
+### ❓ "Lập kế hoạch hôm nay (25/6) nhưng daily checkin hiển thị 3 ngày liên tiếp?"
+**Nguyên nhân**: Có dữ liệu checkin cũ trong localStorage từ test trước
+
+```javascript
+// Kiểm tra dữ liệu checkin hiện tại:
+for (let i = 0; i < 7; i++) {
+  const date = new Date();
+  date.setDate(date.getDate() - i);
+  const dateStr = date.toISOString().split('T')[0];
+  const data = localStorage.getItem(`checkin_${dateStr}`);
+  if (data) {
+    console.log(`${dateStr}:`, JSON.parse(data));
+  }
+}
+
+// Xóa tất cả dữ liệu checkin cũ:
+for (let i = 0; i < 30; i++) {
+  const date = new Date();
+  date.setDate(date.getDate() - i);
+  const dateStr = date.toISOString().split('T')[0];
+  localStorage.removeItem(`checkin_${dateStr}`);
+}
+
+// Hoặc xóa toàn bộ localStorage và bắt đầu lại:
+localStorage.clear();
+location.reload();
+```
+
+**Giải thích**: Daily checkin tính streak bằng cách đếm ngược từ hôm nay về trước để tìm dữ liệu checkin có kết quả tốt (actual ≤ target). Nếu có dữ liệu test cũ, nó sẽ tính vào streak.
+
+**Khuyến nghị**: Khi test kế hoạch mới, nên clear localStorage trước để có kết quả chính xác.
+
+### ❓ "Ngày 26/6 Daily Checkin có cập nhật biểu đồ không?"
+**CÓ!** Hệ thống đã được thiết kế để tự động cập nhật:
+
+```javascript
+// Quy trình khi bạn Daily Checkin ngày 26/6:
+// 1. DailyCheckin.jsx lưu dữ liệu vào localStorage với key "checkin_2025-06-26"
+// 2. Gọi onProgressUpdate() để thông báo cho Progress.jsx
+// 3. Progress.jsx load lại tất cả dữ liệu checkin từ ngày bắt đầu kế hoạch
+// 4. Cập nhật state actualProgress
+// 5. QuitProgressChart.jsx nhận actualProgress mới và vẽ lại biểu đồ
+
+// Để kiểm tra dữ liệu checkin:
+const date26 = '2025-06-26';
+const checkinData = localStorage.getItem(`checkin_${date26}`);
+if (checkinData) {
+  console.log('Dữ liệu ngày 26/6:', JSON.parse(checkinData));
+} else {
+  console.log('Chưa có dữ liệu checkin cho ngày 26/6');
+}
+
+// Kiểm tra biểu đồ có cập nhật không bằng cách xem console:
+// - "✅ Xác nhận ngày hôm nay (2025-06-26) có dữ liệu"
+// - "Updated actual progress data" với array chứa ngày 26/6
+```
+
+**Kết quả mong đợi ngày 26/6:**
+- ✅ Daily Checkin hiển thị ngày 26/6
+- ✅ Biểu đồ có thêm điểm dữ liệu ngày 26/6 (đường xanh lá)
+- ✅ Streak days tăng lên (nếu đạt target)
+- ✅ Statistics dashboard cập nhật số liệu mới
+
+### 🔍 Script Debug Toàn Diện
+
+```javascript
+// === SCRIPT KIỂM TRA TOÀN BỘ TÍNH TOÁN ===
+console.log("=== BẮT ĐẦU KIỂM TRA TÍNH TOÁN ===");
+
+// 1. Kiểm tra kế hoạch
+const activePlan = JSON.parse(localStorage.getItem('activePlan') || '{}');
+console.log("1. Kế hoạch hiện tại:", activePlan);
+console.log("   - Ngày bắt đầu:", activePlan.startDate);
+console.log("   - Số điếu ban đầu:", activePlan.initialCigarettes);
+console.log("   - Giá gói thuốc:", activePlan.packPrice);
+
+// 2. Đếm ngày có checkin thực tế
+let actualCheckinDays = [];
+let totalSavedCigarettes = 0;
+const initialCigs = activePlan.initialCigarettes || 22;
+
+for (let i = 0; i < 30; i++) {
+  const date = new Date();
+  date.setDate(date.getDate() - i);
+  const dateStr = date.toISOString().split('T')[0];
+  const checkinData = localStorage.getItem(`checkin_${dateStr}`);
+  
+  if (checkinData) {
+    const data = JSON.parse(checkinData);
+    const saved = Math.max(0, initialCigs - data.actualCigarettes);
+    
+    actualCheckinDays.push({
+      date: dateStr,
+      actual: data.actualCigarettes,
+      target: data.targetCigarettes,
+      saved: saved
+    });
+    
+    if (saved > 0) totalSavedCigarettes += saved;
+  }
+}
+
+// Sắp xếp theo ngày
+actualCheckinDays.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+console.log("2. Ngày có checkin thực tế:", actualCheckinDays.length);
+actualCheckinDays.forEach(day => {
+  console.log(`   - ${day.date}: ${day.actual}/${day.target} (${day.saved} điếu tránh)`);
+});
+
+// 3. Tính toán thống kê
+console.log("3. Thống kê tính toán:");
+console.log("   - Ngày theo dõi:", actualCheckinDays.length);
+console.log("   - Tổng điếu đã tránh:", totalSavedCigarettes);
+console.log("   - Tiền tiết kiệm:", Math.round(totalSavedCigarettes * (activePlan.packPrice || 25000) / 20));
+
+// 4. Milestone sức khỏe
+const healthMilestones = [1, 2, 3, 7, 14, 30, 90, 365];
+const achievedMilestones = healthMilestones.filter(m => actualCheckinDays.length >= m).length;
+const healthProgress = Math.round((achievedMilestones / healthMilestones.length) * 100);
+console.log("   - Milestone đã đạt:", `${achievedMilestones}/${healthMilestones.length} (${healthProgress}%)`);
+
+// 5. Streak hiện tại
+let currentStreak = 0;
+const today = new Date();
+for (let i = 0; i < actualCheckinDays.length; i++) {
+  const checkDate = new Date(today);
+  checkDate.setDate(checkDate.getDate() - i);
+  const dateStr = checkDate.toISOString().split('T')[0];
+  const checkinData = localStorage.getItem(`checkin_${dateStr}`);
+  
+  if (checkinData) {
+    const data = JSON.parse(checkinData);
+    if (data.actualCigarettes <= data.targetCigarettes) {
+      currentStreak++;
+    } else {
+      break;
+    }
+  } else {
+    break;
+  }
+}
+console.log("   - Streak hiện tại:", currentStreak);
+
+console.log("=== KẾT THÚC KIỂM TRA ===");
+```
+
+### 🧹 Script Reset Dữ Liệu Test
+
+```javascript
+// === RESET TẤT CẢ DỮ LIỆU TEST ===
+console.log("Đang xóa tất cả dữ liệu test...");
+
+// Xóa checkin data
+for (let i = 0; i < 60; i++) {
+  const date = new Date();
+  date.setDate(date.getDate() - i);
+  const dateStr = date.toISOString().split('T')[0];
+  localStorage.removeItem(`checkin_${dateStr}`);
+}
+
+// Xóa các dữ liệu khác
+localStorage.removeItem('activePlan');
+localStorage.removeItem('dashboardStats');
+localStorage.removeItem('quitPlanCompletion');
+
+console.log("✅ Đã xóa tất cả dữ liệu test");
+console.log("🔄 Reload trang để bắt đầu lại...");
+location.reload();
+```
+
+### ❓ "Ngày theo dõi đang được tính sai, số điếu thuốc đã tránh sai, milestone sai?"
+**✅ ĐÃ KHẮC PHỤC**: Logic tính toán đã được sửa
+
+**Vấn đề trước:**
+- Ngày theo dõi = số lần checkin thay vì số ngày từ bắt đầu kế hoạch
+- Số điếu tránh được tính cả khi không giảm 
+- Milestone dựa trên ngày checkin đầu tiên thay vì ngày bắt đầu kế hoạch
+
+**Logic mới đã sửa:**
+```javascript
+// 1. Ngày theo dõi = số ngày từ startDate đến hôm nay
+const startDate = new Date(activePlan.startDate);
+const today = new Date();
+const noSmokingDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+// 2. Số điếu tránh CHỈ tính khi thực sự giảm được
+actualProgress.forEach(dayRecord => {
+  const daySaved = Math.max(0, initialCigarettes - dayRecord.actualCigarettes);
+  if (daySaved > 0) { // CHỈ cộng khi tránh được
+    totalSavedCigarettes += daySaved;
+  }
+});
+
+// 3. Milestone dựa trên noSmokingDays (từ ngày bắt đầu kế hoạch)
+const achievedMilestones = healthMilestones.filter(m => noSmokingDays >= m.days).length;
+```
+
+**Kết quả sau khi sửa:**
+- Ngày theo dõi chính xác (nếu bắt đầu 25/6, ngày 26/6 sẽ hiển thị "2 ngày")
+- Số điếu tránh chỉ tính những ngày thực sự giảm được
+- Milestone tính từ ngày bắt đầu kế hoạch thực tế
