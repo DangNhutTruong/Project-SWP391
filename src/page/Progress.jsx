@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import QuitProgressChart from '../components/QuitProgressChart';
 import DailyCheckin from '../components/DailyCheckin';
-import MoodTracking from '../components/MoodTracking';
 import ProgressDashboard from '../components/ProgressDashboard';
 import ResetCheckinData from '../components/ResetCheckinData';
 import './Progress.css';
 import '../styles/DailyCheckin.css';
-import '../styles/MoodTracking.css';
 import '../styles/ProgressDashboard.css';
 
 export default function Progress() {
@@ -18,6 +16,7 @@ export default function Progress() {
   const [userPlan, setUserPlan] = useState(null);
   const [userProgress, setUserProgress] = useState([]);
   const [actualProgress, setActualProgress] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
   const [moodData, setMoodData] = useState([]);
   // Load user plan and progress from localStorage
   useEffect(() => {
@@ -349,6 +348,9 @@ export default function Progress() {
     localStorage.removeItem('dashboardStats');
     localStorage.setItem('dashboardStats', JSON.stringify(newStats));
     
+    // Cập nhật state dashboardStats
+    setDashboardStats(newStats);
+    
     console.log("======= KẾT THÚC TÍNH TOÁN THỐNG KÊ =======");
     
     return newStats;
@@ -513,9 +515,13 @@ export default function Progress() {
             </button>
           </div>
 
-          {/* Mood Tracking Section - Phần tâm trạng */}
-          <MoodTracking 
-            onMoodUpdate={handleMoodUpdate}
+          {/* Progress Dashboard Section - Thay thế MoodTracking */}
+          <ProgressDashboard 
+            userPlan={userPlan}
+            completionDate={userPlan?.startDate || new Date().toISOString().split('T')[0]}
+            dashboardStats={dashboardStats}
+            actualProgress={actualProgress}
+            onDataReset={loadUserPlanAndProgress}
           />
 
           {/* Plan Information */}
