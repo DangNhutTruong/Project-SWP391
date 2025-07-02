@@ -202,7 +202,7 @@ export const ensureTablesExist = async () => {
 // Generate JWT Token
 const generateToken = (userId) => {
     return jwt.sign(
-        { userId },
+        { userId, id: userId },  // Include both userId and id for compatibility
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
@@ -211,7 +211,7 @@ const generateToken = (userId) => {
 // Generate Refresh Token
 const generateRefreshToken = (userId) => {
     return jwt.sign(
-        { userId, type: 'refresh' },
+        { userId, id: userId, type: 'refresh' },  // Include both userId and id for compatibility
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' }
     );
@@ -390,6 +390,9 @@ export const login = async (req, res) => {
         // Tạo tokens
         const token = generateToken(user.id);
         const refreshToken = generateRefreshToken(user.id);
+        
+        // Log token structure for debugging
+        console.log('🔐 Generated token structure:', jwt.decode(token));
         
         // Cập nhật thời gian đăng nhập
         await pool.execute(

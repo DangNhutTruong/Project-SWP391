@@ -1,14 +1,14 @@
 import { pool } from '../config/database.js';
 
 /**
- * Tạo bảng packages nếu chưa tồn tại
+ * Tạo bảng package nếu chưa tồn tại
  */
-export const ensurePackagesTable = async () => {
+export const ensurePackageTable = async () => {
   try {
-    // Tạo bảng packages nếu chưa tồn tại
+    // Tạo bảng package nếu chưa tồn tại
     await pool.execute(`
-      CREATE TABLE IF NOT EXISTS packages (
-        id VARCHAR(50) PRIMARY KEY,
+      CREATE TABLE IF NOT EXISTS package (
+        id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         description VARCHAR(255),
         price INT NOT NULL,
@@ -24,18 +24,18 @@ export const ensurePackagesTable = async () => {
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS package_features (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        package_id VARCHAR(50) NOT NULL,
+        package_id INT NOT NULL,
         feature_name VARCHAR(255) NOT NULL,
         enabled BOOLEAN DEFAULT TRUE,
-        FOREIGN KEY (package_id) REFERENCES packages(id),
+        FOREIGN KEY (package_id) REFERENCES package(id),
         UNIQUE KEY unique_package_feature (package_id, feature_name)
       )
     `);
     
     console.log('✅ Packages tables created or already exist');
     
-    // Kiểm tra xem đã có dữ liệu trong bảng packages chưa
-    const [rows] = await pool.execute('SELECT COUNT(*) as count FROM packages');
+    // Kiểm tra xem đã có dữ liệu trong bảng package chưa
+    const [rows] = await pool.execute('SELECT COUNT(*) as count FROM package');
     
     // Nếu chưa có dữ liệu, thêm dữ liệu mặc định
     if (rows[0].count === 0) {
@@ -54,41 +54,50 @@ const insertDefaultPackages = async () => {
   try {
     // Thêm 3 gói mặc định: free, premium, pro
     await pool.execute(`
-      INSERT INTO packages (id, name, description, price, period, popular) VALUES
-      ('free', 'Free', 'Bắt đầu miễn phí', 0, 'tháng', FALSE),
-      ('premium', 'Premium', 'Hỗ trợ toàn diện', 99000, 'tháng', TRUE),
-      ('pro', 'Pro', 'Hỗ trợ toàn diện', 999000, 'năm', FALSE)
+      INSERT INTO package (name, description, price, period, popular) VALUES
+      ('Free', 'Bắt đầu miễn phí', 0, 'tháng', FALSE),
+      ('Premium', 'Hỗ trợ toàn diện', 99000, 'tháng', TRUE),
+      ('Pro', 'Hỗ trợ toàn diện', 999000, 'năm', FALSE)
     `);
+    
+    // Lấy ID của các gói vừa thêm
+    const [freePackage] = await pool.execute('SELECT id FROM package WHERE name = ? LIMIT 1', ['Free']);
+    const [premiumPackage] = await pool.execute('SELECT id FROM package WHERE name = ? LIMIT 1', ['Premium']);
+    const [proPackage] = await pool.execute('SELECT id FROM package WHERE name = ? LIMIT 1', ['Pro']);
+    
+    const freeId = freePackage[0].id;
+    const premiumId = premiumPackage[0].id;
+    const proId = proPackage[0].id;
     
     // Thêm tính năng cho gói free
     await pool.execute(`
       INSERT INTO package_features (package_id, feature_name, enabled) VALUES
-      ('free', 'Theo dõi cai thuốc', TRUE),
-      ('free', 'Lập kế hoạch cá nhân', TRUE),
-      ('free', 'Huy hiệu & cộng đồng', FALSE),
-      ('free', 'Chat huấn luyện viên', FALSE),
-      ('free', 'Video call tư vấn', FALSE)
-    `);
+      (?, 'Theo dõi cai thuốc', TRUE),
+      (?, 'Lập kế hoạch cá nhân', TRUE),
+      (?, 'Huy hiệu & cộng đồng', FALSE),
+      (?, 'Chat huấn luyện viên', FALSE),
+      (?, 'Video call tư vấn', FALSE)
+    `, [freeId, freeId, freeId, freeId, freeId]);
     
     // Thêm tính năng cho gói premium
     await pool.execute(`
       INSERT INTO package_features (package_id, feature_name, enabled) VALUES
-      ('premium', 'Theo dõi cai thuốc', TRUE),
-      ('premium', 'Lập kế hoạch cá nhân', TRUE),
-      ('premium', 'Huy hiệu & cộng đồng', TRUE),
-      ('premium', 'Chat huấn luyện viên', TRUE),
-      ('premium', 'Video call tư vấn', TRUE)
-    `);
+      (?, 'Theo dõi cai thuốc', TRUE),
+      (?, 'Lập kế hoạch cá nhân', TRUE),
+      (?, 'Huy hiệu & cộng đồng', TRUE),
+      (?, 'Chat huấn luyện viên', TRUE),
+      (?, 'Video call tư vấn', TRUE)
+    `, [premiumId, premiumId, premiumId, premiumId, premiumId]);
     
     // Thêm tính năng cho gói pro
     await pool.execute(`
       INSERT INTO package_features (package_id, feature_name, enabled) VALUES
-      ('pro', 'Theo dõi cai thuốc', TRUE),
-      ('pro', 'Lập kế hoạch cá nhân', TRUE),
-      ('pro', 'Huy hiệu & cộng đồng', TRUE),
-      ('pro', 'Chat huấn luyện viên', TRUE),
-      ('pro', 'Video call tư vấn', TRUE)
-    `);
+      (?, 'Theo dõi cai thuốc', TRUE),
+      (?, 'Lập kế hoạch cá nhân', TRUE),
+      (?, 'Huy hiệu & cộng đồng', TRUE),
+      (?, 'Chat huấn luyện viên', TRUE),
+      (?, 'Video call tư vấn', TRUE)
+    `, [proId, proId, proId, proId, proId]);
     
     console.log('✅ Default packages inserted successfully');
   } catch (error) {
@@ -102,24 +111,39 @@ const insertDefaultPackages = async () => {
  */
 export const getAllPackages = async () => {
   try {
+    // Sử dụng điều kiện phù hợp với cách lưu trữ boolean trong MySQL
     const [packages] = await pool.execute(`
-      SELECT * FROM packages WHERE active = TRUE ORDER BY price ASC
+      SELECT * FROM package WHERE active = 1 OR active IS NULL ORDER BY price ASC
     `);
+    
+    console.log('Found packages:', packages.map(p => p.name));
     
     // Lấy tính năng cho từng gói
     for (const pkg of packages) {
-      const [features] = await pool.execute(`
-        SELECT feature_name, enabled FROM package_features WHERE package_id = ? ORDER BY id ASC
-      `, [pkg.id]);
-      
-      pkg.features = features.filter(f => f.enabled).map(f => f.feature_name);
-      pkg.disabledFeatures = features.filter(f => !f.enabled).map(f => f.feature_name);
+      try {
+        const [features] = await pool.execute(`
+          SELECT feature_name, enabled FROM package_features WHERE package_id = ? ORDER BY id ASC
+        `, [pkg.id]);
+        
+        console.log(`Package ${pkg.name} (ID: ${pkg.id}) - Raw features:`, features);
+        
+        // Chuyển đổi Boolean để đảm bảo hoạt động đúng
+        pkg.features = features.filter(f => f.enabled == 1).map(f => f.feature_name);
+        pkg.disabledFeatures = features.filter(f => f.enabled == 0).map(f => f.feature_name);
+        
+        console.log(`Package ${pkg.name} - Features:`, pkg.features);
+        console.log(`Package ${pkg.name} - Disabled features:`, pkg.disabledFeatures);
+      } catch (featureError) {
+        console.error(`Error getting features for package ${pkg.id}:`, featureError);
+        pkg.features = [];
+        pkg.disabledFeatures = [];
+      }
     }
     
     return packages;
   } catch (error) {
     console.error('❌ Error getting all packages:', error);
-    throw error;
+    throw new Error('Failed to retrieve packages: ' + error.message);
   }
 };
 
@@ -129,7 +153,7 @@ export const getAllPackages = async () => {
 export const getPackageById = async (packageId) => {
   try {
     const [packages] = await pool.execute(`
-      SELECT * FROM packages WHERE id = ? AND active = TRUE
+      SELECT * FROM package WHERE id = ? AND (active = 1 OR active IS NULL)
     `, [packageId]);
     
     if (packages.length === 0) {
@@ -143,18 +167,19 @@ export const getPackageById = async (packageId) => {
       SELECT feature_name, enabled FROM package_features WHERE package_id = ? ORDER BY id ASC
     `, [packageId]);
     
-    package_data.features = features.filter(f => f.enabled).map(f => f.feature_name);
-    package_data.disabledFeatures = features.filter(f => !f.enabled).map(f => f.feature_name);
+    // Chuyển đổi Boolean để đảm bảo hoạt động đúng
+    package_data.features = features.filter(f => f.enabled == 1).map(f => f.feature_name);
+    package_data.disabledFeatures = features.filter(f => f.enabled == 0).map(f => f.feature_name);
     
     return package_data;
   } catch (error) {
     console.error(`❌ Error getting package ${packageId}:`, error);
-    throw error;
+    throw new Error(`Failed to retrieve package ${packageId}: ${error.message}`);
   }
 };
 
 export default {
-  ensurePackagesTable,
+  ensurePackageTable,
   getAllPackages,
   getPackageById
 };
