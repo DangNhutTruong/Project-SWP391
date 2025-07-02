@@ -11,10 +11,10 @@ export default function Header() {  const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0); // Add this state for notification count
   const { user, logout } = useAuth();
-
+  
   // Thêm useRef để theo dõi dropdown menu
   const userMenuRef = useRef(null);
-  // Debug user membership và đảm bảo nhất quán
+    // Debug user membership và đảm bảo nhất quán
   useEffect(() => {
     if (user) {
       console.log('Header - User Membership:', user.membership);
@@ -54,7 +54,7 @@ export default function Header() {  const navigate = useNavigate();
     if (isUserMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-
+    
     // Cleanup function
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);

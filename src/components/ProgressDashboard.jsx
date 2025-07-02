@@ -53,7 +53,7 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
       </div>
     );
   }
-
+  
   const calculateDashboardStats = useCallback(() => {
     if (!userPlan || !completionDate) return;
 
@@ -119,8 +119,8 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
     if (!userPlan || !completionDate || !dashboardStats) {
       return;
     }
-
-
+    
+    
     // Milestone theo thời gian WHO
     const healthMilestones = [
       { days: 1, title: '24 giờ đầu tiên', description: 'Carbon monoxide được loại bỏ khỏi cơ thể', achieved: false },
@@ -145,7 +145,7 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
       calculateDashboardStats();
     }
   }, [userPlan, completionDate, calculateDashboardStats]);
-
+  
   // Tải milestone sau khi đã có thống kê
   useEffect(() => {
     if (dashboardStats) {
@@ -168,7 +168,7 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
     console.log("Current dashboard stats:", dashboardStats);
     console.log("Current milestones:", milestones);
   }, [dashboardStats, milestones]);
-
+  
   // Show loading state while dashboardStats is not set
   if (!dashboardStats) {
     console.log("Dashboard stats not set yet, showing loading screen");
@@ -254,8 +254,8 @@ const ProgressDashboard = ({ userPlan, completionDate, dashboardStats: externalS
         <h2>Milestone sức khỏe</h2>
         <div className="milestones-grid">
           {milestones.map((milestone, index) => (
-            <div
-              key={index}
+            <div 
+              key={index} 
               className={`milestone-card ${milestone.achieved ? 'achieved' : 'pending'}`}
             >
               <div className="milestone-indicator">

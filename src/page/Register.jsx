@@ -4,34 +4,34 @@ import './Register.css';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
-  const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  
   const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  // Chuyển hướng đến home nếu đã đăng nhập
+  
+  // Chuyển hướng đến profile nếu đã đăng nhập
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/profile');
     }
   }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
+    
     // Kiểm tra mật khẩu xác nhận
     if (password !== confirmPassword) {
       setError('Mật khẩu xác nhận không khớp');
       return;
     }
-
+    
     // Kiểm tra mật khẩu đủ mạnh (ít nhất 6 ký tự)
     if (password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự');
@@ -41,28 +41,15 @@ export default function Register() {
     setIsLoading(true);
       try {
       const userData = {
-        username,
-        fullName,
+        name,
         email,
         password
       };
       
       const result = await register(userData);
-      console.log('📋 Register result:', result); // Debug log
-
+      
       if (result.success) {
-        if (result.needsVerification) {
-          // Redirect to email verification page
-          navigate('/verify-email', {
-            state: {
-              email: result.email,
-              message: result.message
-            }
-          });
-        } else {
-          // This should not happen in normal flow, but handle gracefully
-          setError('Unexpected registration flow. Please try again or contact support.');
-        }
+        navigate('/profile');
       } else {
         setError(result.error || 'Đăng ký không thành công');
       }
@@ -83,36 +70,21 @@ export default function Register() {
           </div>
 
           <form onSubmit={handleSubmit} className="register-form">
-            {error && <div className="error-message">{error}</div>}            <div className="form-group">
-              <label htmlFor="fullName">Họ và tên</label>
-              <input
-                type="text"
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Nhập tên đầy đủ của bạn"
-                disabled={isLoading}
-                required
-              />
-            </div>
-
+            {error && <div className="error-message">{error}</div>}
+            
             <div className="form-group">
-              <label htmlFor="username">Tên người dùng</label>
+              <label htmlFor="name">Họ và tên</label>
               <input
                 type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Nhập tên người dùng (3-50 ký tự)"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nhập tên của bạn"
                 disabled={isLoading}
                 required
-                minLength={3}
-                maxLength={50}
-                pattern="[a-zA-Z0-9_]+"
-                title="Chỉ được chứa chữ cái, số và dấu gạch dưới"
               />
             </div>
-
+            
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
@@ -124,33 +96,6 @@ export default function Register() {
                 disabled={isLoading}
                 required
               />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="phone">Số điện thoại (tuỳ chọn)</label>
-              <input
-                type="tel"
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Nhập số điện thoại"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="gender">Giới tính (tuỳ chọn)</label>
-              <select
-                id="gender"
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                disabled={isLoading}
-              >
-                <option value="">Chọn giới tính</option>
-                <option value="male">Nam</option>
-                <option value="female">Nữ</option>
-                <option value="other">Khác</option>
-              </select>
             </div>
 
             <div className="form-group">
@@ -166,7 +111,7 @@ export default function Register() {
                 minLength={6}
               />
             </div>
-
+            
             <div className="form-group">
               <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
               <input
@@ -186,8 +131,8 @@ export default function Register() {
               </label>
             </div>
 
-            <button
-              type="submit"
+            <button 
+              type="submit" 
               className="register-button"
               disabled={isLoading}
             >

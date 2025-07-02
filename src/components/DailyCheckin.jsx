@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FaCalendarCheck, FaSave, FaCalendarAlt, FaArrowLeft } from 'react-icons/fa';
-import CalendarPicker from './CalendarPicker';
+import { FaCalendarCheck, FaSave } from 'react-icons/fa';
 
 const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
-    const [showCalendar, setShowCalendar] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [todayData, setTodayData] = useState({
         date: new Date().toISOString().split('T')[0],
         targetCigarettes: 12, // Sẽ được tính từ kế hoạch
@@ -120,50 +117,17 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
         
         console.log(`Streak days cuối cùng: ${streak}`);
         setStreakDays(streak);
-    };    // Load dữ liệu cho ngày được chọn
-    const loadDataForDate = (dateStr) => {
-        const target = calculateTargetForDate(dateStr);
-        const savedData = localStorage.getItem(`checkin_${dateStr}`);
-
-        if (savedData) {
-            const data = JSON.parse(savedData);
-            setTodayData({
-                ...data,
-                targetCigarettes: target
-            });
-            setIsSubmitted(true);
-        } else {
-            setTodayData({
-                date: dateStr,
-                targetCigarettes: target,
-                actualCigarettes: 0,
-                notes: ''
-            });
-            setIsSubmitted(false);
-        }
-
-        // Cập nhật current week
-        const targetDate = new Date(dateStr);
-        const startDate = new Date(currentPlan?.startDate || new Date());
-        const daysDiff = Math.floor((targetDate - startDate) / (1000 * 60 * 60 * 24));
-        const weekNumber = Math.floor(daysDiff / 7) + 1;
-        setCurrentWeek(weekNumber);
-    };
-
-    // Xử lý chọn ngày từ calendar
-    const handleDateSelect = (dateStr) => {
-        setSelectedDate(dateStr);
-        loadDataForDate(dateStr);
-        setShowCalendar(false);
     };
 
     // Cập nhật target khi component mount hoặc plan thay đổi
     useEffect(() => {
-        if (currentPlan) {
-            loadDataForDate(selectedDate);
-            calculateStreakDays();
-        }
-    }, [currentPlan, selectedDate]);// Kiểm tra xem hôm nay đã checkin chưa
+        const target = calculateTodayTarget();
+        setTodayData(prev => ({
+            ...prev,
+            targetCigarettes: target
+        }));
+        calculateStreakDays();
+    }, [currentPlan]);    // Kiểm tra xem hôm nay đã checkin chưa
     useEffect(() => {
         const today = new Date().toISOString().split('T')[0];
         const savedData = localStorage.getItem(`checkin_${today}`);
@@ -172,12 +136,12 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
             setTodayData(data);
             setIsSubmitted(true);
         }
-    }, []); const handleInputChange = (field, value) => {
+    }, []);    const handleInputChange = (field, value) => {
         setTodayData(prev => ({
             ...prev,
             [field]: value
         }));
-    }; const handleSubmit = () => {
+    };    const handleSubmit = () => {
         // Lưu dữ liệu vào localStorage
         const today = new Date().toISOString().split('T')[0];
         const isUpdate = localStorage.getItem(`checkin_${today}`) !== null;
@@ -337,7 +301,7 @@ const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
                             className="submit-btn"
                         >
                             <FaSave className="btn-icon" />
-                            {isToday ? 'Lưu checkin hôm nay' : `Lưu checkin ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}`}
+                            Lưu checkin hôm nay
                         </button>
                     ) : (
                         <button
