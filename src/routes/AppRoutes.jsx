@@ -7,6 +7,7 @@ import SettingsPage from '../page/Settings';
 import Pay from '../page/Pay';
 import PaymentSuccess from '../page/PaymentSuccess';
 import CoachBookings from '../page/coach/CoachBookings';
+import CoachDashboard from '../page/coach/CoachDashboard';
 import Chat from '../page/Chat';
 import EmailVerification from '../page/EmailVerification';
 import Register from '../page/Register';
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
   {
     path: "/coach",
     element: <Layout><CoachBookings /></Layout>,
+  },
+  {
+    path: "/coach-dashboard",
+    element: <Layout><CoachDashboard /></Layout>,
   },
   {
     path: "/chat",
