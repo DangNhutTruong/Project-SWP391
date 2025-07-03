@@ -173,6 +173,17 @@
   content: "★";
   margin-right: 4px;
   font-size: 10px;
+}
+
+/* Hiệu ứng khi membership được cập nhật */
+@keyframes membershipUpdated {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.membership-updated .membership-label {
+  animation: membershipUpdated 0.6s ease;
   text-shadow: 0 0 3px rgba(255, 255, 255, 0.7);
 }
 

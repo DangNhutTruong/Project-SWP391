@@ -11,6 +11,8 @@ import CoachDashboard from '../page/coach/CoachDashboard';
 import Chat from '../page/Chat';
 import EmailVerification from '../page/EmailVerification';
 import Register from '../page/Register';
+import MembershipGuard from '../components/MembershipGuard';
+import Layout from '../components/Layout';
 
 /**
  * AppRoutes - Cung cấp cấu hình định tuyến (routing) cho toàn bộ ứng dụng
@@ -18,13 +20,6 @@ import Register from '../page/Register';
  * Component này định nghĩa các routes chính sử dụng React Router v7
  * và liên kết chúng với các component tương ứng.
  */
-
-// Layout component để bọc nội dung của trang
-const Layout = ({ children }) => (
-  <>
-    {children}
-  </>
-);
 
 // Cấu hình router
 const router = createBrowserRouter([
@@ -50,7 +45,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/coach",
-    element: <Layout><CoachBookings /></Layout>,
+    element: <Layout><MembershipGuard requiredMembership="premium" redirectTo="/membership"><CoachBookings /></MembershipGuard></Layout>,
   },
   {
     path: "/coach-dashboard",
@@ -58,7 +53,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/chat",
-    element: <Layout><Chat /></Layout>,
+    element: <Layout><MembershipGuard requiredMembership="premium" redirectTo="/membership"><Chat /></MembershipGuard></Layout>,
   },
   {
     path: "*",

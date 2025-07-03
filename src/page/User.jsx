@@ -60,6 +60,22 @@ const UserProfile = ({ isStandalone = false }) => {
         processedUser.quit_reason = user.quitReason;
       }
       
+      // Đảm bảo đồng bộ membership và membershipType
+      if (user.membership && (!user.membershipType || user.membershipType !== user.membership)) {
+        processedUser.membershipType = user.membership;
+      } else if (user.membershipType && (!user.membership || user.membership !== user.membershipType)) {
+        processedUser.membership = user.membershipType;
+      }
+
+      // Đảm bảo xử lý role và membership đồng bộ với nhau
+      if (user.role === 'premium' || user.role === 'pro') {
+        // Nếu user có role premium hoặc pro, nhưng membership không phù hợp, cập nhật membership
+        if (!processedUser.membership || processedUser.membership === 'free') {
+          processedUser.membership = user.role;
+          processedUser.membershipType = user.role;
+        }
+      }
+      
       // Đảm bảo age và address cũng được sao chép
       processedUser.age = user.age !== undefined ? user.age : null;
       processedUser.address = user.address || "";
@@ -70,7 +86,10 @@ const UserProfile = ({ isStandalone = false }) => {
         quitReason: processedUser.quitReason,
         age: processedUser.age,
         address: processedUser.address,
-        profile_image: processedUser.profile_image
+        profile_image: processedUser.profile_image,
+        membership: processedUser.membership,
+        membershipType: processedUser.membershipType,
+        role: processedUser.role
       });
       
       setUserData(processedUser);
@@ -294,6 +313,148 @@ const UserProfile = ({ isStandalone = false }) => {
     }
   };
 
+  // Lắng nghe sự kiện membership-updated từ API
+  useEffect(() => {
+    const handleMembershipUpdate = (event) => {
+      if (event.detail && event.detail.membership) {
+        console.log('User.jsx - Membership update event received:', event.detail);
+        
+        // Cập nhật userData với thông tin membership mới
+        setUserData(prev => ({
+          ...prev,
+          membership: event.detail.membership,
+          membershipType: event.detail.membership,
+          packageDetails: event.detail.packageDetails
+        }));
+      }
+    };
+    
+    // Đăng ký lắng nghe sự kiện
+    window.addEventListener('membership-updated', handleMembershipUpdate);
+    
+    // Hủy đăng ký khi component unmount
+    return () => {
+      window.removeEventListener('membership-updated', handleMembershipUpdate);
+    };
+  }, []);
+
+  // Lắng nghe sự kiện user-updated từ AuthContext
+  useEffect(() => {
+    const handleUserUpdate = (event) => {
+      if (event.detail && event.detail.user) {
+        console.log('User.jsx - User update event received:', event.detail);
+        
+        // Xử lý dữ liệu user mới
+        const updatedUser = event.detail.user;
+        const processedUser = { ...updatedUser };
+        
+        // Đảm bảo đồng bộ các trường cần thiết
+        if (updatedUser.full_name && !updatedUser.name) {
+          processedUser.name = updatedUser.full_name;
+        }
+        
+        if (updatedUser.date_of_birth && !updatedUser.dateOfBirth) {
+          processedUser.dateOfBirth = updatedUser.date_of_birth;
+        }
+        
+        if (updatedUser.quit_reason && !updatedUser.quitReason) {
+          processedUser.quitReason = updatedUser.quit_reason;
+        }
+        
+        // Đảm bảo đồng bộ membership và membershipType
+        if (updatedUser.membership && (!updatedUser.membershipType || updatedUser.membershipType !== updatedUser.membership)) {
+          processedUser.membershipType = updatedUser.membership;
+        } else if (updatedUser.membershipType && (!updatedUser.membership || updatedUser.membership !== updatedUser.membershipType)) {
+          processedUser.membership = updatedUser.membershipType;
+        }
+        
+        // Đảm bảo xử lý role và membership đồng bộ với nhau
+        if (updatedUser.role === 'premium' || updatedUser.role === 'pro') {
+          // Nếu user có role premium hoặc pro, nhưng membership không phù hợp, cập nhật membership
+          if (!processedUser.membership || processedUser.membership === 'free') {
+            processedUser.membership = updatedUser.role;
+            processedUser.membershipType = updatedUser.role;
+          }
+        }
+        
+        // Cập nhật userData
+        setUserData(processedUser);
+      }
+    };
+    
+    // Đăng ký lắng nghe sự kiện
+    window.addEventListener('user-updated', handleUserUpdate);
+    
+    // Hủy đăng ký khi component unmount
+    return () => {
+      window.removeEventListener('user-updated', handleUserUpdate);
+    };
+  }, []);
+
+  // Tự động lấy thông tin membership từ backend khi component mount
+  useEffect(() => {
+    const fetchMembership = async () => {
+      if (user && user.id) {
+        try {
+          console.log('User.jsx - Fetching membership data from backend...');
+          
+          // Import API từ membershipApi.js
+          const membershipApiModule = await import('../utils/membershipApi');
+          const membershipApi = membershipApiModule.default;
+          
+          // Gọi API lấy membership hiện tại
+          const response = await membershipApi.getCurrentMembership();
+          console.log('User.jsx - Membership API response:', response);
+          
+          if (response.success && response.data) {
+            // Xác định membership value từ tên gói
+            let membershipValue = 'free';
+            if (response.data.package_name) {
+              const packageName = response.data.package_name.toLowerCase();
+              if (packageName.includes('pro')) {
+                membershipValue = 'pro';
+              } else if (packageName.includes('premium')) {
+                membershipValue = 'premium';
+              } else if (response.data.package_id !== 1) {
+                membershipValue = 'premium';
+              }
+            }
+            
+            console.log('User.jsx - Membership value determined:', membershipValue);
+            
+            // Kiểm tra nếu user có role premium hoặc pro
+            if (user?.role === 'premium' || user?.role === 'pro') {
+              if (membershipValue === 'free') {
+                membershipValue = user.role;
+              }
+            }
+            
+            // Cập nhật userData với thông tin membership mới
+            setUserData(prev => {
+              const updatedData = {
+                ...prev,
+                membership: membershipValue,
+                membershipType: membershipValue,
+                packageDetails: response.data
+              };
+              
+              // Đảm bảo role được đồng bộ nếu có
+              if (user?.role && (user.role === 'premium' || user.role === 'pro')) {
+                updatedData.role = user.role;
+              }
+              
+              return updatedData;
+            });
+          }
+        } catch (error) {
+          console.error('User.jsx - Error fetching membership:', error);
+        }
+      }
+    };
+    
+    fetchMembership();
+  }, [user]);
+
   // If no user data is available, show loading state
   if (!user) {
     return <div className="loading-container">Đang tải...</div>;
@@ -389,16 +550,51 @@ const UserProfile = ({ isStandalone = false }) => {
               />
             </div>
           )}
-          {/* Hiển thị ID người dùng dưới avatar */}
+          {/* Hiển thị ID người dùng dưới avatar - Hiển thị đầy đủ các ID có thể có */}
           <div className="user-id">
-            ID: {userData._id || userData.id || "N/A"}
+            ID: {userData._id || userData.id || user?._id || user?.id || "N/A"}
           </div>
 
-          {userData.membershipType && userData.membershipType !== 'free' && (
-            <div className={`membership-badge ${userData.membershipType}`}>
-              <FaCrown /> {userData.membershipType === 'premium' ? 'Premium' : 'Pro'}
-            </div>
-          )}
+          {/* Hiển thị nhãn thành viên - kiểm tra nhiều nguồn dữ liệu */}
+          {(() => {
+            // Xác định membership từ các nguồn khác nhau
+            const membershipValue = 
+              userData.membership || 
+              userData.membershipType || 
+              user?.membership || 
+              user?.membershipType || 
+              (localStorage.getItem('nosmoke_user') ? 
+                JSON.parse(localStorage.getItem('nosmoke_user'))?.membership : null) ||
+              (sessionStorage.getItem('nosmoke_user') ? 
+                JSON.parse(sessionStorage.getItem('nosmoke_user'))?.membership : null);
+            
+            // Kiểm tra nếu user có role premium hoặc pro
+            const userRole = 
+              userData.role || 
+              user?.role || 
+              (localStorage.getItem('nosmoke_user') ? 
+                JSON.parse(localStorage.getItem('nosmoke_user'))?.role : null) ||
+              (sessionStorage.getItem('nosmoke_user') ? 
+                JSON.parse(sessionStorage.getItem('nosmoke_user'))?.role : null);
+                
+            // Xác định membership từ role nếu không có membership
+            let finalMembership = membershipValue;
+            if (!finalMembership || finalMembership === 'free') {
+              if (userRole === 'premium' || userRole === 'pro') {
+                finalMembership = userRole;
+              }
+            }
+                
+            // Chỉ hiển thị khi có membership và khác free
+            if (finalMembership && finalMembership !== 'free') {
+              return (
+                <div className={`membership-badge ${finalMembership}`}>
+                  <FaCrown /> {finalMembership === 'premium' ? 'Premium' : 'Pro'}
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
 

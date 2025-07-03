@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import healthRoutes from './routes/health.js';
 import packageRoutes from './routes/packages.js';
+import paymentRoutes from './routes/payments.js';
 import ensureTablesExist from './ensureTables.js';
 import path from 'path';
 
@@ -77,6 +78,59 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', healthRoutes);
 app.use('/api/packages', packageRoutes);
+
+// Đăng ký route payments với debug chi tiết
+console.log('📌 Registering payment routes...');
+try {
+  // Express routers can be functions with properties
+  if (paymentRoutes) {
+    // Đăng ký routes
+    app.use('/api/payments', paymentRoutes);
+    console.log('✅ Payment routes registered successfully');
+    
+    // Log các routes đã đăng ký
+    if (paymentRoutes.stack && Array.isArray(paymentRoutes.stack)) {
+      console.log('Routes registered in paymentRoutes:');
+      paymentRoutes.stack.forEach(r => {
+        if (r.route) {
+          const methods = Object.keys(r.route.methods).map(m => m.toUpperCase()).join(',');
+          console.log(`  ${methods} ${r.route.path}`);
+        }
+      });
+    }
+  } else {
+    console.error('❌ paymentRoutes is not available');
+  }
+} catch (error) {
+  console.error('❌ Error registering payment routes:', error);
+}
+
+// Log tất cả các routes đã đăng ký (để debug)
+console.log('\n📋 Registered routes:');
+app._router.stack.forEach(middleware => {
+  if (middleware.route) {
+    // Routes đơn giản
+    console.log(`${middleware.route.stack[0].method.toUpperCase()} ${middleware.route.path}`);
+  } else if (middleware.name === 'router') {
+    // Router-level middleware
+    const path = middleware.regexp.toString()
+      .replace('\\/?(?=\\/|$)', '')
+      .replace(/[\\^$.*+?()[\]{}|]/g, '')
+      .replace('/^', '')
+      .replace('\\/', '/')
+      .replace('(?:/(?=$))?$/i', '');
+      
+    if (path.includes('/api/payments')) {
+      console.log(`🔍 Router at path: ${path}`);
+      middleware.handle.stack.forEach(handler => {
+        if (handler.route) {
+          const method = Object.keys(handler.route.methods)[0].toUpperCase();
+          console.log(`  ${method} ${path}${handler.route.path}`);
+        }
+      });
+    }
+  }
+});
 
 // 404 handler
 app.use('*', (req, res) => {
