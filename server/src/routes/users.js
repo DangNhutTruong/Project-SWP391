@@ -1,30 +1,25 @@
 import express from 'express';
-import * as userController from '../controllers/userController.js';
-import { authenticateToken } from '../middleware/auth.js';
-import { 
-    validateProfileUpdate,
-    validateSmokingStatus,
-    handleValidationErrors 
-} from '../middleware/validation.js';
-import { upload } from '../middleware/fileUpload.js';
+import {
+  getProfile,
+  updateProfile,
+  uploadAvatar,
+  getSmokingStatus,
+  updateSmokingStatus,
+  deleteAccount
+} from '../controllers/userController.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes in this file require authentication
-router.use(authenticateToken);
+// All user routes require authentication
+router.use(authenticate);
 
-// User profile routes
-router.get('/profile', userController.getProfile);
-router.put('/profile', validateProfileUpdate, handleValidationErrors, userController.updateProfile);
-
-// Avatar routes
-router.post('/avatar', upload.single('avatar'), userController.uploadAvatar);
-
-// Smoking status routes
-router.get('/smoking-status', userController.getSmokingStatus);
-router.put('/smoking-status', validateSmokingStatus, handleValidationErrors, userController.updateSmokingStatus);
-
-// Account deletion route
-router.delete('/account', userController.deleteAccount);
+// User management routes
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
+router.post('/avatar', uploadAvatar);
+router.get('/smoking-status', getSmokingStatus);
+router.put('/smoking-status', updateSmokingStatus);
+router.delete('/account', deleteAccount);
 
 export default router;
