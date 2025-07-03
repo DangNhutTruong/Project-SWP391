@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import './MembershipPackage.css';
-import { FaCheck, FaTimes, FaCrown, FaLeaf, FaRocket, FaLock } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import MembershipDashboard from '../components/MembershipDashboard';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import './MembershipPackage.css';
+import { FaRocket, FaCheck, FaTimes, FaLock, FaLeaf, FaCrown } from 'react-icons/fa';
 
 export default function MembershipPackage() {
-  const navigate = useNavigate();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [toasts, setToasts] = useState([]);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -174,127 +175,145 @@ export default function MembershipPackage() {
   );
 
   return (
-    <>
-      <section className="pricing-section">
-        <div className="container">
-          <h2>Gói thành viên</h2>
-          <p className="pricing-subtitle">Chọn gói phù hợp với nhu cầu của bạn</p>
-          <div className="pricing-particles"></div>
-  
-          <div className="pricing-grid">            <div className={`pricing-card free ${!canPurchasePackage('free') && user?.membership !== 'free' ? 'disabled-package' : ''}`}>
-              {!canPurchasePackage('free') && user?.membership !== 'free' && <div className="package-owned"><FaLock /> Đã sở hữu</div>}
-              <div className="pricing-header">
-                <h3><FaRocket /> Free</h3>
-                <p className="pricing-desc">Bắt đầu miễn phí</p>
-                <div className="pricing-price">
-                  <span className="price">0đ</span>
-                  <span className="period">/tháng</span>
+      <div className="membership-page-wrapper">
+        <div className="container py-4">
+          {!user ? (
+            <div className="card text-center my-5 p-4">
+              <div className="card-body">
+                <div className="alert alert-info">
+                  <h4>Bạn cần đăng nhập để quản lý gói thành viên</h4>
+                  <p>Vui lòng đăng nhập hoặc đăng ký để truy cập trang này</p>
                 </div>
-              </div><div className="pricing-features">
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Theo dõi cai thuốc</span>
-                </div>
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Lập kế hoạch cá nhân</span>
-                </div>
-                <div className="feature-item disabled">
-                  <FaTimes />
-                  <span>Huy hiệu & cộng đồng</span>
-                </div>
-                <div className="feature-item disabled">
-                  <FaTimes />
-                  <span>Chat huấn luyện viên</span>
-                </div>
-                <div className="feature-item disabled">
-                  <FaTimes />
-                  <span>Video call tư vấn</span>
-                </div>              </div><button 
-                onClick={() => handlePackageSelection('free')} 
-                className="pricing-btn"
-              >
-                Bắt đầu miễn phí
-              </button>
-            </div>            <div className={`pricing-card premium highlight ${!canPurchasePackage('premium') ? 'disabled-package' : ''}`}>              <div className="best-value">Phổ biến nhất</div>
-              {!canPurchasePackage('premium') && <div className="package-owned"><FaLock /> Đã sở hữu</div>}
-              <div className="pricing-header">
-                <h3><FaLeaf /> Premium</h3>
-                <p className="pricing-desc">Hỗ trợ toàn diện</p>
-                <div className="pricing-price">
-                  <span className="price">99.000đ</span>
-                  <span className="period">/tháng</span>
-                </div>
+                <button className="btn btn-primary" onClick={() => document.getElementById('loginButton')?.click()}>
+                  Đăng nhập
+                </button>
               </div>
-              <div className="pricing-features">
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Theo dõi cai thuốc</span>
+            </div>
+          ) : (
+            <>
+              <section className="pricing-section">
+                <div className="container">
+                  <h2>Gói thành viên</h2>
+                  <p className="pricing-subtitle">Chọn gói phù hợp với nhu cầu của bạn</p>
+                  <div className="pricing-particles"></div>
+      
+                  <div className="pricing-grid">            <div className={`pricing-card free ${!canPurchasePackage('free') && user?.membership !== 'free' ? 'disabled-package' : ''}`}>
+                    {!canPurchasePackage('free') && user?.membership !== 'free' && <div className="package-owned"><FaLock /> Đã sở hữu</div>}
+                    <div className="pricing-header">
+                      <h3><FaRocket /> Free</h3>
+                      <p className="pricing-desc">Bắt đầu miễn phí</p>
+                      <div className="pricing-price">
+                        <span className="price">0đ</span>
+                        <span className="period">/tháng</span>
+                      </div>
+                    </div><div className="pricing-features">
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Theo dõi cai thuốc</span>
+                      </div>
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Lập kế hoạch cá nhân</span>
+                      </div>
+                      <div className="feature-item disabled">
+                        <FaTimes />
+                        <span>Huy hiệu & cộng đồng</span>
+                      </div>
+                      <div className="feature-item disabled">
+                        <FaTimes />
+                        <span>Chat huấn luyện viên</span>
+                      </div>
+                      <div className="feature-item disabled">
+                        <FaTimes />
+                        <span>Video call tư vấn</span>
+                      </div>              </div><button 
+                      onClick={() => handlePackageSelection('free')} 
+                      className="pricing-btn"
+                    >
+                      Bắt đầu miễn phí
+                    </button>
+                  </div>            <div className={`pricing-card premium highlight ${!canPurchasePackage('premium') ? 'disabled-package' : ''}`}>              <div className="best-value">Phổ biến nhất</div>
+                    {!canPurchasePackage('premium') && <div className="package-owned"><FaLock /> Đã sở hữu</div>}
+                    <div className="pricing-header">
+                      <h3><FaLeaf /> Premium</h3>
+                      <p className="pricing-desc">Hỗ trợ toàn diện</p>
+                      <div className="pricing-price">
+                        <span className="price">99.000đ</span>
+                        <span className="period">/tháng</span>
+                      </div>
+                    </div>
+                    <div className="pricing-features">
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Theo dõi cai thuốc</span>
+                      </div>
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Lập kế hoạch cá nhân</span>
+                      </div>
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Huy hiệu & cộng đồng</span>
+                      </div>
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Chat huấn luyện viên</span>
+                      </div>
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Video call tư vấn</span>
+                      </div>              </div>
+                    <button 
+                      onClick={() => canPurchasePackage('premium') && handlePackageSelection('premium')} 
+                      className={`pricing-btn ${!canPurchasePackage('premium') ? 'disabled-btn' : ''}`}
+                      disabled={!canPurchasePackage('premium')}
+                    >
+                      {canPurchasePackage('premium') ? 'Đăng ký ngay' : 'Đã sở hữu'}
+                    </button>
+                  </div>            <div className={`pricing-card pro ${!canPurchasePackage('pro') ? 'disabled-package' : ''}`}>              {!canPurchasePackage('pro') && <div className="package-owned"><FaLock /> Đã sở hữu</div>}
+                    <div className="pricing-header">
+                      <h3><FaCrown /> Pro</h3>
+                      <p className="pricing-desc">Hỗ trợ toàn diện</p>
+                      <div className="pricing-price">
+                        <span className="price">999.000đ</span>
+                        <span className="period">/năm</span>
+                      </div>
+                    </div>
+                    <div className="pricing-features">
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Theo dõi cai thuốc</span>
+                      </div>
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Lập kế hoạch cá nhân</span>
+                      </div>
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Huy hiệu & cộng đồng</span>
+                      </div>
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Chat huấn luyện viên</span>
+                      </div>
+                      <div className="feature-item">
+                        <FaCheck />
+                        <span>Video call tư vấn</span>
+                      </div>              </div>
+                    <button 
+                      onClick={() => canPurchasePackage('pro') && handlePackageSelection('pro')} 
+                      className={`pricing-btn ${!canPurchasePackage('pro') ? 'disabled-btn' : ''}`}
+                      disabled={!canPurchasePackage('pro')}
+                    >
+                      {canPurchasePackage('pro') ? 'Đăng ký Pro' : 'Đã sở hữu'}
+                    </button>
+                  </div>          </div>
                 </div>
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Lập kế hoạch cá nhân</span>
-                </div>
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Huy hiệu & cộng đồng</span>
-                </div>
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Chat huấn luyện viên</span>
-                </div>
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Video call tư vấn</span>
-                </div>              </div>
-              <button 
-                onClick={() => canPurchasePackage('premium') && handlePackageSelection('premium')} 
-                className={`pricing-btn ${!canPurchasePackage('premium') ? 'disabled-btn' : ''}`}
-                disabled={!canPurchasePackage('premium')}
-              >
-                {canPurchasePackage('premium') ? 'Đăng ký ngay' : 'Đã sở hữu'}
-              </button>
-            </div>            <div className={`pricing-card pro ${!canPurchasePackage('pro') ? 'disabled-package' : ''}`}>              {!canPurchasePackage('pro') && <div className="package-owned"><FaLock /> Đã sở hữu</div>}
-              <div className="pricing-header">
-                <h3><FaCrown /> Pro</h3>
-                <p className="pricing-desc">Hỗ trợ toàn diện</p>
-                <div className="pricing-price">
-                  <span className="price">999.000đ</span>
-                  <span className="period">/năm</span>
-                </div>
-              </div>
-              <div className="pricing-features">
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Theo dõi cai thuốc</span>
-                </div>
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Lập kế hoạch cá nhân</span>
-                </div>
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Huy hiệu & cộng đồng</span>
-                </div>
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Chat huấn luyện viên</span>
-                </div>
-                <div className="feature-item">
-                  <FaCheck />
-                  <span>Video call tư vấn</span>
-                </div>              </div>
-              <button 
-                onClick={() => canPurchasePackage('pro') && handlePackageSelection('pro')} 
-                className={`pricing-btn ${!canPurchasePackage('pro') ? 'disabled-btn' : ''}`}
-                disabled={!canPurchasePackage('pro')}
-              >
-                {canPurchasePackage('pro') ? 'Đăng ký Pro' : 'Đã sở hữu'}
-              </button>
-            </div>          </div>
+              </section>
+              <ToastContainer />
+            </>
+          )}
         </div>
-      </section>
-      <ToastContainer />
-    </>
+      </div>
   );
 }

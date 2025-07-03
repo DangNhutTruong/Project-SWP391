@@ -23,6 +23,10 @@
         "fix-membership-column": "node src/scripts/fix-membership-column.js",
         "check-packages": "node src/scripts/check-packages.js",
         "extend-membership": "node src/scripts/extend-membership-enum.js",
+        "test-payment-endpoints": "node src/scripts/test-payment-endpoints.js",
+        "test-payment-history": "node src/scripts/test-payment-history-api.js", 
+        "test-payment-verify": "node src/scripts/test-payment-verify-endpoints.js",
+        "create-test-user": "node src/scripts/create-test-user.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
@@ -36,6 +40,7 @@
         "jsonwebtoken": "^9.0.2",
         "multer": "^2.0.1",
         "mysql2": "^3.6.5",
+        "node-fetch": "^3.3.2",
         "nodemailer": "^6.10.1"
     },
     "devDependencies": {

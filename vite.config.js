@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -8,6 +9,22 @@ export default defineConfig({
   base: '/',
   build: {
     assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
+          'bootstrap': ['react-bootstrap', 'bootstrap'],
+        }
+      }
+    }
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    }
+  },
+  optimizeDeps: {
+    include: ['react-bootstrap']
   },
   publicDir: 'public',
   server: {

@@ -15,7 +15,8 @@ const API_CONFIG = {
  * @returns {string|null} The auth token or null
  */
 const getAuthToken = () => {
-  const token = localStorage.getItem('nosmoke_token');
+  // Kiểm tra nhiều vị trí lưu token
+  const token = localStorage.getItem('nosmoke_token') || localStorage.getItem('token');
   return token || null;
 };
 

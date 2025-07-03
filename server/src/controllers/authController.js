@@ -111,6 +111,19 @@ export const ensureTablesExist = async () => {
                 console.log('address column error:', error.message);
             }
         }
+        
+        // Thêm cột membership nếu chưa có
+        try {
+            await pool.execute(`
+                ALTER TABLE users 
+                ADD COLUMN membership ENUM('free', 'premium', 'pro') DEFAULT 'free'
+            `);
+            console.log('✅ Added membership column to users table');
+        } catch (error) {
+            if (!error.message.includes('Duplicate column name')) {
+                console.log('membership column error:', error.message);
+            }
+        }
 
         // Fix role column to ensure it has correct ENUM values
         try {
@@ -228,6 +241,7 @@ const formatUserResponse = (user) => {
     console.log('- address:', user.address, typeof user.address);
     console.log('- age:', user.age, typeof user.age);
     console.log('- quit_reason:', user.quit_reason, typeof user.quit_reason);
+    console.log('- membership:', user.membership, typeof user.membership);
     
     // Ensure all fields are mapped for frontend and backend compatibility
     const formattedUser = {
@@ -250,6 +264,8 @@ const formatUserResponse = (user) => {
         quitReason: user.quit_reason,
         age: user.age !== undefined ? user.age : null,
         address: user.address,
+        membership: user.membership || 'free',  // Thêm membership với giá trị mặc định là 'free'
+        membershipType: user.membership || 'free',  // Thêm membershipType cho frontend
         createdAt: user.created_at,
         updatedAt: user.updated_at
     };
@@ -355,13 +371,13 @@ export const login = async (req, res) => {
         console.log('🔑 Login attempt for:', req.body.email);
         const { email, password } = req.body;
         
-        // Đảm bảo truy vấn lấy tất cả các trường, bao gồm address, age, quit_reason
+        // Đảm bảo truy vấn lấy tất cả các trường, bao gồm address, age, quit_reason, membership
         const [users] = await pool.execute(
             `SELECT 
                 id, username, email, password_hash, full_name, phone, 
                 date_of_birth, gender, role, email_verified, is_active,
                 profile_image, refresh_token, created_at, updated_at,
-                address, age, quit_reason
+                address, age, quit_reason, membership
              FROM users 
              WHERE email = ?`,
             [email]
@@ -407,7 +423,7 @@ export const login = async (req, res) => {
                 id, username, email, password_hash, full_name, phone, 
                 date_of_birth, gender, role, email_verified, is_active,
                 profile_image, refresh_token, created_at, updated_at,
-                address, age, quit_reason
+                address, age, quit_reason, membership
              FROM users 
              WHERE id = ?`,
             [user.id]
@@ -420,6 +436,7 @@ export const login = async (req, res) => {
             quit_reason: updatedUser.quit_reason,
             age: updatedUser.age,
             profile_image: updatedUser.profile_image
+            
         });
         
         // Format và trả về dữ liệu
@@ -467,8 +484,8 @@ export const verifyEmail = async (req, res) => {
         // Move data from pending_registrations to users table
         const [result] = await pool.execute(
             `INSERT INTO users 
-             (username, email, password_hash, full_name, phone, date_of_birth, gender, role, email_verified, is_active, created_at, age, address, quit_reason) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE, TRUE, NOW(), ?, ?, ?)`,
+             (username, email, password_hash, full_name, phone, date_of_birth, gender, role, email_verified, is_active, created_at, age, address, quit_reason, membership) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE, TRUE, NOW(), ?, ?, ?, ?)`,
             [
                 pendingUser.username,
                 pendingUser.email,
@@ -480,7 +497,8 @@ export const verifyEmail = async (req, res) => {
                 pendingUser.role || 'user',
                 null, // age
                 null, // address
-                null  // quit_reason
+                null, // quit_reason
+                'free' // membership - mặc định là free cho người dùng mới
             ]
         );
 
@@ -583,7 +601,7 @@ export const getProfile = async (req, res) => {
                 id, username, email, password_hash, full_name, phone, 
                 date_of_birth, gender, role, email_verified, is_active,
                 profile_image, refresh_token, created_at, updated_at,
-                address, age, quit_reason
+                address, age, quit_reason, membership
              FROM users 
              WHERE id = ?`,
             [userId]
@@ -626,7 +644,8 @@ export const updateProfile = async (req, res) => {
             address,
             age,
             quitReason,
-            quit_reason
+            quit_reason,
+            membership
         } = req.body;
         
         // Format age thành số nếu có
@@ -641,7 +660,7 @@ export const updateProfile = async (req, res) => {
         
         console.log('🔄 Prepared update data:', {
             fullName, phone, dateOfBirth, gender, role,
-            address, age: formattedAge, quitReason: finalQuitReason
+            address, age: formattedAge, quitReason: finalQuitReason, membership
         });
         
         await pool.execute(
@@ -654,6 +673,7 @@ export const updateProfile = async (req, res) => {
                 address = ?,
                 age = ?,
                 quit_reason = ?,
+                membership = ?,
                 updated_at = NOW() 
              WHERE id = ?`,
             [
@@ -665,6 +685,7 @@ export const updateProfile = async (req, res) => {
                 address || null,
                 formattedAge,
                 finalQuitReason,
+                membership || 'free', // Giữ lại trường membership, mặc định 'free' nếu null
                 userId
             ]
         );
@@ -675,7 +696,7 @@ export const updateProfile = async (req, res) => {
                 id, username, email, full_name, phone, 
                 date_of_birth, gender, role, email_verified, is_active,
                 profile_image, created_at, updated_at,
-                address, age, quit_reason
+                address, age, quit_reason, membership
              FROM users 
              WHERE id = ?`,
             [userId]

@@ -5,7 +5,6 @@ import membershipApi from '../utils/membershipApi';
 
 /**
  * Component tiện ích để giúp debug và sửa lỗi membership
- * Cung cấp công cụ kiểm tra và gỡ lỗi hệ thống membership
  * Chỉ hiển thị trong môi trường phát triển
  */
 const MembershipDebugger = () => {
@@ -214,7 +213,7 @@ const MembershipDebugger = () => {
       </div>
     );
   }
-
+  
   // Hiển thị giao diện mở rộng với nhiều công cụ debug hơn
   return (
     <div style={{
