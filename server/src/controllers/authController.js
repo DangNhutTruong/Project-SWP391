@@ -435,9 +435,17 @@ export const login = async (req, res) => {
             name: updatedUser.full_name,
             quit_reason: updatedUser.quit_reason,
             age: updatedUser.age,
-            profile_image: updatedUser.profile_image
-            
+            profile_image: updatedUser.profile_image,
+            membership: updatedUser.membership // Thêm log membership để debug
         });
+        
+        // Check if membership exists in the database
+        if (updatedUser.membership === undefined || updatedUser.membership === null) {
+            console.log('⚠️ Membership field is missing in user data. Adding default value "free"');
+            updatedUser.membership = 'free';
+        } else {
+            console.log('✅ Membership found in user data:', updatedUser.membership);
+        }
         
         // Format và trả về dữ liệu
         const formattedUser = formatUserResponse(updatedUser);
