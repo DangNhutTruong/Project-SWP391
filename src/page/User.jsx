@@ -31,11 +31,15 @@ const UserProfile = ({ isStandalone = false }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   // Initialize userData from the authenticated user
   useEffect(() => {
     if (user) {
       console.log('🔄 User.jsx - Initializing userData from user:', user);
+      
+      // Reset avatar error when user changes
+      setAvatarError(false);
       
       // Xử lý mapping giữa full_name và name
       const processedUser = { ...user };
@@ -114,6 +118,7 @@ const UserProfile = ({ isStandalone = false }) => {
     try {
       setIsUploading(true);
       setErrorMessage("");
+      setAvatarError(false); // Reset avatar error khi có file mới
       
       // Kiểm tra kích thước và loại file
       if (file.size > 5 * 1024 * 1024) { // giới hạn 5MB
@@ -510,11 +515,12 @@ const UserProfile = ({ isStandalone = false }) => {
         <div className="loading-message animate-feedback">
           <FaSpinner className="loading-spinner" /> Đang xử lý, vui lòng đợi...
         </div>
-      )}        <div className="avatar-info-layout">        <div className="avatar-section">
-        <div className="avatar-container">
-          {userData.avatar || userData.profile_image ? (
+      )}        <div className="avatar-info-layout">
+        <div className="avatar-section">
+          <div className="avatar-container">
+          {(userData.avatar || userData.profile_image) && !avatarError ? (
             <img
-              key={userData.avatar || userData.profile_image} // Key helps React recognize when to re-render
+              key={userData.avatar || userData.profile_image}
               src={
                 userData.avatar || 
                 (userData.profile_image && userData.profile_image.startsWith('http') 
@@ -525,8 +531,7 @@ const UserProfile = ({ isStandalone = false }) => {
               className={`user-avatar ${isUploading ? 'avatar-uploading' : ''}`}
               onError={(e) => {
                 console.error("Không thể tải avatar:", e);
-                e.target.style.display = 'none';
-                e.target.parentElement.innerHTML = `<div class="user-avatar-placeholder"><FaUserAlt /></div>`;
+                setAvatarError(true);
               }}
             />
           ) : (
