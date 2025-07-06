@@ -22,24 +22,66 @@ const Pay = () => {
   const [processingMessage, setProcessingMessage] = useState('');
 
   useEffect(() => {
+    console.log('Pay.jsx useEffect - Kiểm tra dữ liệu gói');
+    console.log('Location state:', location.state);
+    
     // Kiểm tra nếu có dữ liệu từ trang chọn gói qua location.state
     if (location.state && location.state.package) {
       console.log('Nhận dữ liệu từ location.state:', location.state.package);
-      setSelectedPackage(location.state.package);
-      return;
+      
+      // Kiểm tra xem dữ liệu package có hợp lệ không
+      if (location.state.package && typeof location.state.package === 'object') {
+        const packageData = location.state.package;
+        
+        // Đảm bảo gói có các thuộc tính cần thiết
+        if (!packageData.name) {
+          console.warn('Package is missing name property:', packageData);
+          packageData.name = packageData.membershipType === 'free' ? 'Free' : 
+                             packageData.membershipType === 'premium' ? 'Premium' : 
+                             packageData.membershipType === 'pro' ? 'Pro' : 'Unknown Package';
+        }
+        
+        if (!packageData.id) {
+          console.warn('Package is missing id property:', packageData);
+          packageData.id = packageData.membershipType === 'free' ? '1' : 
+                          packageData.membershipType === 'premium' ? '2' : 
+                          packageData.membershipType === 'pro' ? '3' : '1';
+        }
+        
+        if (typeof packageData.price !== 'number') {
+          console.warn('Package price is not a number:', packageData.price);
+          packageData.price = Number(packageData.price) || 0;
+        }
+        
+        console.log('Dữ liệu gói đã được chuẩn hóa:', packageData);
+        setSelectedPackage(packageData);
+        
+        // Lưu vào localStorage để bảo hiểm nếu trang bị refresh
+        try {
+          const packageJson = JSON.stringify(packageData);
+          console.log('Dữ liệu JSON trước khi lưu:', packageJson);
+          localStorage.setItem('selectedPackage', packageJson);
+          console.log('Đã sao lưu gói vào localStorage từ location.state');
+        } catch (error) {
+          console.error('Lỗi khi lưu gói vào localStorage:', error);
+        }
+        return;
+      } else {
+        console.error('Dữ liệu package từ location.state không hợp lệ:', location.state.package);
+      }
     } 
     
     // Nếu không có trong location.state, thử lấy từ localStorage
     try {
       const storedPackage = localStorage.getItem('selectedPackage');
-      if (storedPackage) {
+      if (storedPackage && storedPackage !== 'undefined' && storedPackage !== 'null') {
+        console.log('Raw stored package data:', storedPackage);
         const packageData = JSON.parse(storedPackage);
         console.log('Nhận dữ liệu từ localStorage:', packageData);
         setSelectedPackage(packageData);
-        
-        // Xóa dữ liệu để không sử dụng lại trong tương lai
-        localStorage.removeItem('selectedPackage');
         return;
+      } else {
+        console.log('Không có dữ liệu gói hợp lệ trong localStorage, giá trị nhận được:', storedPackage);
       }
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu từ localStorage:', error);
@@ -48,6 +90,22 @@ const Pay = () => {
     // Nếu không có dữ liệu từ cả hai nguồn, chuyển về trang chọn gói
     console.log('Không tìm thấy dữ liệu gói, chuyển hướng về trang membership');
     navigate('/membership');
+    
+    // Không xóa dữ liệu ngay trong cleanup function để tránh mất dữ liệu khi chuyển trang
+    // Chỉ cần dọn dẹp khi thực sự cần thiết (sau khi thanh toán hoàn tất)
+    return () => {
+      // Kiểm tra xem có đang chuyển đến trang thành công không
+      if (window.location.pathname === '/payment/success') {
+        try {
+          localStorage.removeItem('selectedPackage');
+          console.log('Đã xóa dữ liệu gói khỏi localStorage khi thanh toán thành công');
+        } catch (e) {
+          console.error('Lỗi khi xóa dữ liệu từ localStorage:', e);
+        }
+      } else {
+        console.log('Giữ lại dữ liệu gói trong localStorage khi chuyển trang');
+      }
+    };
   }, [location, navigate]);
 
   // Xử lý thay đổi phương thức thanh toán
@@ -65,11 +123,40 @@ const Pay = () => {
   };  // Xử lý khi nhấn nút thanh toán
   const handlePayment = async (e) => {
     e.preventDefault();
+    console.log('Bắt đầu xử lý thanh toán với gói:', selectedPackage);
     
     if (!termsAccepted) {
       alert('Vui lòng đồng ý với điều khoản sử dụng dịch vụ');
       return;
     }
+    
+    if (!selectedPackage) {
+      console.error('Lỗi: Không có thông tin gói được chọn!');
+      alert('Không tìm thấy thông tin gói. Vui lòng thử lại.');
+      navigate('/membership');
+      return;
+    }
+    
+    // Kiểm tra xem gói có đủ thông tin cần thiết không
+    if (!selectedPackage.price || !selectedPackage.name) {
+      console.error('Lỗi: Gói không có đủ thông tin cần thiết:', selectedPackage);
+      alert('Thông tin gói không đầy đủ. Vui lòng thử lại.');
+      navigate('/membership');
+      return;
+    }
+    
+    // Đảm bảo gói có ID
+    if (!selectedPackage.id) {
+      console.log('Thiếu ID gói, đang thêm ID dựa vào loại membership:', selectedPackage.membershipType);
+      const membershipTypeToId = {
+        'free': '1',
+        'premium': '2', 
+        'pro': '3'
+      };
+      selectedPackage.id = membershipTypeToId[selectedPackage.membershipType] || '1';
+    }
+    
+    console.log('Thông tin gói hợp lệ, tiếp tục xử lý thanh toán...');
 
     // Hiển thị loading hoặc thông báo đang xử lý thanh toán dựa trên phương thức thanh toán
     setIsProcessing(true);
@@ -92,6 +179,8 @@ const Pay = () => {
       default:
         message = 'Đang xử lý thanh toán...';
     }
+    
+    console.log(`Phương thức thanh toán: ${paymentMethod}, Thông báo: ${message}`);
     
     setProcessingMessage(message);
     
@@ -271,9 +360,10 @@ const Pay = () => {
     );
   }
 
-  // Tính VAT và tổng tiền
-  const vat = selectedPackage.price * 0.1;
-  const totalAmount = selectedPackage.price + vat;
+  // Tính VAT và tổng tiền - đảm bảo giá trị hợp lệ
+  const price = selectedPackage && selectedPackage.price ? Number(selectedPackage.price) : 0;
+  const vat = price * 0.1;
+  const totalAmount = price + vat;
 
   return (
     <div className="payment-container">

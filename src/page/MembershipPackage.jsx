@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './MembershipPackage.css';
 import { FaRocket, FaCheck, FaTimes, FaLock, FaLeaf, FaCrown } from 'react-icons/fa';
+import { testPackagesApi } from '../utils/testPackageApi';
 
 export default function MembershipPackage() {
   const { user } = useAuth();
@@ -17,18 +18,33 @@ export default function MembershipPackage() {
     const fetchPackages = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/packages');
-        const result = await response.json();
+        console.log('Đang gọi API /api/packages để lấy thông tin gói...');
         
-        if (result.success) {
-          setPackages(result.data);
-          console.log('Packages loaded:', result.data);
+        // Sử dụng utility để kiểm tra API
+        const apiTestResult = await testPackagesApi();
+        console.log('Kết quả kiểm tra API:', apiTestResult);
+        
+        if (apiTestResult.success) {
+          console.log('Số lượng gói nhận được:', apiTestResult.data.length);
+          
+          // Đảm bảo dữ liệu có đúng định dạng
+          const formattedPackages = apiTestResult.data.map(pkg => {
+            // Đảm bảo mỗi gói có membershipType
+            if (!pkg.membershipType) {
+              pkg.membershipType = pkg.id === 1 ? 'free' : pkg.id === 2 ? 'premium' : pkg.id === 3 ? 'pro' : `package-${pkg.id}`;
+            }
+            return pkg;
+          });
+          
+          setPackages(formattedPackages);
+          console.log('Đã cập nhật state packages với dữ liệu đã format:', formattedPackages);
         } else {
-          console.error('Failed to load packages:', result.message);
+          console.error('Failed to load packages:', apiTestResult.message);
           addToast('Không thể tải dữ liệu gói thành viên', 'error');
         }
       } catch (error) {
         console.error('Error fetching packages:', error);
+        console.error('Error details:', error.message);
         addToast('Lỗi kết nối đến server', 'error');
       } finally {
         setLoading(false);
@@ -52,10 +68,28 @@ export default function MembershipPackage() {
   
   // Chuyển đổi dữ liệu packages từ API thành định dạng để sử dụng trong component
   const packageDetails = useMemo(() => {
+    // Map package types to ID values for consistency
+    const packageTypeToId = {
+      'free': '1',
+      'premium': '2',
+      'pro': '3'
+    };
+    
+    // Map ID values to package types for reverse lookup
+    const idToPackageType = {
+      '1': 'free',
+      '2': 'premium',
+      '3': 'pro'
+    };
+
+    // Log the packages array received from API
+    console.log('Raw packages from API:', packages);
+    
     if (packages.length === 0) {
       // Sử dụng dữ liệu mặc định khi chưa load được từ API
-      return {
+      const defaultPackages = {
         free: {
+          id: '1',
           name: "Free",
           price: 0,
           period: "tháng",
@@ -66,6 +100,7 @@ export default function MembershipPackage() {
           ]
         },
         premium: {
+          id: '2',
           name: "Premium",
           price: 99000,
           period: "tháng",
@@ -79,6 +114,7 @@ export default function MembershipPackage() {
           ]
         },
         pro: {
+          id: '3',
           name: "Pro",
           price: 999000,
           period: "năm",
@@ -92,20 +128,40 @@ export default function MembershipPackage() {
           ]
         }
       };
+      
+      console.log('Using default packages:', defaultPackages);
+      return defaultPackages;
     }
     
-    // Chuyển đổi từ array sang object với key là id
+    // Chuyển đổi từ array sang object với key là packageType (free, premium, pro)
     const packageDetailsObj = {};
+    
     packages.forEach(pkg => {
-      packageDetailsObj[pkg.id] = {
+      // Xác định package type dựa vào id hoặc membershipType
+      let packageType = idToPackageType[pkg.id.toString()];
+      if (!packageType && pkg.membershipType) {
+        packageType = pkg.membershipType;
+      }
+      
+      if (!packageType) {
+        packageType = pkg.id === 1 ? 'free' : pkg.id === 2 ? 'premium' : pkg.id === 3 ? 'pro' : `package-${pkg.id}`;
+      }
+      
+      packageDetailsObj[packageType] = {
+        id: pkg.id.toString(),
         name: pkg.name,
         price: pkg.price,
         period: pkg.period,
-        membershipType: pkg.id,
+        membershipType: packageType,
         features: pkg.features || [],
         disabledFeatures: pkg.disabledFeatures || []
       };
+      
+      // Cũng lưu theo ID để có thể truy cập cả 2 cách
+      packageDetailsObj[pkg.id.toString()] = packageDetailsObj[packageType];
     });
+    
+    console.log('Package details after mapping:', packageDetailsObj);
     
     return packageDetailsObj;
   }, [packages]);
@@ -134,7 +190,13 @@ export default function MembershipPackage() {
     return membershipValue[currentMembership] < membershipValue[packageType];
   };
     // Xử lý chuyển hướng khi người dùng chọn gói
-  const handlePackageSelection = (packageType) => {
+  const handlePackageSelection = (packageType, event) => {
+    // Ngăn chặn hành vi mặc định nếu là sự kiện click
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
     // Kiểm tra xem người dùng đã đăng nhập chưa
     if (!user) {
       addToast('Bạn cần đăng nhập để mua gói thành viên!', 'error');
@@ -150,8 +212,65 @@ export default function MembershipPackage() {
       return;
     }
 
+    // Kiểm tra xem gói có tồn tại không
+    if (!packageDetails[packageType]) {
+      console.error('Không tìm thấy thông tin gói:', packageType);
+      addToast('Không tìm thấy thông tin gói. Vui lòng thử lại!', 'error');
+      return;
+    }
+    
+    console.log('Thông tin gói đang được lựa chọn:', packageDetails[packageType]);
+    
+    // Map package type to correct ID
+    const packageTypeToId = {
+      'free': '1',
+      'premium': '2',
+      'pro': '3'
+    };
+    
+    // Tạo đối tượng gói đầy đủ và hợp lệ
+    const packageToSend = {
+      ...packageDetails[packageType],
+      id: packageDetails[packageType].id || packageTypeToId[packageType] || packageType,
+      membershipType: packageType  // Đảm bảo có membershipType chính xác
+    };
+    
+    // Lưu thông tin gói vào localStorage để đề phòng chuyển trang bị lỗi
+    try {
+      const packageJson = JSON.stringify(packageToSend);
+      localStorage.setItem('selectedPackage', packageJson);
+      console.log('Đã lưu gói đã chọn vào localStorage:', packageToSend, 'JSON:', packageJson);
+    } catch (error) {
+      console.error('Lỗi khi lưu gói vào localStorage:', error);
+    }
+
     // Chuyển hướng đến trang thanh toán với thông tin gói đã chọn
-    navigate('/payment', { state: { package: packageDetails[packageType] } });  };
+    console.log('Đang chuyển hướng đến trang thanh toán với gói:', packageToSend);
+    console.log('JSON serialization test:', JSON.stringify(packageToSend));
+    
+    // Hiện toast thông báo
+    addToast(`Đang chuyển đến trang thanh toán cho gói ${packageToSend.name}...`, 'info');
+    
+    // Sử dụng setTimeout để đảm bảo localStorage được cập nhật trước khi chuyển trang
+    setTimeout(() => {
+      try {
+        // Đảm bảo state là đúng và không bị null/undefined
+        const navigationState = { 
+          package: {
+            ...packageToSend,
+            price: Number(packageToSend.price), // Đảm bảo price là số
+            id: packageToSend.id.toString(),    // Đảm bảo id là string
+          } 
+        };
+        
+        console.log('State chính xác khi navigate:', navigationState);
+        navigate('/payment', { state: navigationState });
+      } catch (error) {
+        console.error('Lỗi khi navigate đến trang payment:', error);
+        alert(`Có lỗi xảy ra khi chuyển trang: ${error.message}. Vui lòng thử lại.`);
+      }
+    }, 200);
+  };
   
   // Component Toast
   const Toast = ({ toast, onClose }) => (
@@ -226,8 +345,8 @@ export default function MembershipPackage() {
                       <div className="feature-item disabled">
                         <FaTimes />
                         <span>Video call tư vấn</span>
-                      </div>              </div><button 
-                      onClick={() => handlePackageSelection('free')} 
+                      </div>              </div>                    <button 
+                      onClick={(e) => handlePackageSelection('free', e)} 
                       className="pricing-btn"
                     >
                       Bắt đầu miễn phí
@@ -264,7 +383,11 @@ export default function MembershipPackage() {
                         <span>Video call tư vấn</span>
                       </div>              </div>
                     <button 
-                      onClick={() => canPurchasePackage('premium') && handlePackageSelection('premium')} 
+                      onClick={(e) => {
+                        console.log('Clicked premium button, packageDetails:', packageDetails);
+                        console.log('Premium package details:', packageDetails['premium']);
+                        return canPurchasePackage('premium') && handlePackageSelection('premium', e);
+                      }} 
                       className={`pricing-btn ${!canPurchasePackage('premium') ? 'disabled-btn' : ''}`}
                       disabled={!canPurchasePackage('premium')}
                     >
@@ -301,7 +424,11 @@ export default function MembershipPackage() {
                         <span>Video call tư vấn</span>
                       </div>              </div>
                     <button 
-                      onClick={() => canPurchasePackage('pro') && handlePackageSelection('pro')} 
+                      onClick={(e) => {
+                        console.log('Clicked pro button, packageDetails:', packageDetails);
+                        console.log('Pro package details:', packageDetails['pro']);
+                        return canPurchasePackage('pro') && handlePackageSelection('pro', e);
+                      }} 
                       className={`pricing-btn ${!canPurchasePackage('pro') ? 'disabled-btn' : ''}`}
                       disabled={!canPurchasePackage('pro')}
                     >
