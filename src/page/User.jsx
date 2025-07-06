@@ -32,6 +32,8 @@ const UserProfile = ({ isStandalone = false }) => {
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState(null); // Lưu file avatar đã chọn
+  const [originalAvatar, setOriginalAvatar] = useState(null); // Lưu avatar gốc để phục hồi khi cần
 
   // Initialize userData from the authenticated user
   useEffect(() => {
@@ -110,20 +112,23 @@ const UserProfile = ({ isStandalone = false }) => {
     }));
   };
 
-  // Handle avatar change
-  const handleAvatarChange = async (e) => {
+  // Handle avatar change - chỉ lưu preview và file, không upload ngay
+  const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
     try {
-      setIsUploading(true);
       setErrorMessage("");
       setAvatarError(false); // Reset avatar error khi có file mới
+      
+      // Lưu avatar gốc nếu chưa được lưu (chỉ lưu lần đầu khi thay đổi)
+      if (!originalAvatar && userData.profile_image) {
+        setOriginalAvatar(userData.profile_image);
+      }
       
       // Kiểm tra kích thước và loại file
       if (file.size > 5 * 1024 * 1024) { // giới hạn 5MB
         setErrorMessage("Kích thước file quá lớn. Vui lòng chọn file nhỏ hơn 5MB.");
-        setIsUploading(false);
         return;
       }
       
@@ -131,9 +136,11 @@ const UserProfile = ({ isStandalone = false }) => {
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
         setErrorMessage("Loại file không hợp lệ. Chỉ chấp nhận JPEG, PNG, GIF hoặc WEBP.");
-        setIsUploading(false);
         return;
       }
+      
+      // Lưu file để upload sau khi người dùng nhấn "Lưu"
+      setSelectedAvatarFile(file);
       
       // Show local preview immediately
       const reader = new FileReader();
@@ -145,48 +152,10 @@ const UserProfile = ({ isStandalone = false }) => {
       };
       reader.readAsDataURL(file);
       
-      console.log("🖼️ Bắt đầu tải lên avatar mới...");
-      
-      // Upload to server sử dụng trực tiếp uploadAvatar từ AuthContext
-      const result = await uploadAvatar(file);
-      
-      if (result.success) {
-        console.log("✅ Tải lên avatar thành công:", result.avatarUrl);
-        
-        // Cập nhật userData với profile_image mới từ kết quả
-        setUserData(prev => ({
-          ...prev,
-          profile_image: result.avatarUrl,
-          // Xóa preview local vì đã có URL thật từ server
-          avatar: null
-        }));
-        
-        // Thêm class hiệu ứng cập nhật thành công
-        const avatarElement = document.querySelector('.user-avatar');
-        if (avatarElement) {
-          avatarElement.classList.add('avatar-update-success');
-          
-          // Xóa class sau khi animation hoàn thành
-          setTimeout(() => {
-            avatarElement.classList.remove('avatar-update-success');
-          }, 1000);
-        }
-        
-        setSuccessMessage("Avatar đã được cập nhật thành công");
-        
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
-      } else {
-        console.error("❌ Lỗi tải lên avatar:", result.error);
-        setErrorMessage("Không thể tải lên ảnh đại diện: " + (result.error || "Lỗi không xác định"));
-      }
+      console.log("🖼️ Đã chọn avatar mới, đợi người dùng xác nhận lưu...");
     } catch (error) {
-      console.error("❌ Lỗi khi tải lên avatar:", error);
-      setErrorMessage("Đã xảy ra lỗi khi tải lên ảnh đại diện: " + (error.message || "Lỗi không xác định"));
-    } finally {
-      setIsUploading(false);
+      console.error("❌ Lỗi khi xử lý avatar:", error);
+      setErrorMessage("Đã xảy ra lỗi khi xử lý ảnh đại diện: " + (error.message || "Lỗi không xác định"));
     }
   };
 
@@ -195,7 +164,40 @@ const UserProfile = ({ isStandalone = false }) => {
     if (isEditing) {
       // Cancel editing and revert changes
       setUserData({ ...user });
+      
+      // Reset avatar changes
+      setSelectedAvatarFile(null);
+      setAvatarError(false);
+      
+      if (originalAvatar) {
+        // Khôi phục avatar gốc nếu đã lưu
+        setUserData(prev => ({
+          ...prev,
+          profile_image: originalAvatar,
+          avatar: null // Xóa avatar preview
+        }));
+      } else if (user && user.profile_image) {
+        // Khôi phục từ user object nếu không có originalAvatar
+        setUserData(prev => ({
+          ...prev,
+          profile_image: user.profile_image,
+          avatar: null
+        }));
+      } else {
+        // Nếu không có avatar nào, đảm bảo xóa hết để hiển thị avatar mặc định
+        setUserData(prev => ({
+          ...prev,
+          profile_image: null,
+          avatar: null
+        }));
+      }
+      
+      setOriginalAvatar(null);
+    } else {
+      // Entering edit mode, save original avatar for potential restore
+      setOriginalAvatar(userData.profile_image || null);
     }
+    
     setIsEditing(!isEditing);
     setSuccessMessage("");
     setErrorMessage("");
@@ -286,19 +288,64 @@ const UserProfile = ({ isStandalone = false }) => {
         }
       });
       
-      console.log('📊 Final data to update:', dataToUpdate);
+      // Kiểm tra nếu có file avatar mới được chọn
+      let avatarUploaded = false;
+      let avatarUrl = null;
       
-      // Kiểm tra xem có dữ liệu để cập nhật không
-      if (Object.keys(dataToUpdate).length === 0) {
+      if (selectedAvatarFile) {
+        console.log('�️ Phát hiện avatar mới, bắt đầu tải lên...');
+        setIsUploading(true);
+        try {
+          // Upload avatar trước
+          const avatarResult = await uploadAvatar(selectedAvatarFile);
+          if (avatarResult.success) {
+            avatarUploaded = true;
+            avatarUrl = avatarResult.avatarUrl;
+            console.log('✅ Avatar đã được tải lên thành công:', avatarUrl);
+          } else {
+            throw new Error(avatarResult.error || 'Không thể tải lên avatar');
+          }
+        } catch (avatarError) {
+          console.error('❌ Lỗi khi tải lên avatar:', avatarError);
+          setErrorMessage('Lỗi khi tải lên avatar: ' + (avatarError.message || 'Lỗi không xác định'));
+          setIsUploading(false);
+          return;
+        } finally {
+          setIsUploading(false);
+        }
+      }
+      
+      console.log('�📊 Final data to update:', dataToUpdate);
+      
+      // Kiểm tra xem có dữ liệu để cập nhật không (bao gồm cả avatar)
+      if (Object.keys(dataToUpdate).length === 0 && !avatarUploaded) {
         setSuccessMessage("Không có thông tin nào thay đổi");
         setIsEditing(false);
         setTimeout(() => setSuccessMessage(""), 3000);
         return;
       }
       
-      const result = await updateUser(dataToUpdate);
+      let result = { success: true };
+      
+      // Chỉ gọi updateUser nếu có dữ liệu cần cập nhật
+      if (Object.keys(dataToUpdate).length > 0) {
+        result = await updateUser(dataToUpdate);
+      }
       
       if (result && result.success) {
+        // Reset trạng thái avatar
+        setSelectedAvatarFile(null);
+        setOriginalAvatar(null);
+        
+        // Cập nhật userData với avatar mới nếu có
+        if (avatarUploaded && avatarUrl) {
+          setUserData(prev => ({
+            ...prev,
+            profile_image: avatarUrl,
+            avatar: null // xóa preview avatar
+          }));
+        }
+        
         setSuccessMessage(result.message || "Thông tin đã được cập nhật thành công.");
         setIsEditing(false);
         setValidationErrors({});
@@ -525,13 +572,21 @@ const UserProfile = ({ isStandalone = false }) => {
                 userData.avatar || 
                 (userData.profile_image && userData.profile_image.startsWith('http') 
                   ? userData.profile_image 
-                  : `http://localhost:5000${userData.profile_image || ''}`)
+                  : userData.profile_image && userData.profile_image.startsWith('/')
+                    ? `http://localhost:5000${userData.profile_image}`
+                    : userData.profile_image || '/default-user-avatar.svg')
               }
               alt="Ảnh đại diện"
               className={`user-avatar ${isUploading ? 'avatar-uploading' : ''}`}
               onError={(e) => {
                 console.error("Không thể tải avatar:", e);
                 setAvatarError(true);
+                
+                // Thử tải avatar mặc định nếu có lỗi
+                if (!userData.avatar) {
+                  e.target.onerror = null; // Tránh loop vô hạn
+                  e.target.src = '/image/default-user-avatar.svg'; // Đường dẫn tới avatar mặc định
+                }
               }}
             />
           ) : (
