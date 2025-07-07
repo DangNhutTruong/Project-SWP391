@@ -67,7 +67,13 @@ INSERT INTO coach_availability (coach_id, day_of_week, start_time, end_time) VAL
 (3, 3, '14:00:00', '16:00:00'),
 (3, 4, '08:00:00', '12:00:00'),
 (3, 5, '13:00:00', '17:00:00'),
-(3, 6, '09:00:00', '13:00:00');
+(3, 6, '09:00:00', '13:00:00'),
+-- Thêm lịch làm việc cho coach có ID 13
+(13, 1, '08:00:00', '17:00:00'),
+(13, 2, '08:00:00', '17:00:00'),
+(13, 3, '08:00:00', '17:00:00'),
+(13, 4, '08:00:00', '17:00:00'),
+(13, 5, '08:00:00', '17:00:00');
 
 -- Dữ liệu mẫu cho các cuộc hẹn
 INSERT INTO appointment (coach_id, user_id, appointment_time, duration_minutes, status, notes) VALUES

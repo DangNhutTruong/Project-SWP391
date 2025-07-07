@@ -10,12 +10,18 @@ export const ensureCoachTables = async () => {
     try {
         console.log('🛠️ Ensuring coach tables exist...');
         
-        // Read SQL script
-        const sqlPath = path.join(__dirname, '..', 'scripts', 'create-coach-tables.sql');
-        const sql = fs.readFileSync(sqlPath, 'utf8');
+        // Read SQL scripts
+        const coachSqlPath = path.join(__dirname, '..', 'scripts', 'create-coach-tables.sql');
+        const appointmentSqlPath = path.join(__dirname, '..', 'scripts', 'create-appointment-tables.sql');
+        
+        const coachSql = fs.readFileSync(coachSqlPath, 'utf8');
+        const appointmentSql = fs.readFileSync(appointmentSqlPath, 'utf8');
+        
+        // Combine both SQL scripts
+        const combinedSql = coachSql + '\n' + appointmentSql;
         
         // Split statements by semicolon
-        const statements = sql
+        const statements = combinedSql
             .split(';')
             .filter(statement => statement.trim())
             .map(statement => statement.trim());

@@ -368,8 +368,16 @@ export const register = async (req, res) => {
 // Login User
 export const login = async (req, res) => {
     try {
-        console.log('🔑 Login attempt for:', req.body.email);
-        const { email, password } = req.body;
+        // Hỗ trợ đăng nhập bằng email hoặc username
+        const { email, username, password } = req.body;
+        
+        // Xác định username hay email được sử dụng
+        const loginIdentifier = email || username;
+        console.log('🔑 Login attempt for:', loginIdentifier);
+        
+        if (!loginIdentifier) {
+            return sendError(res, 'Username or email is required', 400);
+        }
         
         // Đảm bảo truy vấn lấy tất cả các trường, bao gồm address, age, quit_reason, membership
         const [users] = await pool.execute(
@@ -379,13 +387,13 @@ export const login = async (req, res) => {
                 profile_image, refresh_token, created_at, updated_at,
                 address, age, quit_reason, membership
              FROM users 
-             WHERE email = ?`,
-            [email]
+             WHERE email = ? OR username = ?`,
+            [loginIdentifier, loginIdentifier]
         );
 
         if (users.length === 0) {
-            console.log('❌ User not found:', email);
-            return sendError(res, 'Invalid email or password', 401);
+            console.log('❌ User not found:', loginIdentifier);
+            return sendError(res, 'Invalid username, email or password', 401);
         }
 
         const user = users[0];
@@ -400,7 +408,7 @@ export const login = async (req, res) => {
 
         if (!isPasswordValid) {
             console.log('❌ Invalid password for user:', user.id);
-            return sendError(res, 'Invalid email or password', 401);
+            return sendError(res, 'Invalid username, email or password', 401);
         }
 
         // Tạo tokens
