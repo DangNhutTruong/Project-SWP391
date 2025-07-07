@@ -9,13 +9,9 @@ import ProfilePage from "./page/Profile.jsx"; // Đổi tên từ Tools sang Pro
 import ProgressPage from "./page/Progress.jsx"; // Import component Progress
 import MembershipDebugger from "./components/MembershipDebugger.jsx"; // Import component để debug membership
 import TestPage from "./page/TestPage.jsx"; // Thêm trang test đơn giản
-import ConnectionTestPage from "./page/ConnectionTestPage.jsx"; // Test kết nối frontend-backend
 import Blog from "./page/Blog.jsx"; // Import component Blog
 import Login from "./page/Login.jsx"; // Import component Login
 import Register from "./page/Register.jsx"; // Import component Register
-import ForgotPassword from "./page/ForgotPassword.jsx"; // Import component ForgotPassword
-import ResetPassword from "./page/ResetPassword.jsx"; // Import component ResetPassword
-import EmailVerification from "./page/EmailVerification.jsx"; // Import component EmailVerification
 import MembershipPackage from "./page/MembershipPackage.jsx"; // Import component MembershipPackage
 import BookAppointment from "./page/BookAppointment.jsx"; // Import component BookAppointment
 import ProtectedRoute from "./components/ProtectedRoute.jsx"; // Import ProtectedRoute
@@ -120,14 +116,6 @@ const router = createBrowserRouter([
     element: (
       <Layout>
         <TestPage />
-      </Layout>
-    ),
-  },
-  {
-    path: "/connection-test",
-    element: (
-      <Layout>
-        <ConnectionTestPage />
       </Layout>
     ),
   },
@@ -264,38 +252,6 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: "/forgot-password",
-    element: (
-      <Layout>
-        <ForgotPassword />
-      </Layout>
-    ),
-  },
-  {
-    path: "/reset-password",
-    element: (
-      <Layout>
-        <ResetPassword />
-      </Layout>
-    ),
-  },
-  {
-    path: "/verify-email",
-    element: (
-      <Layout>
-        <EmailVerification />
-      </Layout>
-    ),
-  },
-  {
-    path: "/email-verification",
-    element: (
-      <Layout>
-        <EmailVerification />
-      </Layout>
-    ),
-  },
-  {
     path: "/payment",
     element: (
       <Layout>
@@ -353,20 +309,20 @@ const router = createBrowserRouter([
   {
     path: "/coach",
     element: (
-      <RoleBasedRoute allowedRoles={["coach"]}>
+      <RoleBasedRoute allowedRoles={['coach']}>
         <CoachLayout />
       </RoleBasedRoute>
     ),
     children: [
       {
         index: true,
-        element: <CoachDashboard />,
+        element: <CoachDashboard />
       },
       {
         path: "bookings",
-        element: <CoachBookings />,
-      },
-    ],
+        element: <CoachBookings />
+      }
+    ]
   },
   {
     path: "/access-denied",
