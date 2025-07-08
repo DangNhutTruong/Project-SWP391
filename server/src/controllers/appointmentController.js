@@ -53,6 +53,10 @@ export const createAppointment = async (req, res) => {
             if (isNaN(appointmentDate.getTime())) {
                 return sendResponse(res, 400, false, 'Invalid appointment_time format. Use ISO format (YYYY-MM-DDTHH:MM:SSZ)', null);
             }
+            
+            // Add date and time fields for the appointments table
+            appointmentData.date = appointmentDate.toISOString().split('T')[0];
+            appointmentData.time = appointmentDate.toTimeString().slice(0, 8);
         } catch (error) {
             return sendResponse(res, 400, false, 'Invalid appointment_time format. Use ISO format (YYYY-MM-DDTHH:MM:SSZ)', null);
         }

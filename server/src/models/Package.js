@@ -20,6 +20,79 @@ export const ensurePackageTable = async () => {
       )
     `);
     
+    // Kiểm tra xem cột period đã tồn tại chưa và thêm nếu chưa có
+    try {
+      // Kiểm tra xem cột period có tồn tại không
+      const [periodColumns] = await pool.execute(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'package' 
+        AND COLUMN_NAME = 'period'
+      `);
+      
+      // Nếu cột period không tồn tại, thêm vào
+      if (periodColumns.length === 0) {
+        console.log('Adding missing period column to package table...');
+        await pool.execute(`
+          ALTER TABLE package 
+          ADD COLUMN period ENUM('tháng', 'năm') NOT NULL DEFAULT 'tháng'
+        `);
+        console.log('✅ period column added successfully');
+      }
+
+      // Kiểm tra xem cột popular có tồn tại không
+      const [popularColumns] = await pool.execute(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'package' 
+        AND COLUMN_NAME = 'popular'
+      `);
+      
+      // Nếu cột popular không tồn tại, thêm vào
+      if (popularColumns.length === 0) {
+        console.log('Adding missing popular column to package table...');
+        await pool.execute(`
+          ALTER TABLE package 
+          ADD COLUMN popular BOOLEAN DEFAULT FALSE
+        `);
+        console.log('✅ popular column added successfully');
+      }
+
+      // Kiểm tra xem cột duration_months có tồn tại không
+      const [durationColumns] = await pool.execute(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'package' 
+        AND COLUMN_NAME = 'duration_months'
+      `);
+      
+      // Nếu cột duration_months tồn tại và chưa có default value
+      if (durationColumns.length > 0) {
+        // Kiểm tra xem column đã có default value chưa
+        const [defaultCheck] = await pool.execute(`
+          SELECT COLUMN_DEFAULT 
+          FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_SCHEMA = DATABASE() 
+          AND TABLE_NAME = 'package' 
+          AND COLUMN_NAME = 'duration_months'
+        `);
+        
+        if (defaultCheck[0].COLUMN_DEFAULT === null) {
+          console.log('Setting default value for duration_months column...');
+          await pool.execute(`
+            ALTER TABLE package 
+            MODIFY COLUMN duration_months INT NOT NULL DEFAULT 1
+          `);
+          console.log('✅ duration_months default value set successfully');
+        }
+      }
+    } catch (columnError) {
+      console.error('❌ Error checking or adding columns:', columnError);
+    }
+    
     // Tạo bảng package_features để lưu trữ tính năng của từng gói
     await pool.execute(`
       CREATE TABLE IF NOT EXISTS package_features (
@@ -54,10 +127,10 @@ const insertDefaultPackages = async () => {
   try {
     // Thêm 3 gói mặc định: free, premium, pro
     await pool.execute(`
-      INSERT INTO package (name, description, price, period, popular) VALUES
-      ('Free', 'Bắt đầu miễn phí', 0, 'tháng', FALSE),
-      ('Premium', 'Hỗ trợ toàn diện', 99000, 'tháng', TRUE),
-      ('Pro', 'Hỗ trợ toàn diện', 999000, 'năm', FALSE)
+      INSERT INTO package (name, description, price, period, popular, duration_months) VALUES
+      ('Free', 'Bắt đầu miễn phí', 0, 'tháng', FALSE, 1),
+      ('Premium', 'Hỗ trợ toàn diện', 99000, 'tháng', TRUE, 1),
+      ('Pro', 'Hỗ trợ toàn diện', 999000, 'năm', FALSE, 12)
     `);
     
     // Lấy ID của các gói vừa thêm
