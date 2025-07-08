@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './MembershipPackage.css';
 import { FaRocket, FaCheck, FaTimes, FaLock, FaLeaf, FaCrown } from 'react-icons/fa';
-import { testPackagesApi } from '../utils/testPackageApi';
 
 export default function MembershipPackage() {
   const { user } = useAuth();
