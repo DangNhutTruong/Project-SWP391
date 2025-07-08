@@ -60,6 +60,25 @@ export const ensurePackageTable = async () => {
         console.log('✅ popular column added successfully');
       }
 
+      // Kiểm tra xem cột active có tồn tại không
+      const [activeColumns] = await pool.execute(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'package' 
+        AND COLUMN_NAME = 'active'
+      `);
+      
+      // Nếu cột active không tồn tại, thêm vào
+      if (activeColumns.length === 0) {
+        console.log('Adding missing active column to package table...');
+        await pool.execute(`
+          ALTER TABLE package 
+          ADD COLUMN active BOOLEAN DEFAULT TRUE
+        `);
+        console.log('✅ active column added successfully');
+      }
+
       // Kiểm tra xem cột duration_months có tồn tại không
       const [durationColumns] = await pool.execute(`
         SELECT COLUMN_NAME 
