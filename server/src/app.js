@@ -8,6 +8,8 @@ import userRoutes from './routes/users.js';
 import healthRoutes from './routes/health.js';
 import packageRoutes from './routes/packages.js';
 import paymentRoutes from './routes/payments.js';
+import coachRoutes from './routes/coachRoutes.js';
+import appointmentRoutes from './routes/appointmentRoutes.js';
 import ensureTablesExist from './ensureTables.js';
 import path from 'path';
 
@@ -78,6 +80,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', healthRoutes);
 app.use('/api/packages', packageRoutes);
+app.use('/api/coaches', coachRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Đăng ký route payments với debug chi tiết
 console.log('📌 Registering payment routes...');
