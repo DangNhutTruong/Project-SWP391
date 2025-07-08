@@ -99,7 +99,7 @@ export default function Login() {
                 <label htmlFor="rememberMe">Ghi nhớ đăng nhập</label>
               </div>
               <Link to="/forgot-password-step1" className="forgot-password">
-                Quên mật khẩu?
+                Forgot password?
               </Link>
             </div>
 

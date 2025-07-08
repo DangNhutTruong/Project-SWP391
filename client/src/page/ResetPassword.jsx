@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { resetPassword } from "../services/apiService";
-import "./ResetPassword.css";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { resetPassword } from '../services/apiService';
+import './ResetPassword.css';
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
+    password: '',
+    confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [token, setToken] = useState("");
-
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [token, setToken] = useState('');
+  
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const tokenFromUrl = searchParams.get("token");
+    const tokenFromUrl = searchParams.get('token');
     if (!tokenFromUrl) {
-      setError("Token không hợp lệ hoặc đã hết hạn");
+      setError('Token không hợp lệ hoặc đã hết hạn');
       return;
     }
     setToken(tokenFromUrl);
@@ -27,24 +27,24 @@ const ResetPassword = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
   };
 
   const validatePassword = (password) => {
     if (password.length < 6) {
-      return "Mật khẩu phải có ít nhất 6 ký tự";
+      return 'Mật khẩu phải có ít nhất 6 ký tự';
     }
-    return "";
+    return '';
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
 
     // Validate passwords
     const passwordError = validatePassword(formData.password);
@@ -55,31 +55,31 @@ const ResetPassword = () => {
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
+      setError('Mật khẩu xác nhận không khớp');
       setIsLoading(false);
       return;
     }
 
     if (!token) {
-      setError("Token không hợp lệ");
+      setError('Token không hợp lệ');
       setIsLoading(false);
       return;
     }
 
     try {
       const response = await resetPassword(token, formData.password);
-
+      
       if (response.success) {
-        setMessage("Đặt lại mật khẩu thành công! Đang chuyển hướng...");
+        setMessage('Đặt lại mật khẩu thành công! Đang chuyển hướng...');
         setTimeout(() => {
-          navigate("/login");
+          navigate('/login');
         }, 2000);
       } else {
-        setError(response.message || "Đặt lại mật khẩu thất bại");
+        setError(response.message || 'Đặt lại mật khẩu thất bại');
       }
     } catch (error) {
-      console.error("Reset password error:", error);
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+      console.error('Reset password error:', error);
+      setError('Có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -135,12 +135,12 @@ const ResetPassword = () => {
           {error && <div className="error-message">{error}</div>}
           {message && <div className="success-message">{message}</div>}
 
-          <button
-            type="submit"
+          <button 
+            type="submit" 
             className="submit-btn"
             disabled={isLoading || !token}
           >
-            {isLoading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
+            {isLoading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
           </button>
         </form>
 

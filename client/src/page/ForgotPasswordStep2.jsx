@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import apiService from "../services/apiService";
-import "./ForgotPasswordStep2.css";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import apiService from '../services/apiService';
+import './ForgotPasswordStep2.css';
 
 const ForgotPasswordStep2 = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [email, setEmail] = useState("");
+  const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     // Get email from previous step
     const emailFromState = location.state?.email;
     if (!emailFromState) {
-      navigate("/forgot-password-step1");
+      navigate('/forgot-password-step1');
       return;
     }
     setEmail(emailFromState);
@@ -26,14 +26,14 @@ const ForgotPasswordStep2 = () => {
 
   const validatePassword = (password) => {
     if (password.length < 6) {
-      return "Mật khẩu phải có ít nhất 6 ký tự";
+      return 'Mật khẩu phải có ít nhất 6 ký tự';
     }
-    return "";
+    return '';
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     // Validate passwords
     const passwordError = validatePassword(newPassword);
@@ -43,7 +43,7 @@ const ForgotPasswordStep2 = () => {
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
+      setError('Mật khẩu xác nhận không khớp');
       return;
     }
 
@@ -52,19 +52,19 @@ const ForgotPasswordStep2 = () => {
     try {
       // Send OTP to email for password reset
       const response = await apiService.forgotPassword(email);
-
+      
       if (response.success) {
         // Navigate to OTP verification step
-        navigate("/reset-password-otp", {
-          state: {
+        navigate('/reset-password-otp', { 
+          state: { 
             email: email,
-            newPassword: newPassword,
-          },
+            newPassword: newPassword
+          }
         });
       }
     } catch (error) {
-      console.error("Send OTP error:", error);
-      setError("Không thể gửi mã xác thực. Vui lòng thử lại.");
+      console.error('Send OTP error:', error);
+      setError('Không thể gửi mã xác thực. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +92,7 @@ const ForgotPasswordStep2 = () => {
             <label htmlFor="newPassword">Mật khẩu mới</label>
             <div className="password-input-container">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 id="newPassword"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
@@ -106,7 +106,7 @@ const ForgotPasswordStep2 = () => {
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? "👁️" : "🙈"}
+                {showPassword ? '👁️' : '🙈'}
               </button>
             </div>
           </div>
@@ -115,7 +115,7 @@ const ForgotPasswordStep2 = () => {
             <label htmlFor="confirmPassword">Xác nhận mật khẩu mới</label>
             <div className="password-input-container">
               <input
-                type={showConfirmPassword ? "text" : "password"}
+                type={showConfirmPassword ? 'text' : 'password'}
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -128,7 +128,7 @@ const ForgotPasswordStep2 = () => {
                 className="password-toggle"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                {showConfirmPassword ? "👁️" : "🙈"}
+                {showConfirmPassword ? '👁️' : '🙈'}
               </button>
             </div>
           </div>
@@ -136,7 +136,7 @@ const ForgotPasswordStep2 = () => {
           <div className="password-requirements">
             <p>Yêu cầu mật khẩu:</p>
             <ul>
-              <li className={newPassword.length >= 6 ? "valid" : ""}>
+              <li className={newPassword.length >= 6 ? 'valid' : ''}>
                 Ít nhất 6 ký tự
               </li>
             </ul>
@@ -144,23 +144,23 @@ const ForgotPasswordStep2 = () => {
 
           {error && <div className="error-message">{error}</div>}
 
-          <button
-            type="submit"
+          <button 
+            type="submit" 
             className="submit-btn"
             disabled={isLoading || !newPassword || !confirmPassword}
           >
             {isLoading ? (
               <span className="loading-spinner">Đang gửi mã xác thực...</span>
             ) : (
-              "Gửi mã xác thực"
+              'Gửi mã xác thực'
             )}
           </button>
         </form>
 
         <div className="back-to-step1">
-          <button
+          <button 
             type="button"
-            onClick={() => navigate("/forgot-password-step1")}
+            onClick={() => navigate('/forgot-password-step1')}
             className="back-btn"
           >
             ← Quay lại nhập email

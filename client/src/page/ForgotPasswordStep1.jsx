@@ -1,27 +1,27 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import apiService from "../services/apiService";
-import "./ForgotPasswordStep1.css";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import apiService from '../services/apiService';
+import './ForgotPasswordStep1.css';
 
 const ForgotPasswordStep1 = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
+    setError('');
+    
     // Validate email
     if (!email.trim()) {
-      setError("Vui lòng nhập địa chỉ email của bạn");
+      setError('Vui lòng nhập địa chỉ email của bạn');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError("Vui lòng nhập địa chỉ email hợp lệ");
+      setError('Vui lòng nhập địa chỉ email hợp lệ');
       return;
     }
 
@@ -30,19 +30,19 @@ const ForgotPasswordStep1 = () => {
     try {
       // Check if email exists
       const response = await apiService.checkEmailExists(email);
-
+      
       if (response.success) {
         // Email exists, navigate to step 2
-        navigate("/forgot-password-step2", {
-          state: { email: email },
+        navigate('/forgot-password-step2', { 
+          state: { email: email }
         });
       }
     } catch (error) {
-      console.error("Check email error:", error);
+      console.error('Check email error:', error);
       if (error.response?.status === 404) {
-        setError("Email này chưa được đăng ký trong hệ thống");
+        setError('Không tìm thấy tài khoản với địa chỉ email này');
       } else {
-        setError("Email này chưa được đăng ký trong hệ thống");
+        setError('Có lỗi xảy ra. Vui lòng thử lại.');
       }
     } finally {
       setIsLoading(false);
@@ -82,19 +82,23 @@ const ForgotPasswordStep1 = () => {
 
           {error && <div className="error-message">{error}</div>}
 
-          <button type="submit" className="submit-btn" disabled={isLoading}>
+          <button 
+            type="submit" 
+            className="submit-btn"
+            disabled={isLoading}
+          >
             {isLoading ? (
               <span className="loading-spinner">Đang kiểm tra...</span>
             ) : (
-              "Tiếp tục"
+              'Tiếp tục'
             )}
           </button>
         </form>
 
         <div className="back-to-login">
-          <button
+          <button 
             type="button"
-            onClick={() => navigate("/login")}
+            onClick={() => navigate('/login')}
             className="back-btn"
           >
             ← Quay lại đăng nhập

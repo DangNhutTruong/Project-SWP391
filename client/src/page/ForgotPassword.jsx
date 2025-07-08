@@ -1,39 +1,39 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import apiService from "../services/apiService";
-import "./ForgotPassword.css";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import apiService from '../services/apiService';
+import './ForgotPassword.css';
 
 const ForgotPassword = () => {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
+    email: '',
+    password: '',
+    confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
   };
 
   const validatePassword = (password) => {
     if (password.length < 6) {
-      return "Mật khẩu phải có ít nhất 6 ký tự";
+      return 'Mật khẩu phải có ít nhất 6 ký tự';
     }
-    return "";
+    return '';
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
 
     // Validate password
     const passwordError = validatePassword(formData.password);
@@ -44,33 +44,31 @@ const ForgotPassword = () => {
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
+      setError('Mật khẩu xác nhận không khớp');
       setIsLoading(false);
       return;
     }
 
     try {
       const response = await apiService.forgotPassword(formData.email);
-      console.log("Forgot password response:", response);
-
+      console.log('Forgot password response:', response);
+      
       if (response && response.success) {
-        setMessage(
-          "Mã xác thực đã được gửi đến email của bạn. Chuyển hướng..."
-        );
+        setMessage('Mã xác thực đã được gửi đến email của bạn. Chuyển hướng...');
         setTimeout(() => {
-          navigate("/reset-password-otp", {
-            state: {
+          navigate('/reset-password-otp', { 
+            state: { 
               email: formData.email,
-              newPassword: formData.password,
-            },
+              newPassword: formData.password 
+            } 
           });
         }, 1500);
       } else {
-        setError(response?.message || "Gửi email thất bại");
+        setError(response?.message || 'Gửi email thất bại');
       }
     } catch (error) {
-      console.error("Forgot password error:", error);
-      setError(error.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+      console.error('Forgot password error:', error);
+      setError(error.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -129,8 +127,12 @@ const ForgotPassword = () => {
           {error && <div className="error-message">{error}</div>}
           {message && <div className="success-message">{message}</div>}
 
-          <button type="submit" className="submit-btn" disabled={isLoading}>
-            {isLoading ? "Đang gửi..." : "Gửi mã xác thực"}
+          <button 
+            type="submit" 
+            className="submit-btn"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Đang gửi...' : 'Gửi mã xác thực'}
           </button>
         </form>
 
