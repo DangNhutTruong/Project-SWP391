@@ -74,6 +74,49 @@ class ApiService {
     });
   }
 
+  async verifyOTP(email, otp) {
+    return this.apiCall('/api/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp })
+    });
+  }
+
+  // Resend OTP for email verification
+  async resendOTP(email) {
+    return this.apiCall('/api/auth/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  // Check if email exists
+  async checkEmailExists(email) {
+    return this.apiCall('/api/auth/check-email-exists', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  // Forgot Password - Send reset email
+  async forgotPassword(email) {
+    return this.apiCall('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  // Reset Password - Set new password with OTP
+  async resetPassword(email, otp, newPassword) {
+    return this.apiCall('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        email,
+        otp, 
+        newPassword 
+      })
+    });
+  }
+
   async getUserProfile() {
     return this.apiCall('/api/users/profile');
   }
@@ -135,6 +178,8 @@ export const {
   healthCheck,
   login,
   register,
+  verifyOTP,
+  resendOTP,
   getUserProfile,
   getUserProgress,
   createCheckin,
@@ -143,5 +188,8 @@ export const {
   getChartData,
   getActivePlan,
   createQuitPlan,
-  updateQuitPlan
+  updateQuitPlan,
+  forgotPassword,
+  resetPassword,
+  checkEmailExists
 } = apiService;

@@ -29,6 +29,14 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING(255),
     allowNull: true
   },
+  email_verification_otp: {
+    type: DataTypes.STRING(6),
+    allowNull: true
+  },
+  email_verification_otp_expires: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   password_reset_token: {
     type: DataTypes.STRING(255),
     allowNull: true

@@ -89,33 +89,16 @@ export const AuthProvider = ({ children }) => {
       const response = await apiService.register(userData);
 
       if (response.success) {
-        // Kiểm tra xem user có cần verify email không
-        if (response.data && response.data.requiresVerification) {
-          setLoading(false);
-          return {
-            success: true,
-            requiresVerification: true,
-            message:
-              response.message ||
-              "Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.",
-          };
-        }
-
-        // Lưu token nếu có
-        if (response.data && response.data.token) {
-          localStorage.setItem("authToken", response.data.token);
-        }
-
-        // Không lưu mật khẩu vào user session
-        const user = response.data ? response.data.user : response.user;
-        const { password, ...userWithoutPassword } = user;
-
-        // Đặt user hiện tại
-        setUser(userWithoutPassword);
-        setIsAuthenticated(true);
         setLoading(false);
 
-        return { success: true, user: userWithoutPassword };
+        // Sau đăng ký thành công, yêu cầu xác thực email
+        return {
+          success: true,
+          requiresVerification: true,
+          message:
+            response.message ||
+            "Vui lòng kiểm tra email để xác thực tài khoản trước khi đăng nhập.",
+        };
       } else {
         throw new Error(response.message || "Đăng ký thất bại");
       }
@@ -169,6 +152,16 @@ export const AuthProvider = ({ children }) => {
         throw new Error(response.message || "Đăng nhập thất bại");
       }
     } catch (err) {
+      // Kiểm tra nếu là lỗi yêu cầu xác thực email
+      if (err.message && err.message.includes("verify your email")) {
+        setLoading(false);
+        return {
+          success: false,
+          requiresVerification: true,
+          error: err.message,
+        };
+      }
+
       // Fallback: kiểm tra coach accounts
       try {
         const foundCoach = COACH_ACCOUNTS.find(
