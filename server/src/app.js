@@ -11,6 +11,8 @@ import paymentRoutes from './routes/payments.js';
 import coachRoutes from './routes/coachRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+import testRoutes from './routes/testRoutes.js';
+import createAppointmentsStatusRoutes from './routes/appointmentsStatusRoutes.js';
 import ensureTablesExist from './ensureTables.js';
 import path from 'path';
 
@@ -46,12 +48,21 @@ const corsOptions = {
         }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     exposedHeaders: ['X-Total-Count']
 };
 
 app.use(cors(corsOptions));
+
+// Add specific CORS headers for preflight requests
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.status(200).end();
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -76,14 +87,26 @@ app.get('/health', (req, res) => {
 // Static files for uploads
 app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
 
+// Special CORS handling for appointments status endpoint
+app.options('/api/appointments/:id/status', (req, res) => {
+    console.log('🔄 Handling OPTIONS preflight for PATCH status endpoint');
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.status(200).end();
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/appointments-update', createAppointmentsStatusRoutes());
 app.use('/api', healthRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/coaches', coachRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/test', testRoutes);
 
 // Đăng ký route payments với debug chi tiết
 console.log('📌 Registering payment routes...');

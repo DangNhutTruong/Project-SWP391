@@ -81,11 +81,23 @@ export const createAppointment = async (req, res) => {
  */
 export const getUserAppointments = async (req, res) => {
     try {
-        // Get user ID from authenticated user
+        // Get user ID and role from authenticated user
         const userId = req.user.id;
+        const userRole = req.user.role;
         
-        // Get appointments
-        const appointments = await Appointment.getByUserId(userId);
+        console.log(`🔍 Getting appointments for user ID: ${userId}, role: ${userRole}`);
+        
+        let appointments;
+        
+        if (userRole === 'coach') {
+            // If user is a coach, get appointments where they are the coach
+            appointments = await Appointment.getByCoachId(userId);
+        } else {
+            // If user is a regular user, get appointments where they are the client
+            appointments = await Appointment.getByUserId(userId);
+        }
+        
+        console.log(`✅ Found ${appointments.length} appointments for ${userRole} ID: ${userId}`);
         
         return sendResponse(res, 200, true, 'Appointments fetched successfully', appointments);
     } catch (error) {
@@ -269,31 +281,6 @@ export const rateAppointment = async (req, res) => {
 };
 
 /**
- * Get all appointments for the authenticated coach
- * @route GET /api/appointments/coach
- */
-export const getCoachAppointments = async (req, res) => {
-    try {
-        // Get coach ID from authenticated user
-        const coachId = req.user.id;
-        
-        // Check if user is a coach
-        if (req.user.role !== 'coach') {
-            return sendResponse(res, 403, false, 'Unauthorized: Only coaches can access this endpoint', null);
-        }
-        
-        // Get appointments for the coach
-        const appointments = await Appointment.getByCoachId(coachId);
-        
-        // Return response
-        return sendResponse(res, 200, true, 'Coach appointments fetched successfully', appointments);
-    } catch (error) {
-        console.error('Error fetching coach appointments:', error);
-        return sendResponse(res, 500, false, 'Internal server error', null);
-    }
-};
-
-/**
  * Update appointment status
  * @route PATCH /api/appointments/:id/status
  */
@@ -304,6 +291,8 @@ export const updateAppointmentStatus = async (req, res) => {
         const userId = req.user.id;
         const userRole = req.user.role;
 
+        console.log(`🔄 Updating appointment ${appointmentId} status to "${status}" by ${userRole} (${userId})`);
+        
         // Validate status
         const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
         if (!status || !validStatuses.includes(status)) {
@@ -311,15 +300,17 @@ export const updateAppointmentStatus = async (req, res) => {
         }
 
         // Get appointment first to check permissions
-        const appointment = await Appointment.findById(appointmentId);
+        const appointment = await Appointment.getById(appointmentId);
         if (!appointment) {
             return sendResponse(res, 404, false, 'Appointment not found', null);
         }
 
+        console.log('📋 Found appointment:', appointment);
+
         // Check if user has permission to update this appointment
-        const canUpdate = userRole === 'coach' || appointment.user_id === userId;
+        const canUpdate = userRole === 'coach' && appointment.coach_id === userId;
         if (!canUpdate) {
-            return sendResponse(res, 403, false, 'You do not have permission to update this appointment', null);
+            return sendResponse(res, 403, false, 'Only coaches can update appointment status', null);
         }
 
         // Update appointment status
@@ -329,9 +320,11 @@ export const updateAppointmentStatus = async (req, res) => {
             return sendResponse(res, 404, false, 'Appointment not found or could not be updated', null);
         }
 
-        sendResponse(res, 200, true, 'Appointment status updated successfully', updatedAppointment);
+        console.log('✅ Successfully updated appointment status');
+        
+        return sendResponse(res, 200, true, 'Appointment status updated successfully', updatedAppointment);
     } catch (error) {
         console.error('Error updating appointment status:', error);
-        sendResponse(res, 500, false, 'Internal server error', null);
+        return sendResponse(res, 500, false, 'Internal server error', null);
     }
 };

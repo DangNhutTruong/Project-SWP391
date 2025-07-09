@@ -80,13 +80,6 @@ router.post('/:appointmentId/messages', requireAuth, createMessage);
 router.post('/:appointmentId/messages/read', requireAuth, markMessagesAsRead);
 
 /**
- * @route GET /api/appointments/coach
- * @desc Get all appointments for the authenticated coach
- * @access Private - Requires authentication with coach role
- */
-router.get('/coach', requireAuth, appointmentController.getCoachAppointments);
-
-/**
  * @route PATCH /api/appointments/:id/status
  * @desc Update appointment status
  * @access Private - Requires authentication and authorization

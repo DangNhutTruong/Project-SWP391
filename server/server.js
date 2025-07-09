@@ -1,4 +1,12 @@
 import app from './src/app.js';
+import setupCorsMiddleware from './cors-middleware.js';
+import setupStatusUpdateEndpoint from './status-update-endpoint.js';
+
+// Thiết lập CORS middleware trước khi khởi động server
+setupCorsMiddleware(app);
+
+// Thiết lập endpoint cập nhật status riêng với CORS đặc biệt
+setupStatusUpdateEndpoint(app);
 
 const PORT = process.env.PORT || 5000;
 

@@ -165,9 +165,26 @@ function CoachDashboard() {
   // Cập nhật hàm loadCoachAppointments sử dụng API
   const loadCoachAppointments = async () => {
     try {
-      const appointments = await getCoachAppointments();
-      if (appointments && Array.isArray(appointments)) {
-        setAppointments(appointments);
+      console.log('📋 Loading coach appointments...');
+      const response = await getCoachAppointments();
+      console.log('📋 API response:', response);
+      
+      // Handle different response structures
+      let appointmentsData = [];
+      if (response) {
+        if (response.data && Array.isArray(response.data)) {
+          appointmentsData = response.data;
+        } else if (Array.isArray(response)) {
+          appointmentsData = response;
+        } else if (response.success && response.data) {
+          appointmentsData = Array.isArray(response.data) ? response.data : [];
+        }
+      }
+      
+      console.log('📅 Processed appointments:', appointmentsData);
+      
+      if (appointmentsData.length > 0) {
+        setAppointments(appointmentsData);
       } else {
         // Fallback to localStorage
         const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
@@ -175,9 +192,10 @@ function CoachDashboard() {
           app => app && app.coachName && (app.coachName === user?.fullName || app.coachName === user?.name)
         );
         setAppointments(coachAppointments);
+        console.log('📋 Using fallback appointments:', coachAppointments);
       }
     } catch (error) {
-      console.error('Error loading coach appointments:', error);
+      console.error('❌ Error loading coach appointments:', error);
       // Fallback to localStorage
       try {
         const storedAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
@@ -185,8 +203,9 @@ function CoachDashboard() {
           app => app && app.coachName && (app.coachName === user?.fullName || app.coachName === user?.name)
         );
         setAppointments(coachAppointments);
+        console.log('📋 Using fallback appointments after error:', coachAppointments);
       } catch (e) {
-        console.error('Error with fallback to localStorage:', e);
+        console.error('❌ Error with fallback to localStorage:', e);
         setAppointments([]);
       }
     }

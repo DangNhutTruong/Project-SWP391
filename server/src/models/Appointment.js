@@ -723,24 +723,25 @@ class Appointment {
                     a.id,
                     a.user_id,
                     a.coach_id,
-                    a.appointment_time,
+                    a.date,
+                    a.time,
+                    CONCAT(a.date, 'T', a.time) as appointment_time,
                     a.duration_minutes,
                     a.status,
-                    a.notes,
                     a.created_at,
                     a.updated_at,
                     u.full_name as user_name,
                     u.email as user_email,
                     u.phone as user_phone,
-                    u.avatar_url as user_avatar
+                    u.profile_image as user_avatar
                 FROM 
-                    appointment a
+                    appointments a
                 LEFT JOIN 
                     users u ON a.user_id = u.id
                 WHERE 
                     a.coach_id = ?
                 ORDER BY 
-                    a.appointment_time DESC`,
+                    a.date DESC, a.time DESC`,
                 [coachId]
             );
             
