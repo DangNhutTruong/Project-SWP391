@@ -39,10 +39,10 @@ CREATE TABLE IF NOT EXISTS feedback (
   FOREIGN KEY (smoker_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Add indexes for improved query performance
-CREATE INDEX IF NOT EXISTS idx_appointment_coach_id ON appointment(coach_id);
-CREATE INDEX IF NOT EXISTS idx_appointment_user_id ON appointment(user_id);
-CREATE INDEX IF NOT EXISTS idx_appointment_status ON appointment(status);
-CREATE INDEX IF NOT EXISTS idx_appointment_time ON appointment(appointment_time);
-CREATE INDEX IF NOT EXISTS idx_coach_availability ON coach_availability(coach_id, day_of_week);
-CREATE INDEX IF NOT EXISTS idx_feedback_coach ON feedback(coach_id);
+-- Add indexes for improved query performance (compatible with older MySQL versions)
+ALTER TABLE appointment ADD INDEX idx_appointment_coach_id (coach_id);
+ALTER TABLE appointment ADD INDEX idx_appointment_user_id (user_id);
+ALTER TABLE appointment ADD INDEX idx_appointment_status (status);
+ALTER TABLE appointment ADD INDEX idx_appointment_time (appointment_time);
+ALTER TABLE coach_availability ADD INDEX idx_coach_availability (coach_id, day_of_week);
+ALTER TABLE feedback ADD INDEX idx_feedback_coach (coach_id);

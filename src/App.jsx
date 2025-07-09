@@ -8,6 +8,7 @@ import Home from "./page/Home.jsx";
 import ProfilePage from "./page/Profile.jsx"; // Đổi tên từ Tools sang ProfilePage
 import ProgressPage from "./page/Progress.jsx"; // Import component Progress
 import MembershipDebugger from "./components/MembershipDebugger.jsx"; // Import component để debug membership
+
 import TestPage from "./page/TestPage.jsx"; // Thêm trang test đơn giản
 import Blog from "./page/Blog.jsx"; // Import component Blog
 import Login from "./page/Login.jsx"; // Import component Login
@@ -414,6 +415,19 @@ const SimpleBackToTop = () => {
     </button>
   );
 };
+
+// Import debug utilities for development
+import debugAuth from "./utils/authDebug.js";
+import debugAuthNew from "./utils/authDebugNew.js";
+
+// Make debug utilities available globally in development
+if (import.meta.env.DEV) {
+  window.debugAuth = debugAuth;
+  window.debugAuthNew = debugAuthNew;
+  console.log('🔧 Debug utilities loaded:');
+  console.log('- window.debugAuth.fullReport() - Original debug functions');
+  console.log('- window.debugAuthNew.fullAuthReport() - Enhanced debug functions');
+}
 
 export default function App() {
   return (

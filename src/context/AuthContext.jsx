@@ -562,10 +562,17 @@ export const AuthProvider = ({ children }) => {
         if (rememberMeOption) {
           localStorage.setItem('nosmoke_user', JSON.stringify(processedUser));
           localStorage.setItem('nosmoke_token', data.data.token);
+          localStorage.setItem('token', data.data.token); // Backup key
           localStorage.setItem('nosmoke_remember', 'true');
+          console.log('💾 Token saved to localStorage:', data.data.token.substring(0, 20) + '...');
         } else {
           sessionStorage.setItem('nosmoke_user', JSON.stringify(processedUser));
           sessionStorage.setItem('nosmoke_token', data.data.token);
+          sessionStorage.setItem('token', data.data.token); // Backup key
+          // Also save to localStorage for API compatibility
+          localStorage.setItem('nosmoke_token', data.data.token);
+          localStorage.setItem('token', data.data.token);
+          console.log('💾 Token saved to sessionStorage and localStorage:', data.data.token.substring(0, 20) + '...');
         }
 
         // Cập nhật membership ngay sau khi đăng nhập thành công

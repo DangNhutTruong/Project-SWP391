@@ -6,21 +6,48 @@
 import api from './api.js';
 
 /**
+ * Get the auth token from multiple possible locations
+ * @returns {string|null} The auth token or null
+ */
+const getAuthToken = () => {
+  // Check multiple possible token storage locations
+  return localStorage.getItem('nosmoke_token') || 
+         sessionStorage.getItem('nosmoke_token') ||
+         localStorage.getItem('token') ||
+         sessionStorage.getItem('token') ||
+         localStorage.getItem('authToken') ||
+         null;
+};
+
+/**
  * Create a new appointment
  * @param {Object} appointmentData - Appointment data
  * @returns {Promise<Object>} Created appointment
  */
 export const createAppointment = async (appointmentData) => {
   try {
+    console.log('📅 Creating appointment:', appointmentData);
+    
+    // Check if user is authenticated
+    const token = getAuthToken();
+    if (!token) {
+      console.error('❌ No authentication token found. Please login first.');
+      throw new Error('Not authenticated. Please login first.');
+    }
+    
+    console.log('🔑 Found token for authentication:', token.substring(0, 20) + '...');
+    
     const options = api.addAuthHeader({
       method: 'POST',
       body: JSON.stringify(appointmentData)
     });
     
+    console.log('📤 Sending request to /api/appointments');
     const response = await api.fetch('/api/appointments', options);
+    console.log('✅ Appointment created successfully');
     return response;
   } catch (error) {
-    console.error('Error creating appointment:', error);
+    console.error('❌ Error creating appointment:', error);
     throw error;
   }
 };
@@ -31,10 +58,22 @@ export const createAppointment = async (appointmentData) => {
  */
 export const getUserAppointments = async () => {
   try {
+    console.log('📋 Fetching user appointments...');
+    
+    // Check if user is authenticated
+    const token = getAuthToken();
+    if (!token) {
+      console.error('❌ No authentication token found. Please login first.');
+      throw new Error('Not authenticated. Please login first.');
+    }
+    
+    console.log('🔑 Found token for authentication:', token.substring(0, 20) + '...');
+    
     const response = await api.fetch('/api/appointments/user', api.addAuthHeader());
+    console.log(`✅ Found ${response?.data?.length || 0} appointments`);
     return response;
   } catch (error) {
-    console.error('Error fetching user appointments:', error);
+    console.error('❌ Error fetching user appointments:', error);
     throw error;
   }
 };
@@ -46,10 +85,21 @@ export const getUserAppointments = async () => {
  */
 export const getAppointmentById = async (appointmentId) => {
   try {
+    console.log(`📋 Fetching appointment ${appointmentId}...`);
+    
+    // Check if user is authenticated
+    const token = getAuthToken();
+    if (!token) {
+      console.error('❌ No authentication token found. Please login first.');
+      throw new Error('Not authenticated. Please login first.');
+    }
+    
+    console.log('🔑 Found token for authentication:', token.substring(0, 20) + '...');
+    
     const response = await api.fetch(`/api/appointments/${appointmentId}`, api.addAuthHeader());
     return response;
   } catch (error) {
-    console.error(`Error fetching appointment ${appointmentId}:`, error);
+    console.error(`❌ Error fetching appointment ${appointmentId}:`, error);
     throw error;
   }
 };
@@ -62,15 +112,27 @@ export const getAppointmentById = async (appointmentId) => {
  */
 export const updateAppointment = async (appointmentId, updateData) => {
   try {
+    console.log(`📝 Updating appointment ${appointmentId}:`, updateData);
+    
+    // Check if user is authenticated
+    const token = getAuthToken();
+    if (!token) {
+      console.error('❌ No authentication token found. Please login first.');
+      throw new Error('Not authenticated. Please login first.');
+    }
+    
+    console.log('🔑 Found token for authentication:', token.substring(0, 20) + '...');
+    
     const options = api.addAuthHeader({
       method: 'PUT',
       body: JSON.stringify(updateData)
     });
     
     const response = await api.fetch(`/api/appointments/${appointmentId}`, options);
+    console.log('✅ Appointment updated successfully');
     return response;
   } catch (error) {
-    console.error(`Error updating appointment ${appointmentId}:`, error);
+    console.error(`❌ Error updating appointment ${appointmentId}:`, error);
     throw error;
   }
 };
@@ -83,15 +145,27 @@ export const updateAppointment = async (appointmentId, updateData) => {
  */
 export const cancelAppointment = async (appointmentId, cancelReason = 'User cancelled') => {
   try {
+    console.log(`❌ Cancelling appointment ${appointmentId}:`, cancelReason);
+    
+    // Check if user is authenticated
+    const token = getAuthToken();
+    if (!token) {
+      console.error('❌ No authentication token found. Please login first.');
+      throw new Error('Not authenticated. Please login first.');
+    }
+    
+    console.log('🔑 Found token for authentication:', token.substring(0, 20) + '...');
+    
     const options = api.addAuthHeader({
       method: 'PUT',
       body: JSON.stringify({ cancel_reason: cancelReason })
     });
     
     const response = await api.fetch(`/api/appointments/${appointmentId}/cancel`, options);
+    console.log('✅ Appointment cancelled successfully');
     return response;
   } catch (error) {
-    console.error(`Error cancelling appointment ${appointmentId}:`, error);
+    console.error(`❌ Error cancelling appointment ${appointmentId}:`, error);
     throw error;
   }
 };
@@ -103,14 +177,26 @@ export const cancelAppointment = async (appointmentId, cancelReason = 'User canc
  */
 export const deleteAppointment = async (appointmentId) => {
   try {
+    console.log(`🗑️ Deleting appointment ${appointmentId}...`);
+    
+    // Check if user is authenticated
+    const token = getAuthToken();
+    if (!token) {
+      console.error('❌ No authentication token found. Please login first.');
+      throw new Error('Not authenticated. Please login first.');
+    }
+    
+    console.log('🔑 Found token for authentication:', token.substring(0, 20) + '...');
+    
     const options = api.addAuthHeader({
       method: 'DELETE'
     });
     
     const response = await api.fetch(`/api/appointments/${appointmentId}`, options);
+    console.log('✅ Appointment deleted successfully');
     return response;
   } catch (error) {
-    console.error(`Error deleting appointment ${appointmentId}:`, error);
+    console.error(`❌ Error deleting appointment ${appointmentId}:`, error);
     throw error;
   }
 };
@@ -123,15 +209,27 @@ export const deleteAppointment = async (appointmentId) => {
  */
 export const rateAppointment = async (appointmentId, ratingData) => {
   try {
+    console.log(`⭐ Rating appointment ${appointmentId}:`, ratingData);
+    
+    // Check if user is authenticated
+    const token = getAuthToken();
+    if (!token) {
+      console.error('❌ No authentication token found. Please login first.');
+      throw new Error('Not authenticated. Please login first.');
+    }
+    
+    console.log('🔑 Found token for authentication:', token.substring(0, 20) + '...');
+    
     const options = api.addAuthHeader({
       method: 'POST',
       body: JSON.stringify(ratingData)
     });
     
     const response = await api.fetch(`/api/appointments/${appointmentId}/rate`, options);
+    console.log('✅ Appointment rated successfully');
     return response;
   } catch (error) {
-    console.error(`Error rating appointment ${appointmentId}:`, error);
+    console.error(`❌ Error rating appointment ${appointmentId}:`, error);
     throw error;
   }
 };

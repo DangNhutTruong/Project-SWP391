@@ -195,7 +195,24 @@ export const checkFeatureAccessFromBackend = async (requiredMembership) => {
     
     // Lấy membership của user từ dữ liệu đã được cập nhật vào localStorage
     const currentUser = JSON.parse(localStorage.getItem('nosmoke_user') || '{}');
-    const userMembership = currentUser.membership || 'free';
+    const rawUserMembership = currentUser.membership || 'free';
+    
+    // Normalize membership - chuẩn hóa "PRE" thành "premium"
+    const normalizeMembership = (membership) => {
+      if (!membership) return 'free';
+      const normalized = membership.toString().toLowerCase().trim();
+      // Map các variant membership về chuẩn
+      if (normalized === 'pre' || normalized === 'premium') return 'premium';
+      if (normalized === 'pro' || normalized === 'professional') return 'pro';
+      return normalized === 'free' ? 'free' : 'premium'; // Default fallback
+    };
+    
+    const userMembership = normalizeMembership(rawUserMembership);
+    
+    console.log('🔄 Backend membership normalization:', {
+      rawUserMembership,
+      normalizedUserMembership: userMembership
+    });
     
     // Chuyển đổi requiredMembership thành mảng nếu là string
     const requiredMemberships = Array.isArray(requiredMembership) 

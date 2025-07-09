@@ -15,9 +15,26 @@ const API_CONFIG = {
  * @returns {string|null} The auth token or null
  */
 const getAuthToken = () => {
-  // Kiểm tra nhiều vị trí lưu token
-  const token = localStorage.getItem('nosmoke_token') || localStorage.getItem('token');
-  return token || null;
+  // Kiểm tra nhiều vị trí lưu token theo thứ tự ưu tiên
+  const sources = [
+    { key: 'nosmoke_token', storage: localStorage },
+    { key: 'nosmoke_token', storage: sessionStorage },
+    { key: 'token', storage: localStorage },
+    { key: 'token', storage: sessionStorage },
+    { key: 'authToken', storage: localStorage }
+  ];
+  
+  for (const source of sources) {
+    const token = source.storage.getItem(source.key);
+    if (token) {
+      console.log(`🔑 Found auth token in ${source.storage === localStorage ? 'localStorage' : 'sessionStorage'}.${source.key}:`, token.substring(0, 20) + '...');
+      return token;
+    }
+  }
+  
+  console.warn('⚠️ No auth token found in any storage location');
+  console.warn('🔍 Checked locations:', sources.map(s => `${s.storage === localStorage ? 'localStorage' : 'sessionStorage'}.${s.key}`));
+  return null;
 };
 
 /**
@@ -28,23 +45,21 @@ const getAuthToken = () => {
 const addAuthHeader = (options = {}) => {
   const token = getAuthToken();
   
+  const headers = {
+    ...API_CONFIG.headers,
+    ...options.headers
+  };
+  
   if (token) {
-    return {
-      ...options,
-      headers: {
-        ...API_CONFIG.headers,
-        ...options.headers,
-        'Authorization': `Bearer ${token}`
-      }
-    };
+    headers['Authorization'] = `Bearer ${token}`;
+    console.log('🔐 Added Authorization header');
+  } else {
+    console.warn('⚠️ No token available for Authorization header');
   }
   
   return {
     ...options,
-    headers: {
-      ...API_CONFIG.headers,
-      ...options.headers
-    }
+    headers
   };
 };
 
