@@ -4,7 +4,7 @@ import { ensurePackageTable } from './models/Package.js';
 import { ensureMembershipTables } from './models/Membership.js';
 import { ensurePaymentsTable } from './models/Payment.js';
 import { ensureCoachTables } from './models/CoachTables.js';
-import fixMessageTable from './scripts/fix-message-table.js';
+import createMessagesTable from './scripts/create-messages-table-fixed.js';
 
 const ensureAllTables = async () => {
   await ensureAuthTables();
@@ -12,7 +12,7 @@ const ensureAllTables = async () => {
   await ensureMembershipTables();
   await ensurePaymentsTable();
   await ensureCoachTables();
-  await fixMessageTable();
+  await createMessagesTable();
 };
 
 export default ensureAllTables;

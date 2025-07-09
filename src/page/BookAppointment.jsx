@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import RequireMembership from '../components/RequireMembership';
 import './BookAppointment.css';
+import { createAppointment, updateAppointment, deleteAppointment } from '../utils/userAppointmentApi';
+import api from '../utils/api';
 
 function BookAppointment() {
   const [step, setStep] = useState(1); // 1: Choose coach, 2: Select date, 3: Select time
@@ -15,6 +17,8 @@ function BookAppointment() {
   const [appointmentId, setAppointmentId] = useState(null);
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [originalAppointment, setOriginalAppointment] = useState(null);
+  const [coaches, setCoaches] = useState([]);
+  const [loadingCoaches, setLoadingCoaches] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,33 +58,29 @@ function BookAppointment() {
     }
   }, [location]);
 
-  // Mock data for coaches
-  const coaches = [
-    {
-      id: 1,
-      name: 'Nguyên Văn A',
-      role: 'Coach cai thuốc chuyên nghiệp',
-      rating: 4.8,
-      avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-      available: true
-    },
-    {
-      id: 2,
-      name: 'Trần Thị B',
-      role: 'Chuyên gia tâm lý',
-      rating: 4.9,
-      avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-      available: true
-    },
-    {
-      id: 3,
-      name: 'Phạm Minh C',
-      role: 'Bác sĩ phục hồi chức năng',
-      rating: 4.7,
-      avatar: 'https://randomuser.me/api/portraits/men/64.jpg',
-      available: true
-    }
-  ];  // Custom time selection
+  // Load coaches from API
+  useEffect(() => {
+    const fetchCoaches = async () => {
+      setLoadingCoaches(true);
+      try {
+        const response = await api.fetch('/api/coaches');
+        
+        if (response.success && response.data) {
+          setCoaches(response.data);
+        } else {
+          console.error('Failed to load coaches:', response.message);
+          setCoaches([]);
+        }
+      } catch (error) {
+        console.error('Error fetching coaches:', error);
+        setCoaches([]);
+      } finally {
+        setLoadingCoaches(false);
+      }
+    };
+
+    fetchCoaches();
+  }, []);  // Custom time selection
   const [customTime, setCustomTime] = useState('');
 
   // Helper functions for calendar
@@ -137,70 +137,50 @@ function BookAppointment() {
     setSelectedDate(selectedDate);
     setStep(3);
   };
-  const handleSelectTime = (time) => {
+  const handleSelectTime = async (time) => {
     setSelectedTime(time);
-
-    // Sử dụng ID của lịch hẹn cũ nếu đang thay đổi lịch hẹn, ngược lại tạo ID mới
-    const newAppointmentId = isRescheduling ? originalAppointment.id : Math.floor(Math.random() * 1000000);
-    setAppointmentId(newAppointmentId);
     
-    // Tạo đối tượng lịch hẹn mới
-    const appointment = {
-      id: newAppointmentId,
-      userId: user.id,
-      userName: user.fullName || user.name,
-      userEmail: user.email,
-      coachId: selectedCoach.id,
-      coachName: selectedCoach.name,
-      coachAvatar: selectedCoach.avatar,
-      coachRole: selectedCoach.role,
-      date: selectedDate.toISOString(),
-      time: time,
-      status: 'pending', // Trạng thái: 'pending', 'confirmed', 'completed', 'cancelled'
-      completed: false, // Trường để theo dõi việc hoàn thành (cần xác nhận thủ công)
-      createdAt: new Date().toISOString()
-    };
-
-    // Lưu vào localStorage
-    const existingAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
-
-    if (isRescheduling) {
-      // Nếu đang thay đổi lịch hẹn, xóa lịch hẹn cũ và thêm lịch hẹn mới
-      const updatedAppointments = existingAppointments.filter(app => app.id !== originalAppointment.id);
-      updatedAppointments.push(appointment);
-      localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
-
-      // Xóa thông tin lịch hẹn đang thay đổi từ localStorage
-      localStorage.removeItem('appointmentToReschedule');
-    } else {
-      // Nếu đang đặt lịch hẹn mới, thêm vào danh sách
-      const updatedAppointments = [...existingAppointments, appointment];
-      localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
-    }
-
-    // Cập nhật thông tin coach cho user
-    if (user && !user.assignedCoachId) {
-      const updatedUser = { ...user, assignedCoachId: selectedCoach.id, assignedCoachName: selectedCoach.name };
+    try {
+      // Chuẩn bị dữ liệu appointment
+      const appointmentDateTime = new Date(selectedDate);
+      const [hours, minutes] = time.split(':');
+      appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
       
-      // Cập nhật user trong localStorage
-      const users = JSON.parse(localStorage.getItem('nosmoke_users') || '[]');
-      const updatedUsers = users.map(u => 
-        u.id === user.id ? { ...u, assignedCoachId: selectedCoach.id, assignedCoachName: selectedCoach.name } : u
-      );
-      localStorage.setItem('nosmoke_users', JSON.stringify(updatedUsers));
-      localStorage.setItem('nosmoke_user', JSON.stringify(updatedUser));
+      const appointmentData = {
+        coach_id: selectedCoach.id,
+        appointment_time: appointmentDateTime.toISOString(),
+        duration_minutes: 60, // Default 60 minutes
+        notes: `Cuộc hẹn với ${selectedCoach.full_name || selectedCoach.username}`
+      };
+
+      if (isRescheduling && originalAppointment) {
+        // Nếu đang thay đổi lịch hẹn, cập nhật lịch hẹn cũ
+        await updateAppointment(originalAppointment.id, appointmentData);
+        setAppointmentId(originalAppointment.id);
+        
+        // Xóa thông tin lịch hẹn đang thay đổi từ localStorage
+        localStorage.removeItem('appointmentToReschedule');
+      } else {
+        // Nếu đang đặt lịch hẹn mới
+        const response = await createAppointment(appointmentData);
+        setAppointmentId(response.data.id);
+      }
+
+      // Hiển thị thông báo thành công
+      setShowSuccess(true);
+
+      // Lưu trạng thái tab trong localStorage để Profile page hiển thị tab lịch hẹn
+      localStorage.setItem('activeProfileTab', 'appointments');
+
+      // Sau 3 giây chuyển hướng đến trang hồ sơ
+      setTimeout(() => {
+        navigate('/profile');
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error creating/updating appointment:', error);
+      alert('Có lỗi xảy ra khi đặt lịch hẹn. Vui lòng thử lại.');
     }
-
-    // Hiển thị thông báo thành công
-    setShowSuccess(true);
-
-    // Lưu trạng thái tab trong localStorage để Profile page hiển thị tab lịch hẹn
-    localStorage.setItem('activeProfileTab', 'appointments');
-
-    // Sau 3 giây chuyển hướng đến trang hồ sơ
-    setTimeout(() => {
-      navigate('/profile');
-    }, 3000);
   };
 
   const handleCustomTimeChange = (e) => {
@@ -225,6 +205,29 @@ function BookAppointment() {
   };
 
   const renderCoachSelection = () => {
+    if (loadingCoaches) {
+      return (
+        <div className="coach-selection-container">
+          <h2>Chọn Coach</h2>
+          <div className="loading-coaches">
+            <div className="loading-spinner"></div>
+            <p>Đang tải danh sách coach...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (coaches.length === 0) {
+      return (
+        <div className="coach-selection-container">
+          <h2>Chọn Coach</h2>
+          <div className="no-coaches">
+            <p>Hiện tại không có coach nào khả dụng. Vui lòng thử lại sau.</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="coach-selection-container">
         <h2>Chọn Coach</h2>
@@ -236,15 +239,22 @@ function BookAppointment() {
               onClick={() => handleSelectCoach(coach)}
             >
               <div className="coach-avatar">
-                <img src={coach.avatar} alt={coach.name} />
-                {coach.available && <div className="coach-status available"></div>}
+                <img 
+                  src={coach.avatar_url || coach.avatar || '/image/default-user-avatar.svg'} 
+                  alt={coach.full_name || coach.username || 'Coach'} 
+                  onError={(e) => {
+                    e.target.src = '/image/default-user-avatar.svg';
+                  }}
+                />
+                <div className="coach-status available"></div>
               </div>
               <div className="coach-info">
-                <h3>{coach.name}</h3>
-                <p>{coach.role}</p>
+                <h3>{coach.full_name || coach.username || 'Tên coach'}</h3>
+                <p>{coach.specialization || coach.bio || 'Coach tư vấn cai thuốc'}</p>
                 <div className="coach-rating">
-                  <span className="stars">{'★'.repeat(Math.floor(coach.rating))}{coach.rating % 1 > 0 ? '☆' : ''}</span>
-                  <span className="rating-value">{coach.rating}</span>
+                  <span className="stars">{'★'.repeat(Math.floor(coach.avg_rating || 5))}{(coach.avg_rating || 5) % 1 > 0 ? '☆' : ''}</span>
+                  <span className="rating-value">{(coach.avg_rating || 5).toFixed(1)}</span>
+                  {coach.review_count && <span className="review-count">({coach.review_count} đánh giá)</span>}
                 </div>
               </div>
             </div>
@@ -264,8 +274,15 @@ function BookAppointment() {
         </div>
 
         <div className="selected-coach">
-          <img src={selectedCoach.avatar} alt={selectedCoach.name} className="small-avatar" />
-          <span>{selectedCoach.name}</span>
+          <img 
+            src={selectedCoach.avatar_url || selectedCoach.avatar || '/image/default-user-avatar.svg'} 
+            alt={selectedCoach.full_name || selectedCoach.username || 'Coach'} 
+            className="small-avatar" 
+            onError={(e) => {
+              e.target.src = '/image/default-user-avatar.svg';
+            }}
+          />
+          <span>{selectedCoach.full_name || selectedCoach.username || 'Coach'}</span>
         </div>
 
         <div className="calendar-container">
@@ -311,8 +328,15 @@ function BookAppointment() {
 
         <div className="selection-details">
           <div className="selected-coach">
-            <img src={selectedCoach.avatar} alt={selectedCoach.name} className="small-avatar" />
-            <span>{selectedCoach.name}</span>
+            <img 
+              src={selectedCoach.avatar_url || selectedCoach.avatar || '/image/default-user-avatar.svg'} 
+              alt={selectedCoach.full_name || selectedCoach.username || 'Coach'} 
+              className="small-avatar" 
+              onError={(e) => {
+                e.target.src = '/image/default-user-avatar.svg';
+              }}
+            />
+            <span>{selectedCoach.full_name || selectedCoach.username || 'Coach'}</span>
           </div>
           <div className="selected-date">
             <FaCalendarAlt />
@@ -351,7 +375,7 @@ function BookAppointment() {
         <div className="success-icon">
           <FaCheck />
         </div>
-        <h2>{isRescheduling ? 'Thay đổi lịch thành công!' : 'Đặt lịch thành công!'}</h2>        <p>Bạn đã {isRescheduling ? 'thay đổi lịch hẹn' : 'đặt lịch hẹn'} với <strong>{selectedCoach.name}</strong></p>
+        <h2>{isRescheduling ? 'Thay đổi lịch thành công!' : 'Đặt lịch thành công!'}</h2>        <p>Bạn đã {isRescheduling ? 'thay đổi lịch hẹn' : 'đặt lịch hẹn'} với <strong>{selectedCoach.full_name || selectedCoach.username}</strong></p>
         <p>Vào ngày <strong>{selectedDate.toLocaleDateString('vi-VN')}</strong> lúc <strong>{selectedTime}</strong></p>
         <p>Mã cuộc hẹn: <strong>#{appointmentId}</strong></p>
         <div className="pending-status-info">

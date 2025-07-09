@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { FaCalendarAlt, FaUser, FaClock, FaCheck, FaTimes, FaEdit, FaComments } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/CoachBookings.css';
+import { getCoachAppointments, updateAppointmentStatus } from '../../utils/coachApiIntegration';
 
 function CoachBookings() {
   const { user } = useAuth();
@@ -27,21 +28,23 @@ function CoachBookings() {
     }
 
     try {
-      // Lấy tất cả appointments từ localStorage
-      const allAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
-      
-      // Lọc chỉ những appointments của coach hiện tại
-      const coachBookings = allAppointments.filter(appointment => 
-        appointment.coachId === user.id
-      );
+      // Lấy tất cả appointments từ API
+      getCoachAppointments(user.id)
+        .then(response => {
+          const allAppointments = response.data || [];
+          
+          // Sắp xếp theo ngày tạo mới nhất
+          const sortedBookings = allAppointments.sort((a, b) => 
+            new Date(b.createdAt) - new Date(a.createdAt)
+          );
 
-      // Sắp xếp theo ngày tạo mới nhất
-      const sortedBookings = coachBookings.sort((a, b) => 
-        new Date(b.createdAt) - new Date(a.createdAt)
-      );
-
-      setBookings(sortedBookings);
-      setLoading(false);
+          setBookings(sortedBookings);
+          setLoading(false);
+        })
+        .catch(error => {
+          console.error('Lỗi khi tải danh sách booking:', error);
+          setLoading(false);
+        });
     } catch (error) {
       console.error('Lỗi khi tải danh sách booking:', error);
       setLoading(false);
@@ -80,15 +83,13 @@ function CoachBookings() {
 
   const updateBookingStatus = (bookingId, newStatus) => {
     try {
-      const allAppointments = JSON.parse(localStorage.getItem('appointments') || '[]');
-      const updatedAppointments = allAppointments.map(appointment =>
-        appointment.id === bookingId
-          ? { ...appointment, status: newStatus, completed: newStatus === 'completed' }
-          : appointment
-      );
-      
-      localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
-      loadBookings(); // Reload data
+      updateAppointmentStatus(bookingId, newStatus)
+        .then(() => {
+          loadBookings(); // Reload data
+        })
+        .catch(error => {
+          console.error('Lỗi khi cập nhật trạng thái booking:', error);
+        });
     } catch (error) {
       console.error('Lỗi khi cập nhật trạng thái booking:', error);
     }

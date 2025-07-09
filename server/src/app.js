@@ -10,6 +10,7 @@ import packageRoutes from './routes/packages.js';
 import paymentRoutes from './routes/payments.js';
 import coachRoutes from './routes/coachRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 import ensureTablesExist from './ensureTables.js';
 import path from 'path';
 
@@ -82,6 +83,7 @@ app.use('/api', healthRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/coaches', coachRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Đăng ký route payments với debug chi tiết
 console.log('📌 Registering payment routes...');

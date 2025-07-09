@@ -1,5 +1,10 @@
 import express from 'express';
 import * as appointmentController from '../controllers/appointmentController.js';
+import { 
+    getAppointmentMessages, 
+    createMessage, 
+    markMessagesAsRead 
+} from '../controllers/messageController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -52,5 +57,40 @@ router.put('/:id/cancel', requireAuth, appointmentController.cancelAppointment);
  * @access Private - Requires authentication and authorization
  */
 router.post('/:id/rate', requireAuth, appointmentController.rateAppointment);
+
+/**
+ * @route GET /api/appointments/:appointmentId/messages
+ * @desc Get messages for a specific appointment
+ * @access Private - Requires authentication
+ */
+router.get('/:appointmentId/messages', requireAuth, getAppointmentMessages);
+
+/**
+ * @route POST /api/appointments/:appointmentId/messages
+ * @desc Create a new message for an appointment
+ * @access Private - Requires authentication
+ */
+router.post('/:appointmentId/messages', requireAuth, createMessage);
+
+/**
+ * @route POST /api/appointments/:appointmentId/messages/read
+ * @desc Mark messages as read for an appointment
+ * @access Private - Requires authentication
+ */
+router.post('/:appointmentId/messages/read', requireAuth, markMessagesAsRead);
+
+/**
+ * @route GET /api/appointments/coach
+ * @desc Get all appointments for the authenticated coach
+ * @access Private - Requires authentication with coach role
+ */
+router.get('/coach', requireAuth, appointmentController.getCoachAppointments);
+
+/**
+ * @route PATCH /api/appointments/:id/status
+ * @desc Update appointment status
+ * @access Private - Requires authentication and authorization
+ */
+router.patch('/:id/status', requireAuth, appointmentController.updateAppointmentStatus);
 
 export default router;

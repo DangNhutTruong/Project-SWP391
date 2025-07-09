@@ -507,6 +507,52 @@ class Appointment {
     }
     
     /**
+     * Update appointment status only
+     * @param {number} id - Appointment ID
+     * @param {string} status - New status
+     * @returns {Object} Updated appointment
+     */
+    static async updateStatus(id, status) {
+        try {
+            console.log('🔍 Updating appointment status:', id, 'to', status);
+            
+            // Check if appointment exists
+            const [currentRows] = await pool.query(
+                'SELECT * FROM appointments WHERE id = ?',
+                [id]
+            );
+            
+            if (currentRows.length === 0) {
+                console.log('⚠️ Appointment not found with ID:', id);
+                return null;
+            }
+
+            // Update status
+            const [updateResult] = await pool.query(
+                'UPDATE appointments SET status = ?, updated_at = NOW() WHERE id = ?',
+                [status, id]
+            );
+
+            if (updateResult.affectedRows === 0) {
+                console.log('⚠️ No rows affected when updating appointment status:', id);
+                return null;
+            }
+
+            // Get updated appointment
+            const [updatedRows] = await pool.query(
+                'SELECT * FROM appointments WHERE id = ?',
+                [id]
+            );
+
+            console.log('✅ Appointment status updated successfully:', updatedRows[0]);
+            return updatedRows[0];
+        } catch (error) {
+            console.error('❌ Error updating appointment status:', error);
+            throw error;
+        }
+    }
+    
+    /**
      * Delete an appointment
      * @param {number} id - The appointment ID
      * @returns {boolean} Success indicator
@@ -658,6 +704,50 @@ class Appointment {
             return feedbackRows[0];
         } catch (error) {
             console.error('❌ Error adding rating:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Get appointments by coach ID
+     * @param {number} coachId - ID of the coach
+     * @returns {Promise<Array>} List of appointments
+     */
+    static async getByCoachId(coachId) {
+        try {
+            console.log('🔍 Getting appointments for coach ID:', coachId);
+            
+            // Get appointments for the coach with detailed information
+            const [rows] = await pool.query(
+                `SELECT 
+                    a.id,
+                    a.user_id,
+                    a.coach_id,
+                    a.appointment_time,
+                    a.duration_minutes,
+                    a.status,
+                    a.notes,
+                    a.created_at,
+                    a.updated_at,
+                    u.full_name as user_name,
+                    u.email as user_email,
+                    u.phone as user_phone,
+                    u.avatar_url as user_avatar
+                FROM 
+                    appointment a
+                LEFT JOIN 
+                    users u ON a.user_id = u.id
+                WHERE 
+                    a.coach_id = ?
+                ORDER BY 
+                    a.appointment_time DESC`,
+                [coachId]
+            );
+            
+            console.log(`✅ Found ${rows.length} appointments for coach ID: ${coachId}`);
+            return rows;
+        } catch (error) {
+            console.error('❌ Error getting appointments by coach ID:', error);
             throw error;
         }
     }

@@ -19,18 +19,16 @@
         "test-token-fix": "node src/scripts/test-token-fix.js",
         "check-membership": "node src/scripts/check-membership-status.js",
         "create-messages-table": "node src/scripts/create-messages-table.js",
-        "fix-messages-fk": "node src/scripts/fix-messages-foreign-key.js",
-        "recreate-messages-table": "node src/scripts/create-messages-table-recreate.js",
+        "create-messages-table-fixed": "node src/scripts/create-messages-table-fixed.js",
         "check-users-membership": "node src/scripts/check-users-membership.js",
         "test-direct-purchase": "node src/scripts/test-direct-purchase.js",
         "fix-membership-column": "node src/scripts/fix-membership-column.js",
         "check-packages": "node src/scripts/check-packages.js",
         "extend-membership": "node src/scripts/extend-membership-enum.js",
         "test-payment-endpoints": "node src/scripts/test-payment-endpoints.js",
-        "test-payment-history": "node src/scripts/test-payment-history-api.js",
+        "test-payment-history": "node src/scripts/test-payment-history-api.js", 
         "test-payment-verify": "node src/scripts/test-payment-verify-endpoints.js",
         "create-test-user": "node src/scripts/create-test-user.js",
-        "add-sample-coaches": "node src/scripts/add-sample-coaches.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "dependencies": {
@@ -45,8 +43,7 @@
         "multer": "^2.0.1",
         "mysql2": "^3.6.5",
         "node-fetch": "^3.3.2",
-        "nodemailer": "^6.10.1",
-        "sqlite3": "^5.1.7"
+        "nodemailer": "^6.10.1"
     },
     "devDependencies": {
         "nodemon": "^3.0.2"

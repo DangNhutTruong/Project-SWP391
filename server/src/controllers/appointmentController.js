@@ -267,3 +267,71 @@ export const rateAppointment = async (req, res) => {
         return sendResponse(res, 500, false, 'Internal server error', null);
     }
 };
+
+/**
+ * Get all appointments for the authenticated coach
+ * @route GET /api/appointments/coach
+ */
+export const getCoachAppointments = async (req, res) => {
+    try {
+        // Get coach ID from authenticated user
+        const coachId = req.user.id;
+        
+        // Check if user is a coach
+        if (req.user.role !== 'coach') {
+            return sendResponse(res, 403, false, 'Unauthorized: Only coaches can access this endpoint', null);
+        }
+        
+        // Get appointments for the coach
+        const appointments = await Appointment.getByCoachId(coachId);
+        
+        // Return response
+        return sendResponse(res, 200, true, 'Coach appointments fetched successfully', appointments);
+    } catch (error) {
+        console.error('Error fetching coach appointments:', error);
+        return sendResponse(res, 500, false, 'Internal server error', null);
+    }
+};
+
+/**
+ * Update appointment status
+ * @route PATCH /api/appointments/:id/status
+ */
+export const updateAppointmentStatus = async (req, res) => {
+    try {
+        const appointmentId = req.params.id;
+        const { status } = req.body;
+        const userId = req.user.id;
+        const userRole = req.user.role;
+
+        // Validate status
+        const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+        if (!status || !validStatuses.includes(status)) {
+            return sendResponse(res, 400, false, 'Invalid status. Must be one of: pending, confirmed, completed, cancelled', null);
+        }
+
+        // Get appointment first to check permissions
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            return sendResponse(res, 404, false, 'Appointment not found', null);
+        }
+
+        // Check if user has permission to update this appointment
+        const canUpdate = userRole === 'coach' || appointment.user_id === userId;
+        if (!canUpdate) {
+            return sendResponse(res, 403, false, 'You do not have permission to update this appointment', null);
+        }
+
+        // Update appointment status
+        const updatedAppointment = await Appointment.updateStatus(appointmentId, status);
+        
+        if (!updatedAppointment) {
+            return sendResponse(res, 404, false, 'Appointment not found or could not be updated', null);
+        }
+
+        sendResponse(res, 200, true, 'Appointment status updated successfully', updatedAppointment);
+    } catch (error) {
+        console.error('Error updating appointment status:', error);
+        sendResponse(res, 500, false, 'Internal server error', null);
+    }
+};
