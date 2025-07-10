@@ -432,10 +432,10 @@ function AppointmentList() {
       setIsSubmittingRating(true);
       
       try {
-        // Create rating object
+        // Create rating object with the correct field name (content instead of feedback)
         const ratingData = {
           rating: rating,
-          feedback: ratingComment
+          content: ratingComment || ' ' // Provide a space if empty to avoid NULL
         };
         
         await rateAppointment(appointmentToRate.id, ratingData);
@@ -446,7 +446,7 @@ function AppointmentList() {
             return { 
               ...appointment, 
               rating: rating,
-              feedback: ratingComment,
+              content: ratingComment || ' ', // Use content instead of feedback
               rated_at: new Date().toISOString()
             };
           }

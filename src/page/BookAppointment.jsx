@@ -341,8 +341,8 @@ function BookAppointment() {
                 <h3>{coach.full_name || coach.username || 'Tên coach'}</h3>
                 <p>{coach.specialization || coach.bio || 'Coach tư vấn cai thuốc'}</p>
                 <div className="coach-rating">
-                  <span className="stars">{'★'.repeat(Math.floor(coach.avg_rating || 5))}{(coach.avg_rating || 5) % 1 > 0 ? '☆' : ''}</span>
-                  <span className="rating-value">{(coach.avg_rating || 5).toFixed(1)}</span>
+                  <span className="stars">{'★'.repeat(Math.floor(parseFloat(coach.avg_rating || 5)))}{parseFloat(coach.avg_rating || 5) % 1 > 0 ? '☆' : ''}</span>
+                  <span className="rating-value">{parseFloat(coach.avg_rating || 5).toFixed(1)}</span>
                   {coach.review_count && <span className="review-count">({coach.review_count} đánh giá)</span>}
                 </div>
               </div>
