@@ -67,7 +67,7 @@ class Message {
         try {
             console.log('🔍 Creating message for appointment ID:', appointmentId, messageData);
             
-            const { text, sender } = messageData;
+            const { text, sender, userId, userName } = messageData;
             
             if (!text || !sender) {
                 throw new Error('Message text and sender are required');
@@ -78,9 +78,22 @@ class Message {
                 throw new Error('Sender must be either "user" or "coach"');
             }
             
-            // First verify the appointment exists
+            // First verify the appointment exists and get user/coach info
             const [appointmentRows] = await pool.query(
-                'SELECT id, user_id, coach_id FROM appointments WHERE id = ?',
+                `SELECT 
+                    a.id, 
+                    a.user_id, 
+                    a.coach_id,
+                    u.full_name AS user_name,
+                    c.full_name AS coach_name
+                FROM 
+                    appointments a
+                LEFT JOIN 
+                    users u ON a.user_id = u.id
+                LEFT JOIN 
+                    users c ON a.coach_id = c.id
+                WHERE 
+                    a.id = ?`,
                 [appointmentId]
             );
             
@@ -110,19 +123,27 @@ class Message {
                 throw new Error('Failed to create message');
             }
             
-            // Get the created message
+            // Get the created message with sender name
             const [messageRows] = await pool.query(
                 `SELECT 
-                    id, 
-                    text, 
-                    sender_type AS sender,
-                    read_by_coach,
-                    read_by_user,
-                    created_at AS timestamp
+                    m.id, 
+                    m.text, 
+                    m.sender_type AS sender,
+                    m.read_by_coach,
+                    m.read_by_user,
+                    m.created_at AS timestamp,
+                    u.full_name AS user_name,
+                    c.full_name AS coach_name
                 FROM 
-                    messages
+                    messages m
+                LEFT JOIN 
+                    appointments a ON m.appointment_id = a.id
+                LEFT JOIN 
+                    users u ON a.user_id = u.id
+                LEFT JOIN 
+                    users c ON a.coach_id = c.id
                 WHERE 
-                    id = ?`,
+                    m.id = ?`,
                 [result.insertId]
             );
             
@@ -214,6 +235,56 @@ class Message {
             return counts;
         } catch (error) {
             console.error('❌ Error getting unread counts:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Get the latest message for an appointment
+     * @param {number} appointmentId - ID of the appointment
+     * @returns {Promise<Object>} - The latest message
+     */
+    static async getLatestMessage(appointmentId) {
+        try {
+            console.log(`🔍 Getting latest message for appointment ID: ${appointmentId}`);
+            
+            // Get the latest message for this appointment
+            const [rows] = await pool.query(
+                `SELECT 
+                    m.*,
+                    u_sender.full_name AS sender_name,
+                    u_sender.profile_image AS sender_avatar,
+                    a.user_id,
+                    a.coach_id,
+                    u_user.full_name AS user_name,
+                    u_coach.full_name AS coach_name
+                FROM 
+                    messages m
+                JOIN
+                    appointments a ON m.appointment_id = a.id
+                LEFT JOIN
+                    users u_sender ON m.sender_id = u_sender.id
+                LEFT JOIN
+                    users u_user ON a.user_id = u_user.id
+                LEFT JOIN
+                    users u_coach ON a.coach_id = u_coach.id
+                WHERE 
+                    m.appointment_id = ?
+                ORDER BY 
+                    m.created_at DESC
+                LIMIT 1`,
+                [appointmentId]
+            );
+            
+            if (rows.length === 0) {
+                console.log(`⚠️ No messages found for appointment ID: ${appointmentId}`);
+                return null;
+            }
+            
+            console.log(`✅ Found latest message for appointment ID: ${appointmentId}`);
+            return rows[0];
+        } catch (error) {
+            console.error('❌ Error getting latest message:', error);
             throw error;
         }
     }

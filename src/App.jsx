@@ -27,6 +27,7 @@ import UserProfile from "./page/User.jsx"; // Import UserProfile component
 import CoachLayout from "./components/CoachLayout.jsx"; // Import CoachLayout
 import CoachDashboard from "./page/coach/CoachDashboard.jsx"; // Import CoachDashboard
 import CoachBookings from "./page/coach/CoachBookings.jsx"; // Import CoachBookings
+import CoachMessaging from "./page/coach/CoachMessaging.jsx"; // Import CoachMessaging
 import { AuthProvider } from "./context/AuthContext.jsx"; // Import AuthProvider
 import { MembershipProvider } from "./context/MembershipContext.jsx"; // Import MembershipProvider
 import "./style.css";
@@ -353,6 +354,10 @@ const router = createBrowserRouter([
       {
         path: "bookings",
         element: <CoachBookings />
+      },
+      {
+        path: "messages",
+        element: <CoachMessaging />
       }
     ]
   },
