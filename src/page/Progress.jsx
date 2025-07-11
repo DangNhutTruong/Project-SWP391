@@ -3,13 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import QuitProgressChart from '../components/QuitProgressChart';
 import DailyCheckin from '../components/DailyCheckin';
-import MoodTracking from '../components/MoodTracking';
 import ProgressDashboard from '../components/ProgressDashboard';
 import ResetCheckinData from '../components/ResetCheckinData';
 import { FaCalendarCheck, FaLeaf, FaCoins, FaHeart } from 'react-icons/fa';
 import './Progress.css';
 import '../styles/DailyCheckin.css';
-import '../styles/MoodTracking.css';
 import '../styles/ProgressDashboard.css';
 
 export default function Progress() {
@@ -32,43 +30,95 @@ export default function Progress() {
     healthProgress: 0
   });
   
-  // Load user plan and progress from localStorage
+  const [syncStatus, setSyncStatus] = useState({
+    hasOfflineData: false,
+    lastCheck: null,
+    isSyncing: false
+  });
+  
+  // Load user plan and progress from localStorage and API
   useEffect(() => {
-    loadUserPlanAndProgress();
-    
-    // Thử load dashboard stats từ localStorage trước
-    const savedStats = localStorage.getItem('dashboardStats');
-    let shouldRecalculate = true;
-    
-    if (savedStats) {
+    const initData = async () => {
       try {
-        const parsedStats = JSON.parse(savedStats);
-        console.log("Đã tìm thấy dashboard stats từ localStorage:", parsedStats);
+        // Kiểm tra dữ liệu offline
+        checkOfflineData();
         
-        // Kiểm tra xem dữ liệu có hợp lệ không
-        if (parsedStats && parsedStats.savedCigarettes !== undefined) {
-          console.log("Sử dụng dữ liệu đã lưu: " + parsedStats.savedCigarettes + " điếu đã tránh");
-          setDashboardStats(parsedStats);
-          shouldRecalculate = false;
+        // Đồng bộ dữ liệu offline lên API trước
+        console.log("Kiểm tra và đồng bộ dữ liệu offline...");
+        await syncOfflineDataToAPI();
+        
+        // Load plan and progress data from API first, fallback to localStorage
+        await loadUserPlanAndProgress();
+        
+        // Try to get dashboard stats from localStorage first for quicker UI rendering
+        const savedStats = localStorage.getItem('dashboardStats');
+        let shouldGetFromAPI = true;
+        
+        if (savedStats) {
+          try {
+            const parsedStats = JSON.parse(savedStats);
+            console.log("Đã tìm thấy dashboard stats từ localStorage:", parsedStats);
+            
+            // Kiểm tra xem dữ liệu có hợp lệ không
+            if (parsedStats && parsedStats.savedCigarettes !== undefined) {
+              console.log("Sử dụng dữ liệu đã lưu: " + parsedStats.savedCigarettes + " điếu đã tránh");
+              setDashboardStats(parsedStats);
+              shouldGetFromAPI = false;
+            }
+          } catch (error) {
+            console.error("Lỗi khi parse dashboard stats:", error);
+            shouldGetFromAPI = true;
+          }
         }
+        
+        // If localStorage data is invalid or not available, get from API
+        if (shouldGetFromAPI) {
+          console.log("Không tìm thấy dữ liệu hợp lệ trong localStorage, lấy từ API...");
+          try {
+            const userId = localStorage.getItem('userId') || '1';
+            await updateDashboardStatsFromAPI(userId);
+          } catch (error) {
+            console.error("Lỗi khi lấy thống kê từ API:", error);
+            console.log("Tính toán thống kê từ dữ liệu local...");
+            
+            // Final fallback - calculate from local data
+            const timer = setTimeout(() => {
+              recalculateStatistics();
+            }, 1000);
+            
+            return () => clearTimeout(timer);
+          }
+        }
+        
+        // Kiểm tra lại dữ liệu offline sau khi tải xong
+        checkOfflineData();
       } catch (error) {
-        console.error("Lỗi khi parse dashboard stats:", error);
-        shouldRecalculate = true;
+        console.error("Lỗi khi khởi tạo dữ liệu:", error);
       }
-    }
+    };
     
-    // Nếu không có dữ liệu từ localStorage hoặc dữ liệu không hợp lệ, tính toán lại
-    if (shouldRecalculate) {
-      console.log("Không tìm thấy dữ liệu hoặc dữ liệu không hợp lệ, tính toán lại thống kê...");
-      const timer = setTimeout(() => {
-        recalculateStatistics();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
+    initData();
+    
+    // Thêm listener cho sự kiện online để đồng bộ dữ liệu khi có kết nối mạng trở lại
+    const handleOnline = () => {
+      console.log("Kết nối mạng đã khôi phục, bắt đầu đồng bộ dữ liệu offline...");
+      syncOfflineDataToAPI();
+    };
+    
+    // Kiểm tra dữ liệu offline định kỳ
+    const intervalId = setInterval(() => {
+      checkOfflineData();
+    }, 60000); // Kiểm tra mỗi phút
+    
+    window.addEventListener('online', handleOnline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      clearInterval(intervalId);
+    };
   }, []);
   
-  const loadUserPlanAndProgress = () => {
+  const loadUserPlanAndProgress = async () => {
     console.log("LOADING USER PLAN...");
     
     // KHÔNG xóa thống kê cũ khi load lại trang để duy trì dữ liệu giữa các phiên
@@ -121,8 +171,144 @@ export default function Progress() {
       console.log("Không tìm thấy completion data, sử dụng active plan:", hasActivePlan);
     }
 
-    // Load actual progress từ daily check-ins
-    loadActualProgressFromCheckins();
+    // Try to load progress data from API first
+    const apiData = await loadProgressFromAPI();
+    
+    // If API data loading fails, fall back to localStorage
+    if (!apiData) {
+      console.log("Fallback to loading progress from localStorage");
+      loadActualProgressFromCheckins();
+    }
+  };
+  
+  // Get API base URL with fallback support
+  const getApiBaseUrl = async () => {
+    const baseUrls = ['http://localhost:5000', 'http://localhost:5001'];
+    
+    for (const url of baseUrls) {
+      try {
+        const healthCheck = await fetch(`${url}/api/health`, { 
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 1000
+        });
+        if (healthCheck.ok) {
+          console.log(`Backend available at: ${url}`);
+          return url;
+        }
+      } catch (error) {
+        console.log(`Backend not available at ${url}`);
+      }
+    }
+    return baseUrls[0]; // Default fallback
+  };
+  
+  // Load progress data from API
+  const loadProgressFromAPI = async () => {
+    try {
+      const userId = localStorage.getItem('userId') || '1';
+      const apiUrl = await getApiBaseUrl();
+      
+      console.log(`Đang tải dữ liệu tiến trình từ API (${apiUrl})...`);
+      const response = await fetch(`${apiUrl}/api/progress/${userId}`);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const progressData = await response.json();
+      console.log(`Đã tải ${progressData.length} bản ghi dữ liệu tiến trình từ API`);
+      
+      // Convert API data to the format expected by components
+      const formattedData = progressData.map(item => {
+        // Extract progress_data which contains the checkin information
+        const progressDetail = item.progress_data ? 
+          (typeof item.progress_data === 'string' ? JSON.parse(item.progress_data) : item.progress_data) 
+          : {};
+          
+        // Đồng bộ dữ liệu giữa API và localStorage - đánh dấu dữ liệu đã có trong API
+        const dateStr = item.date.split('T')[0];
+        const storageKey = getStorageKey(dateStr);
+        try {
+          const localData = localStorage.getItem(storageKey);
+          if (localData) {
+            const parsedLocalData = JSON.parse(localData);
+            // Cập nhật trạng thái localStorage để đánh dấu đã có trong API
+            localStorage.setItem(storageKey, JSON.stringify({
+              ...parsedLocalData,
+              savedToAPI: true
+            }));
+          }
+        } catch (error) {
+          console.log(`Lỗi khi đồng bộ localStorage cho ngày ${dateStr}:`, error);
+        }
+        
+        return {
+          date: dateStr, // Remove time part
+          actualCigarettes: progressDetail.actualCigarettes || 0,
+          targetCigarettes: progressDetail.targetCigarettes || 0,
+          mood: progressDetail.mood,
+          achievements: progressDetail.achievements || [],
+          challenges: progressDetail.challenges || [],
+          notes: item.notes,
+          money_saved: item.money_saved,
+          cigarettes_avoided: item.cigarettes_avoided
+        };
+      });
+      
+      // Sort by date (oldest first)
+      formattedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+      console.log("Dữ liệu tiến trình đã được định dạng:", formattedData);
+      
+      // Update state
+      setActualProgress(formattedData);
+      
+      // Also update dashboard stats based on API data
+      updateDashboardStatsFromAPI(userId);
+      
+      return formattedData;
+    } catch (error) {
+      console.error('Failed to load progress from API:', error);
+      return null;
+    }
+  };
+  
+  // Update dashboard stats from API
+  const updateDashboardStatsFromAPI = async (userId) => {
+    try {
+      const apiUrl = await getApiBaseUrl();
+      console.log(`Đang tải thống kê dashboard từ API (${apiUrl})...`);
+      const response = await fetch(`${apiUrl}/api/progress/${userId}/stats`);
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const stats = await response.json();
+      console.log('Thống kê tiến trình từ API:', stats);
+      
+      // Update dashboard stats with API data
+      setDashboardStats({
+        noSmokingDays: stats.max_days_clean || 0,
+        savedCigarettes: stats.total_cigarettes_avoided || 0,
+        savedMoney: stats.total_money_saved || 0,
+        healthProgress: stats.avg_health_score || 0,
+        streak: stats.current_streak || 0
+      });
+      
+      // Save to localStorage for offline use
+      localStorage.setItem('dashboardStats', JSON.stringify({
+        noSmokingDays: stats.max_days_clean || 0,
+        savedCigarettes: stats.total_cigarettes_avoided || 0,
+        savedMoney: stats.total_money_saved || 0,
+        healthProgress: stats.avg_health_score || 0,
+        streak: stats.current_streak || 0
+      }));
+      
+      return stats;
+    } catch (error) {
+      console.error('Failed to load dashboard stats from API:', error);
+      throw error;
+    }
   };
   
   const getActivePlan = () => {
@@ -203,7 +389,7 @@ export default function Progress() {
         
         // Chỉ tải dữ liệu nếu ngày đó >= ngày bắt đầu kế hoạch
         if (date >= planStartDate) {
-          const checkinData = localStorage.getItem(`checkin_${dateStr}`);
+          const checkinData = localStorage.getItem(getStorageKey(dateStr));
           if (checkinData) {
             const data = JSON.parse(checkinData);
             actualData.push({
@@ -232,12 +418,48 @@ export default function Progress() {
     console.log('Progress updated:', newProgress);
     console.log('PROGRESS DEBUG: Received new progress with date:', newProgress.date);
     
-    // Load lại actual progress từ localStorage để lấy dữ liệu mới nhất
+    // Cập nhật thống kê dashboard với dữ liệu mới nhận được từ DailyCheckin
+    if (newProgress.moneySaved !== undefined && newProgress.cigarettesAvoided !== undefined) {
+      console.log(`THỐNG KÊ MỚI: Tiết kiệm thêm ${newProgress.moneySaved.toLocaleString()}đ, tránh thêm ${newProgress.cigarettesAvoided} điếu thuốc`);
+      
+      // Cập nhật dashboardStats với dữ liệu mới nhất
+      setDashboardStats(prevStats => {
+        const updatedStats = {
+          ...prevStats,
+          savedMoney: prevStats.savedMoney + newProgress.moneySaved,
+          savedCigarettes: prevStats.savedCigarettes + newProgress.cigarettesAvoided,
+          healthProgress: newProgress.health_score || prevStats.healthProgress,
+          lastUpdated: new Date().toISOString()
+        };
+        
+        // Lưu vào localStorage để sử dụng giữa các phiên
+        localStorage.setItem('dashboardStats', JSON.stringify(updatedStats));
+        console.log('Đã cập nhật thống kê dashboard:', updatedStats);
+        
+        return updatedStats;
+      });
+    }
+    
+    // Reload progress data from API
+    try {
+      console.log("Tải lại dữ liệu tiến trình từ API sau khi cập nhật...");
+      const apiData = await loadProgressFromAPI();
+      
+      if (apiData) {
+        console.log("Đã tải lại dữ liệu tiến trình từ API thành công");
+        return; // Exit early if API data loaded successfully
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải lại dữ liệu từ API:", error);
+      console.log("Fallback to localStorage data");
+    }
+    
+    // Fallback: Load lại actual progress từ localStorage để lấy dữ liệu mới nhất
     const actualData = [];
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     
-    console.log(`PROGRESS DEBUG: Ngày hôm nay là ${todayStr}, đang tìm dữ liệu mới nhất...`);
+    console.log(`PROGRESS DEBUG: Fallback - Ngày hôm nay là ${todayStr}, đang tìm dữ liệu mới nhất từ localStorage...`);
     
     // Lấy ngày bắt đầu kế hoạch từ activePlan
     let planStartDate = null;
@@ -273,7 +495,7 @@ export default function Progress() {
       
       // Chỉ tải dữ liệu nếu ngày đó >= ngày bắt đầu kế hoạch
       if (date >= planStartDate) {
-        const checkinData = localStorage.getItem(`checkin_${dateStr}`);
+        const checkinData = localStorage.getItem(getStorageKey(dateStr));
         if (checkinData) {
           try {
             const data = JSON.parse(checkinData);
@@ -362,6 +584,17 @@ export default function Progress() {
   const recalculateStatistics = () => {
     console.log("======= BẮT ĐẦU TÍNH TOÁN THỐNG KÊ MỚI =======");
     
+    // Try to get stats from API first
+    try {
+      const userId = localStorage.getItem('userId') || '1';
+      updateDashboardStatsFromAPI(userId);
+      console.log("Đã tải thống kê từ API");
+      return; // Exit early if API call successful
+    } catch (error) {
+      console.log("Không thể tải thống kê từ API, tính toán từ dữ liệu local...");
+    }
+    
+    // Fallback calculation if API fails
     // Tính số ngày đã check-in (tính bằng số ngày đã lưu DailyCheckin)
     const currentDate = new Date();
     const noSmokingDays = actualProgress.length; // Số lần người dùng đã lưu DailyCheckin
@@ -531,6 +764,8 @@ export default function Progress() {
     return newStats;
   };
   
+  // These functions have been moved to the beginning of the file
+  
   if (!userPlan) {
     return (
       <div className="progress-container">
@@ -625,6 +860,40 @@ export default function Progress() {
       <h1 className="page-title">
         {showCompletionDashboard ? 'Chúc mừng! Bạn đã lập kế hoạch cai thuốc' : 'Tiến trình cai thuốc hiện tại'}
       </h1>
+      
+      {/* Hiển thị trạng thái đồng bộ */}
+      {syncStatus.hasOfflineData && (
+        <div className="sync-status-banner" style={{
+          backgroundColor: '#fff3cd',
+          color: '#856404',
+          padding: '10px 15px',
+          borderRadius: '5px',
+          margin: '10px 0 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+        }}>
+          <div>
+            <span style={{ fontWeight: 'bold', marginRight: '10px' }}>⚠️ Dữ liệu chưa đồng bộ:</span>
+            <span>Bạn có dữ liệu offline chưa được lưu vào máy chủ.</span>
+          </div>
+          <button 
+            onClick={() => syncOfflineDataToAPI()}
+            disabled={syncStatus.isSyncing}
+            style={{
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              padding: '8px 15px',
+              borderRadius: '4px',
+              cursor: syncStatus.isSyncing ? 'wait' : 'pointer'
+            }}
+          >
+            {syncStatus.isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ ngay'}
+          </button>
+        </div>
+      )}
       
       {/* Daily Checkin Section - Luôn hiển thị để người dùng có thể nhập số điếu đã hút */}
       <DailyCheckin 
@@ -799,6 +1068,203 @@ export default function Progress() {
           </div>
         </>
       )}
+
+
     </div>
   );
 }
+
+// Hàm tạo key cho localStorage dựa trên userId
+const getStorageKey = (date) => {
+  // Lấy userId từ localStorage hoặc từ thông tin đăng nhập
+  const userId = user?.id || localStorage.getItem('userId') || localStorage.getItem('nosmoke_user_id') || '1';
+  return `checkin_${userId}_${date}`;
+};
+
+// Đồng bộ dữ liệu từ localStorage lên API nếu có dữ liệu offline chưa được lưu
+const syncOfflineDataToAPI = async () => {
+  try {
+    // Cập nhật trạng thái đang đồng bộ
+    setSyncStatus(prev => ({
+      ...prev,
+      isSyncing: true
+    }));
+    
+    const userId = localStorage.getItem('userId') || '1';
+    const apiUrl = await getApiBaseUrl();
+    console.log('Đang kiểm tra dữ liệu offline cần đồng bộ...');
+
+    // Tìm tất cả các key trong localStorage có định dạng "checkin_{userId}_{date}"
+    const offlineData = [];
+    const userPrefix = `checkin_${userId}_`;
+    
+    // Lặp qua tất cả các key trong localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      
+      // Chỉ quan tâm đến key có định dạng checkin
+      if (key && key.startsWith(userPrefix)) {
+        try {
+          const data = JSON.parse(localStorage.getItem(key));
+          
+          // Chỉ đồng bộ dữ liệu chưa được lưu vào API
+          if (data && data.savedToAPI !== true) {
+            // Extract date từ key
+            const date = key.replace(userPrefix, '');
+            
+            offlineData.push({
+              key,
+              date,
+              data
+            });
+          }
+        } catch (e) {
+          console.error(`Lỗi khi parse dữ liệu từ key ${key}:`, e);
+        }
+      }
+    }
+    
+    // Thông báo số lượng dữ liệu offline cần đồng bộ
+    if (offlineData.length > 0) {
+      console.log(`Tìm thấy ${offlineData.length} bản ghi offline cần đồng bộ`);
+      
+      // Đồng bộ từng bản ghi một
+      for (const item of offlineData) {
+        try {
+          // Tính toán tiền tiết kiệm được và cigarettes avoided
+          const cigarettesAvoided = Math.max(0, item.data.targetCigarettes - item.data.actualCigarettes);
+          
+          // Lấy giá trị từ localStorage
+          const validPackPrice = parseFloat(localStorage.getItem('packPrice')) || 50000;
+          const validCigarettesPerPack = parseInt(localStorage.getItem('cigarettesPerPack')) || 20;
+          
+          // Tính tiền tiết kiệm
+          const moneySaved = cigarettesAvoided * (validPackPrice / validCigarettesPerPack);
+          
+          // Chuẩn bị dữ liệu gửi đi
+          const dataToSend = {
+            tool_type: 'quit_smoking_plan',
+            days_clean: item.data.actualCigarettes === 0 ? 1 : 0,
+            money_saved: moneySaved,
+            cigarettes_avoided: cigarettesAvoided,
+            progress_percentage: Math.min(100, Math.max(0, Math.round((1 - (item.data.actualCigarettes / item.data.targetCigarettes)) * 100))),
+            health_score: Math.max(1, Math.min(100, 
+              item.data.actualCigarettes === 0 ? 100 : 
+              Math.floor(100 - (item.data.actualCigarettes / item.data.targetCigarettes) * 100)
+            )),
+            progress_data: {
+              ...item.data,
+              packPrice: validPackPrice,
+              cigarettesPerPack: validCigarettesPerPack,
+              moneySaved: moneySaved,
+              cigarettesAvoided: cigarettesAvoided,
+              date: item.date
+            },
+            notes: item.data.notes || 'Đồng bộ từ offline data'
+          };
+          
+          console.log(`Đồng bộ dữ liệu ngày ${item.date} lên API...`);
+          
+          // Gọi API để lưu dữ liệu
+          const response = await fetch(`${apiUrl}/api/progress/${userId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataToSend)
+          });
+          
+          if (response.ok) {
+            // Cập nhật trạng thái trong localStorage
+            const localData = JSON.parse(localStorage.getItem(item.key) || '{}');
+            localStorage.setItem(item.key, JSON.stringify({
+              ...localData,
+              savedToAPI: true,
+              lastSavedToAPI: new Date().toISOString()
+            }));
+            
+            console.log(`✅ Đồng bộ thành công dữ liệu ngày ${item.date}`);
+          } else {
+            console.error(`❌ Không thể đồng bộ dữ liệu ngày ${item.date}:`, await response.text());
+          }
+        } catch (error) {
+          console.error(`Lỗi khi đồng bộ dữ liệu ngày ${item.date}:`, error);
+        }
+      }
+      
+      // Tải lại dữ liệu từ API sau khi đồng bộ
+      await loadProgressFromAPI();
+      
+      // Cập nhật trạng thái đồng bộ
+      setSyncStatus({
+        hasOfflineData: false,
+        lastCheck: new Date(),
+        isSyncing: false
+      });
+      
+      return true;
+    } else {
+      console.log('Không có dữ liệu offline cần đồng bộ');
+      
+      // Cập nhật trạng thái đồng bộ
+      setSyncStatus({
+        hasOfflineData: false,
+        lastCheck: new Date(),
+        isSyncing: false
+      });
+      
+      return false;
+    }
+  } catch (error) {
+    console.error('Lỗi khi đồng bộ dữ liệu offline:', error);
+    
+    // Cập nhật trạng thái đồng bộ
+    setSyncStatus(prev => ({
+      ...prev,
+      isSyncing: false,
+      lastCheck: new Date()
+    }));
+    
+    return false;
+  }
+};
+
+  // Kiểm tra xem có dữ liệu offline chưa được đồng bộ không
+  const checkOfflineData = () => {
+    try {
+      const userId = localStorage.getItem('userId') || '1';
+      const userPrefix = `checkin_${userId}_`;
+      let hasOfflineData = false;
+      
+      // Lặp qua tất cả các key trong localStorage
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        
+        // Chỉ quan tâm đến key có định dạng checkin
+        if (key && key.startsWith(userPrefix)) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key));
+            
+            // Kiểm tra có dữ liệu chưa được lưu vào API không
+            if (data && data.savedToAPI !== true) {
+              hasOfflineData = true;
+              break;
+            }
+          } catch (e) {
+            console.error(`Lỗi khi parse dữ liệu từ key ${key}:`, e);
+          }
+        }
+      }
+      
+      setSyncStatus(prev => ({
+        ...prev,
+        hasOfflineData,
+        lastCheck: new Date()
+      }));
+      
+      return hasOfflineData;
+    } catch (error) {
+      console.error('Lỗi khi kiểm tra dữ liệu offline:', error);
+      return false;
+    }
+  };
