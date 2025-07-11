@@ -10,11 +10,13 @@ import {
   markMessagesAsRead as socketMarkMessagesAsRead
 } from '../utils/socket';
 import '../styles/CoachMessagePanel.css';
+import JitsiMeeting from './JitsiMeeting';
 
 const CoachMessagePanel = ({ appointment, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showJitsi, setShowJitsi] = useState(false);
   const messagesEndRef = useRef(null);
   const socketUnsubscribersRef = useRef([]);
 
@@ -220,87 +222,114 @@ const CoachMessagePanel = ({ appointment, onClose }) => {
     return '/image/default-coach-avatar.svg';
   };
 
+  // Tạo roomName cho Jitsi từ appointment
+  const jitsiRoomName = appointment ? `appointment-${appointment.id}` : '';
+
   return (
-    <div className="coach-message-panel">
-      <div className="message-panel-header">
-        <div className="user-info">
-          <img src={getUserAvatar()} alt={appointment.userName || 'Người dùng'} className="user-avatar" />
-          <div>
-            <h3>{appointment.userName || 'Người dùng'}</h3>
-            <p>Cuộc hẹn #{appointment.id}</p>
-          </div>
-        </div>
-        <button className="close-button" onClick={onClose}>
-          <FaTimes />
-        </button>
-      </div>
-
-      <div className="message-panel-content">
-        {isLoading ? (
-          <div className="loading-messages">
-            <p>Đang tải tin nhắn...</p>
-          </div>
-        ) : (
-          <>
-            {messages.length === 0 ? (
-              <div className="no-messages">
-                <p>Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</p>
-              </div>
-            ) : (
-              messages.map(message => (
-                <div 
-                  key={message.id} 
-                  className={`message ${message.sender === 'user' ? 'user-message' : 'coach-message'} ${message.pending ? 'pending' : ''} ${message.failed ? 'failed' : ''}`}
-                >
-                  {message.sender === 'user' && (
-                    <div className="avatar-container">
-                      <img src={getUserAvatar()} alt={message.user_name || appointment.userName || 'Người dùng'} className="message-avatar" />
-                    </div>
-                  )}
-                  
-                  <div className="message-bubble">
-                    <div className="message-sender-name">
-                      {message.sender === 'user' 
-                        ? (message.user_name || appointment.userName || 'Người dùng') 
-                        : (message.coach_name || appointment.coachName || 'Coach')}
-                    </div>
-                    <p>{message.text}</p>
-                    <span className="message-time">
-                      {message.failed ? 'Gửi thất bại' : (message.pending ? 'Đang gửi...' : formatTime(message.timestamp || message.created_at))}
-                    </span>
-                  </div>
-                  
-                  {message.sender === 'coach' && (
-                    <div className="avatar-container">
-                      <img src={getCoachAvatar()} alt={message.coach_name || "Coach"} className="message-avatar" />
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-      </div>
-
-      <div className="message-panel-input">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Nhập tin nhắn..."
-          disabled={isLoading}
+    <>
+      {showJitsi && (
+        <JitsiMeeting
+          roomName={jitsiRoomName}
+          onLeave={() => setShowJitsi(false)}
         />
-        <button 
-          className="send-button"
-          onClick={handleSendMessage}
-          disabled={isLoading || input.trim() === ''}
-        >
-          <FaPaperPlane />
-        </button>
+      )}
+      <div className="coach-message-panel">
+        <div className="message-panel-header">
+          <div className="user-info">
+            <img src={getUserAvatar()} alt={appointment.userName || 'Người dùng'} className="user-avatar" />
+            <div>
+              <h3>{appointment.userName || 'Người dùng'}</h3>
+              <p>Cuộc hẹn #{appointment.id}</p>
+            </div>
+          </div>
+          <button className="close-button" onClick={onClose}>
+            <FaTimes />
+          </button>
+        </div>
+        {/* Thêm nút gọi video */}
+        <div style={{ textAlign: 'center', margin: '10px 0' }}>
+          <button
+            style={{
+              padding: '8px 16px',
+              background: '#0077ff',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              fontSize: 16,
+              cursor: 'pointer',
+            }}
+            onClick={() => setShowJitsi(true)}
+          >
+            Gọi video với học viên
+          </button>
+        </div>
+        <div className="message-panel-content">
+          {isLoading ? (
+            <div className="loading-messages">
+              <p>Đang tải tin nhắn...</p>
+            </div>
+          ) : (
+            <>
+              {messages.length === 0 ? (
+                <div className="no-messages">
+                  <p>Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</p>
+                </div>
+              ) : (
+                messages.map(message => (
+                  <div 
+                    key={message.id} 
+                    className={`message ${message.sender === 'user' ? 'user-message' : 'coach-message'} ${message.pending ? 'pending' : ''} ${message.failed ? 'failed' : ''}`}
+                  >
+                    {message.sender === 'user' && (
+                      <div className="avatar-container">
+                        <img src={getUserAvatar()} alt={message.user_name || appointment.userName || 'Người dùng'} className="message-avatar" />
+                      </div>
+                    )}
+                    
+                    <div className="message-bubble">
+                      <div className="message-sender-name">
+                        {message.sender === 'user' 
+                          ? (message.user_name || appointment.userName || 'Người dùng') 
+                          : (message.coach_name || appointment.coachName || 'Coach')}
+                      </div>
+                      <p>{message.text}</p>
+                      <span className="message-time">
+                        {message.failed ? 'Gửi thất bại' : (message.pending ? 'Đang gửi...' : formatTime(message.timestamp || message.created_at))}
+                      </span>
+                    </div>
+                    
+                    {message.sender === 'coach' && (
+                      <div className="avatar-container">
+                        <img src={getCoachAvatar()} alt={message.coach_name || "Coach"} className="message-avatar" />
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+        </div>
+
+        <div className="message-panel-input">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Nhập tin nhắn..."
+            disabled={isLoading}
+          />
+          <button 
+            className="send-button"
+            onClick={handleSendMessage}
+            disabled={isLoading || input.trim() === ''}
+          >
+            <FaPaperPlane />
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

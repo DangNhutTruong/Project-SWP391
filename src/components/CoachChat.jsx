@@ -10,6 +10,7 @@ import {
   subscribeToMessagesRead,
   markMessagesAsRead as socketMarkMessagesAsRead
 } from '../utils/socket';
+import JitsiMeeting from './JitsiMeeting';
 
 const CoachChat = ({ coach, appointment, isOpen, onClose }) => {
   const [messages, setMessages] = useState([]);
@@ -17,6 +18,7 @@ const CoachChat = ({ coach, appointment, isOpen, onClose }) => {
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showJitsi, setShowJitsi] = useState(false);
   const messagesEndRef = useRef(null);
   const socketUnsubscribersRef = useRef([]);
   
@@ -233,109 +235,136 @@ const CoachChat = ({ coach, appointment, isOpen, onClose }) => {
 
   if (!isOpen || !appointment || !coach) return null;
 
+  // Tạo roomName cho Jitsi từ appointment
+  const jitsiRoomName = appointment ? `appointment-${appointment.id}` : '';
+
   return (
-    <div className="coach-chat-overlay">
-      <div className="coach-chat-container">
-        <div className="coach-chat-header">
-          <div className="coach-chat-title">
-            <div className="coach-avatar-small">
-              <img src={coach.avatar} alt={coach.name} />
-              {/* Status indicator ẩn vì đã có text status */}
-            </div>
-            <div>
-              <h3>Coach {coach.name}</h3>
-              <p>● Đang online - Sẵn sàng hỗ trợ</p>
-            </div>
-            {hasNewMessage && (
-              <div className="new-message-indicator">
-                Tin nhắn mới!
+    <>
+      {showJitsi && (
+        <JitsiMeeting
+          roomName={jitsiRoomName}
+          onLeave={() => setShowJitsi(false)}
+        />
+      )}
+      <div className="coach-chat-overlay">
+        <div className="coach-chat-container">
+          <div className="coach-chat-header">
+            <div className="coach-chat-title">
+              <div className="coach-avatar-small">
+                <img src={coach.avatar} alt={coach.name} />
+                {/* Status indicator ẩn vì đã có text status */}
               </div>
-            )}
-          </div>
-          <button className="coach-chat-close" onClick={onClose}>
-            <FaTimes />
-          </button>
-        </div>
-        
-        <div className="coach-chat-messages">
-          {isLoading ? (
-            <div className="loading-messages">
-              <p>Đang tải tin nhắn...</p>
-            </div>
-          ) : (
-            <>
-              {messages.length === 0 ? (
-                <div className="no-messages">
-                  <p>Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</p>
+              <div>
+                <h3>Coach {coach.name}</h3>
+                <p>● Đang online - Sẵn sàng hỗ trợ</p>
+              </div>
+              {hasNewMessage && (
+                <div className="new-message-indicator">
+                  Tin nhắn mới!
                 </div>
-              ) : (
-                messages.map(message => (
-                  <div 
-                    key={message.id} 
-                    className={`message ${message.sender === 'coach' ? 'coach-message' : 'user-message'} ${message.pending ? 'pending' : ''} ${message.failed ? 'failed' : ''}`}
-                  >
-                    {message.sender === 'coach' && (
-                      <div className="avatar-container">
-                        <img 
-                          src={coach.avatar || '/image/default-coach-avatar.svg'} 
-                          alt={message.coach_name || coach.name || "Coach"} 
-                          className="message-avatar" 
-                        />
-                      </div>
-                    )}
-                    
-                    <div className="message-bubble">
-                      <div className="message-sender-name">
-                        {message.sender === 'user' 
-                          ? (message.user_name || appointment.userName || 'Người dùng') 
-                          : (message.coach_name || coach.name || 'Coach')}
-                      </div>
-                      <p>{message.text}</p>
-                      <span className="message-time">
-                        {message.failed ? 'Gửi thất bại' : (message.pending ? 'Đang gửi...' : formatTime(message.timestamp || message.created_at))}
-                      </span>
-                    </div>
-                    
-                    {message.sender === 'user' && (
-                      <div className="avatar-container">
-                        <img 
-                          src={getUserAvatar()} 
-                          alt={message.user_name || appointment.userName || 'Người dùng'} 
-                          className="message-avatar"
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))
               )}
-            </>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-        
-        <div className="coach-chat-input">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Nhập tin nhắn gửi coach..."
-            disabled={isLoading}
-          />
-          <button 
-            className="send-button" 
-            onClick={handleSendMessage}
-            disabled={isLoading || input.trim() === ''}
-          >
-            <FaPaperPlane />
-          </button>
-        </div>
-        
-        <div className="coach-chat-footer">
-          <p>Coach sẽ phản hồi trong vòng: <strong>15-30 phút</strong></p>
+            </div>
+            <button className="coach-chat-close" onClick={onClose}>
+              <FaTimes />
+            </button>
+          </div>
+          {/* Thêm nút gọi video */}
+          <div style={{ textAlign: 'center', margin: '10px 0' }}>
+            <button
+              style={{
+                padding: '8px 16px',
+                background: '#0077ff',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                fontSize: 16,
+                cursor: 'pointer',
+              }}
+              onClick={() => setShowJitsi(true)}
+            >
+              Gọi video với Coach
+            </button>
+          </div>
+          <div className="coach-chat-messages">
+            {isLoading ? (
+              <div className="loading-messages">
+                <p>Đang tải tin nhắn...</p>
+              </div>
+            ) : (
+              <>
+                {messages.length === 0 ? (
+                  <div className="no-messages">
+                    <p>Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</p>
+                  </div>
+                ) : (
+                  messages.map(message => (
+                    <div 
+                      key={message.id} 
+                      className={`message ${message.sender === 'coach' ? 'coach-message' : 'user-message'} ${message.pending ? 'pending' : ''} ${message.failed ? 'failed' : ''}`}
+                    >
+                      {message.sender === 'coach' && (
+                        <div className="avatar-container">
+                          <img 
+                            src={coach.avatar || '/image/default-coach-avatar.svg'} 
+                            alt={message.coach_name || coach.name || "Coach"} 
+                            className="message-avatar" 
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="message-bubble">
+                        <div className="message-sender-name">
+                          {message.sender === 'user' 
+                            ? (message.user_name || appointment.userName || 'Người dùng') 
+                            : (message.coach_name || coach.name || 'Coach')}
+                        </div>
+                        <p>{message.text}</p>
+                        <span className="message-time">
+                          {message.failed ? 'Gửi thất bại' : (message.pending ? 'Đang gửi...' : formatTime(message.timestamp || message.created_at))}
+                        </span>
+                      </div>
+                      
+                      {message.sender === 'user' && (
+                        <div className="avatar-container">
+                          <img 
+                            src={getUserAvatar()} 
+                            alt={message.user_name || appointment.userName || 'Người dùng'} 
+                            className="message-avatar"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          
+          <div className="coach-chat-input">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Nhập tin nhắn gửi coach..."
+              disabled={isLoading}
+            />
+            <button 
+              className="send-button" 
+              onClick={handleSendMessage}
+              disabled={isLoading || input.trim() === ''}
+            >
+              <FaPaperPlane />
+            </button>
+          </div>
+          
+          <div className="coach-chat-footer">
+            <p>Coach sẽ phản hồi trong vòng: <strong>15-30 phút</strong></p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
