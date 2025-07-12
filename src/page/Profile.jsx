@@ -44,6 +44,7 @@ import "../styles/ProfilePlan.css";
 import "../styles/ModalStyles.css";
 import "../styles/JournalEntry.css";
 import "../styles/ProgressTracker.css";
+import CoachMessaging from "./coach/CoachMessaging.jsx";
 
 // Component Modal chỉnh sửa kế hoạch
 function PlanEditModal({ isOpen, onClose, currentPlan, activePlan, onSave }) {
@@ -393,7 +394,7 @@ export default function ProfilePage() {
       },
       {
         id: 3,
-        name: "Tuần đầu tiên không hút thuốc",
+        name: "Tuần đầu tiên không hút",
         date: new Date(
           new Date(user?.startDate).getTime() + 7 * 86400000
         ).toLocaleDateString("vi-VN"),
@@ -543,40 +544,12 @@ export default function ProfilePage() {
     <div className="profile-container">
       {/* Sidebar */}
       <div className="profile-sidebar">
-        {/* <div className="user-info">
-          <div className="avatar-circle">
-            <div className="user-initial-container">
-              <span className="user-initial">{userData.name ? userData.name.charAt(0) : 'U'}</span>
-            </div>
-          </div>
-          <div className="user-details">
-            <div className="user-name-wrapper">
-              <h3 className="user-name">{userData.name}</h3>
-              {userData.membershipType && userData.membershipType !== 'free' && (
-                <span className={`membership-label ${userData.membershipType}`}>
-                  {userData.membershipType === 'premium' ? 'Premium' : 'Pro'}
-                </span>
-              )}
-            </div>
-            <div className="quit-status-container">
-              <div className="quit-status-text">
-                <span className="status-dot"></span>
-                Đang cai thuốc
-              </div>
-              <div className="quit-days-display">
-                <span className="day-count">{userData.daysWithoutSmoking || 5}</span>
-                <span className="day-text">ngày</span>
-              </div>
-            </div>
-          </div>
-        </div> */}
         <nav className="profile-nav">
           <Link
             to="#"
             className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
             onClick={() => {
               setActiveTab("profile");
-              // Scroll to the top of the content area
               const profileContent = document.querySelector('.profile-content');
               if (profileContent) {
                 setTimeout(() => {
@@ -593,7 +566,6 @@ export default function ProfilePage() {
             className={`nav-item ${activeTab === "appointments" ? "active" : ""}`}
             onClick={() => {
               setActiveTab("appointments");
-              // Scroll to the top of the content area
               const profileContent = document.querySelector('.profile-content');
               if (profileContent) {
                 setTimeout(() => {
@@ -604,14 +576,31 @@ export default function ProfilePage() {
           >
             <FaCalendarAlt /> Lịch hẹn Coach
           </Link>
-            <Link
+
+          {/* Mục Nhắn tin tích hợp chat coach */}
+          <button
+            className={`nav-item${activeTab === "coach-messaging" ? " active" : ""}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              background: activeTab === 'coach-messaging' ? '#1976d2' : 'none', // Blue when active
+              color: activeTab === 'coach-messaging' ? '#fff' : 'inherit',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'coach-messaging' ? 'bold' : 'normal',
+              boxShadow: activeTab === 'coach-messaging' ? '0 2px 8px rgba(25, 118, 210, 0.08)' : 'none',
+            }}
+            onClick={() => setActiveTab('coach-messaging')}
+          >
+            <FaComment /> Nhắn tin
+          </button>
+
+          <Link
             to="#"
-            className={`nav-item ${
-              activeTab === "achievements" ? "active" : ""
-            }`}
+            className={`nav-item ${activeTab === "achievements" ? "active" : ""}`}
             onClick={() => {
               setActiveTab("achievements");
-              // Scroll to the top of the content area
               const profileContent = document.querySelector('.profile-content');
               if (profileContent) {
                 setTimeout(() => {
@@ -619,7 +608,8 @@ export default function ProfilePage() {
                 }, 10);
               }
             }}
-          >            <FaTrophy /> Huy hiệu
+          >
+            <FaTrophy /> Huy hiệu
           </Link>
           <button onClick={logout} className="nav-item logout-btn">
             <FaSignOutAlt /> Đăng xuất
@@ -822,6 +812,15 @@ export default function ProfilePage() {
             />
           </div>        )}
         
+        {/* Tích hợp CoachMessaging khi chọn Nhắn tin */}
+        {activeTab === "coach-messaging" && (
+          <div
+            className="coach-messaging-section flex flex-row w-full h-[80vh] min-h-[500px] bg-transparent shadow-none rounded-none m-0 p-0"
+            style={{ alignItems: 'stretch', flexWrap: 'nowrap' }}
+          >
+            <CoachMessaging />
+          </div>
+        )}
         {/* Modal chỉnh sửa kế hoạch */}
         <PlanEditModal
           isOpen={isPlanEditOpen}

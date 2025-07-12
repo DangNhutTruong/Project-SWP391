@@ -16,7 +16,7 @@ const CoachMessaging = () => {
 
   // Tải danh sách cuộc hẹn
   useEffect(() => {
-    if (user && user.role === 'coach') {
+    if (user) { // Relaxed role restriction
       loadAppointments();
       loadUnreadCounts();
       
@@ -36,9 +36,17 @@ const CoachMessaging = () => {
     try {
       setLoading(true);
       const response = await getCoachAppointments();
-      
-      if (response?.success && response?.data) {
-        setAppointments(response.data);
+      console.log('API appointments data:', response?.data); // Debug log
+      if (response?.success && Array.isArray(response?.data)) {
+        // Map API data to expected structure
+        const mapped = response.data.map(appt => ({
+          id: appt.id || appt.appointmentId || appt._id,
+          userName: appt.userName || appt.username || appt.user_name || appt.name || 'Người dùng',
+          date: appt.date || appt.appointment_date || appt.createdAt || appt.time,
+          userAvatar: appt.userAvatar || appt.avatar || appt.user_avatar,
+          ...appt
+        }));
+        setAppointments(mapped);
       } else {
         setAppointments([]);
       }
@@ -113,83 +121,66 @@ const CoachMessaging = () => {
   };
 
   return (
-    <div className="coach-messaging">
-      <div className="messaging-header">
-        <h2><FaInbox /> Tin nhắn của bạn</h2>
-        <p>Quản lý tin nhắn với người dùng</p>
-      </div>
-      
-      {showMessagePanel && selectedAppointment ? (
-        <div className="messaging-content with-panel">
-          <div className="back-to-list">
-            <button onClick={handleCloseMessagePanel}>
-              <FaChevronLeft /> Quay lại danh sách
-            </button>
+    <div className="coach-messaging flex h-full w-full min-h-[400px]" style={{flexDirection: 'row', background: 'transparent', borderRadius: '2rem', boxShadow: '0 4px 24px rgba(67,233,123,0.10)', overflow: 'hidden'}}>
+      {/* Sidebar: Chat List */}
+      <aside className="flex flex-col shrink-0 w-[270px] min-w-[220px] max-w-[300px] h-full bg-white rounded-3xl shadow-lg p-0" style={{background: 'linear-gradient(120deg,#43e97b 0%,#38f9d7 100%)', boxShadow: '0 4px 24px rgba(67,233,123,0.10)'}}>
+        <header className="px-4 py-3 rounded-t-3xl" style={{background: 'linear-gradient(90deg,#43e97b 0%,#38f9d7 100%)'}}>
+          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+            <FaComments className="text-white text-lg" /> Tin nhắn của bạn
+          </h2>
+        </header>
+        <div className="px-4 py-2 bg-transparent">
+          <div className="flex items-center bg-white/80 rounded-full px-3 py-2 border border-gray-200 shadow-sm">
+            <FaSearch className="text-gray-400 mr-2 text-base" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 rounded-full px-1"
+            />
           </div>
-          
-          <CoachMessagePanel 
-            appointment={selectedAppointment} 
-            onClose={handleCloseMessagePanel} 
-          />
         </div>
-      ) : (
-        <div className="messaging-content">
-          <div className="messaging-search">
-            <div className="search-container">
-              <FaSearch className="search-icon" />
-              <input 
-                type="text" 
-                placeholder="Tìm kiếm theo tên hoặc ID cuộc hẹn..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+        <nav className="flex-1 overflow-y-auto px-2 pb-2 bg-transparent">
+          {loading ? (
+            <div className="py-3 text-center text-gray-400 text-xs">
+              <p>Đang tải...</p>
             </div>
-          </div>
-          
-          <div className="appointment-list">
-            {loading ? (
-              <div className="loading-container">
-                <p>Đang tải danh sách cuộc hẹn...</p>
-              </div>
-            ) : filteredAppointments.length > 0 ? (
-              filteredAppointments.map(appointment => (
-                <div 
-                  key={appointment.id} 
-                  className={`appointment-item ${selectedAppointment?.id === appointment.id ? 'active' : ''}`}
-                  onClick={() => handleSelectAppointment(appointment)}
-                >
-                  <img 
-                    src={getUserAvatar(appointment)} 
-                    alt={appointment.userName || 'Người dùng'} 
-                    className="user-avatar" 
-                  />
-                  
-                  <div className="appointment-info">
-                    <h3>{appointment.userName || 'Người dùng'}</h3>
-                    <p className="appointment-date">
-                      Cuộc hẹn #{appointment.id} - {formatDate(appointment.date)}
-                    </p>
-                  </div>
-                  
-                  {unreadCounts[appointment.id] && unreadCounts[appointment.id] > 0 && (
-                    <div className="unread-badge">
-                      {unreadCounts[appointment.id]}
-                    </div>
-                  )}
-                  
-                  <button className="message-button">
-                    <FaComments />
-                  </button>
+          ) : filteredAppointments.length > 0 ? (
+            filteredAppointments.map(appointment => (
+              <button
+                key={appointment.id}
+                className={`flex items-center w-full px-2 py-2 my-1 rounded-full transition-all duration-200 shadow-sm text-xs group focus:outline-none border-2 ${selectedAppointment?.id === appointment.id ? 'bg-gradient-to-r from-green-100 to-green-50 border-green-400 shadow-md scale-[1.03]' : 'bg-white/90 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 border-transparent hover:shadow-lg hover:scale-105'} `}
+                onClick={() => handleSelectAppointment(appointment)}
+                style={{boxShadow: selectedAppointment?.id === appointment.id ? '0 4px 16px rgba(67,233,123,0.18)' : '0 1px 4px rgba(67,233,123,0.06)', minHeight: '44px', height: '44px'}}
+              >
+                <div className="flex-1 text-left">
+                  {/* Chỉ hiển thị appointment ID */}
+                  <div className="text-[10px] text-gray-400 transition-colors duration-200 group-hover:text-green-500">Cuộc hẹn #{appointment.id}</div>
                 </div>
-              ))
-            ) : (
-              <div className="empty-list">
-                <p>Không có cuộc hẹn nào. Hãy tạo cuộc hẹn mới để bắt đầu trò chuyện!</p>
-              </div>
-            )}
+                <FaComments className={`transition-colors duration-200 ${selectedAppointment?.id === appointment.id ? 'text-green-400 text-base' : 'text-green-200 text-base group-hover:text-green-400'}`} />
+              </button>
+            ))
+          ) : (
+            <div className="py-3 text-center text-gray-400 text-xs">
+              <p>Không có cuộc hẹn nào.</p>
+            </div>
+          )}
+        </nav>
+      </aside>
+      {/* Main: Message Panel */}
+      <main className="flex-1 flex flex-col h-full bg-gradient-to-br from-white via-green-50 to-blue-50 rounded-3xl ml-5 shadow-lg" style={{minWidth: 0}}>
+        {showMessagePanel && selectedAppointment ? (
+          <CoachMessagePanel
+            appointment={selectedAppointment}
+            onClose={handleCloseMessagePanel}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-300 text-base font-medium">
+            Chọn một cuộc hẹn để xem tin nhắn
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 };
