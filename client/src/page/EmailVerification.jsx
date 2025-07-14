@@ -8,7 +8,6 @@ export default function EmailVerification() {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [resendCooldown, setResendCooldown] = useState(0);
 
     const navigate = useNavigate();
@@ -33,57 +32,45 @@ export default function EmailVerification() {
             }, 1000);
             return () => clearTimeout(timer);
         }
-    }, [resendCooldown]);
-
-    const handleCodeChange = (e) => {
-        const value = e.target.value.replace(/\D/g, ''); // Only allow digits
-        if (value.length <= 6) {
-            setVerificationCode(value);
-        }
-    };
-
-    const handleVerify = async (e) => {
+    }, [resendCooldown]); const handleVerify = async (e) => {
         e.preventDefault();
+        setError('');
 
         if (verificationCode.length !== 6) {
-            setError('Vui lòng nhập đầy đủ 6 chữ số');
+            setError('Mã xác nhận phải có 6 chữ số');
             return;
         }
 
         setIsLoading(true);
-        setError('');
+        console.log(`🔐 Đang xác thực email ${email} với mã: ${verificationCode}`);
 
         try {
             const result = await verifyEmail(email, verificationCode);
-
-            if (result.success) {
-                setSuccess('Xác nhận email thành công! Đang chuyển hướng...');
-                setTimeout(() => {
-                    navigate('/login');
-                }, 2000);
+            console.log('🔐 Kết quả xác thực:', result); if (result.success) {
+                // Show success message and redirect to home
+                alert('Xác nhận email thành công! Chào mừng bạn đến với NoSmoke!');
+                navigate('/'); // Chuyển về trang chủ thay vì login
             } else {
-                setError(result.error || 'Mã xác nhận không đúng hoặc đã hết hạn');
+                console.error('🔐 Xác thực thất bại:', result.error);
+                setError(result.error || 'Mã xác nhận không đúng. Vui lòng kiểm tra và thử lại.');
             }
         } catch (err) {
-            setError('Có lỗi xảy ra, vui lòng thử lại');
-            console.error('Verification error:', err);
+            console.error('🔐 Lỗi xác thực:', err);
+            setError(`Có lỗi xảy ra: ${err.message || 'Không xác định được lỗi'}`);
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const handleResendCode = async () => {
+    }; const handleResendCode = async () => {
         if (resendCooldown > 0) return;
 
-        setIsLoading(true);
         setError('');
-
-        try {
+        setIsLoading(true); try {
             const result = await resendVerificationCode(email);
 
             if (result.success) {
-                setSuccess('Mã xác nhận mới đã được gửi đến email của bạn');
+                alert('Mã xác nhận mới đã được gửi đến email của bạn');
                 setResendCooldown(60); // 60 seconds cooldown
+                setVerificationCode(''); // Clear current code
             } else {
                 setError(result.error || 'Không thể gửi lại mã xác nhận');
             }
@@ -93,27 +80,30 @@ export default function EmailVerification() {
         } finally {
             setIsLoading(false);
         }
+    }; const handleCodeChange = (e) => {
+        const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+        if (value.length <= 6) {
+            setVerificationCode(value);
+            console.log(`📟 Mã xác thực đã nhập: ${value}`);
+        }
     };
 
     return (
         <div className="email-verification-page">
             <div className="verification-container">
-                <div className="verification-header">
-                    <div className="verification-icon">
-                        📧
+                <div className="verification-card">
+                    <div className="verification-header">
+                        <div className="email-icon">
+                            📧
+                        </div>
+                        <h1>Xác nhận Email</h1>
+                        <p>Chúng tôi đã gửi mã xác nhận 6 chữ số đến</p>
+                        <p className="email-address">{email}</p>
                     </div>
-                    <h1>Xác nhận Email</h1>
-                    <p className="verification-subtitle">
-                        Chúng tôi đã gửi mã xác nhận 6 chữ số đến<br />
-                        <strong>{email}</strong>
-                    </p>
-                </div>
-
-                <div className="verification-content">
-                    {error && <div className="error-message">{error}</div>}
-                    {success && <div className="success-message">{success}</div>}
 
                     <form onSubmit={handleVerify} className="verification-form">
+                        {error && <div className="error-message">{error}</div>}
+
                         <div className="form-group">
                             <label htmlFor="verificationCode">Mã xác nhận</label>
                             <input
@@ -142,7 +132,7 @@ export default function EmailVerification() {
                         </button>
 
                         <div className="resend-section">
-                            <p className="resend-text">Không nhận được email?</p>
+                            <p>Không nhận được email?</p>
                             <button
                                 type="button"
                                 className="resend-btn"
@@ -150,19 +140,29 @@ export default function EmailVerification() {
                                 disabled={isLoading || resendCooldown > 0}
                             >
                                 {resendCooldown > 0
-                                    ? `Gửi lại mã (${resendCooldown}s)`
+                                    ? `Gửi lại sau ${resendCooldown}s`
                                     : 'Gửi lại mã'
                                 }
                             </button>
-                            {resendCooldown > 0 && (
-                                <div className="countdown-text">
-                                    Bạn có thể gửi lại mã sau {resendCooldown} giây
-                                </div>
-                            )}
+                        </div>
+
+                        <div className="verification-tips">
+                            <h4>💡 Mẹo:</h4>
+                            <ul>
+                                <li>Kiểm tra thư mục spam/junk mail</li>
+                                <li>Mã có hiệu lực trong 10 phút</li>
+                                <li>Đảm bảo địa chỉ email chính xác</li>
+                            </ul>
                         </div>
 
                         <div className="back-to-register">
-                            <a href="/register">← Quay lại đăng ký</a>
+                            <button
+                                type="button"
+                                className="back-btn"
+                                onClick={() => navigate('/register')}
+                            >
+                                ← Quay lại đăng ký
+                            </button>
                         </div>
                     </form>
                 </div>

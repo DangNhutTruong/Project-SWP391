@@ -8,14 +8,17 @@ import Home from "./page/Home.jsx";
 import ProfilePage from "./page/Profile.jsx"; // Đổi tên từ Tools sang ProfilePage
 import ProgressPage from "./page/Progress.jsx"; // Import component Progress
 import MembershipDebugger from "./components/MembershipDebugger.jsx"; // Import component để debug membership
+
 import TestPage from "./page/TestPage.jsx"; // Thêm trang test đơn giản
 import Blog from "./page/Blog.jsx"; // Import component Blog
 import Login from "./page/Login.jsx"; // Import component Login
 import Register from "./page/Register.jsx"; // Import component Register
 import ForgotPassword from "./page/ForgotPassword.jsx"; // Import component ForgotPassword
-import EmailVerification from "./page/EmailVerification.jsx"; // Import component EmailVerification
+import ResetPassword from "./page/ResetPassword.jsx"; // Import component ResetPassword
+import ChangePassword from "./page/ChangePassword.jsx"; // Import component ChangePassword
 import MembershipPackage from "./page/MembershipPackage.jsx"; // Import component MembershipPackage
 import BookAppointment from "./page/BookAppointment.jsx"; // Import component BookAppointment
+import BackendConnectionTest from "./components/BackendConnectionTest.jsx"; // Import BackendConnectionTest
 import ProtectedRoute from "./components/ProtectedRoute.jsx"; // Import ProtectedRoute
 import RoleBasedRoute from "./components/RoleBasedRoute.jsx"; // Import RoleBasedRoute
 import CoachRedirect from "./components/CoachRedirect.jsx"; // Import CoachRedirect
@@ -24,6 +27,7 @@ import UserProfile from "./page/User.jsx"; // Import UserProfile component
 import CoachLayout from "./components/CoachLayout.jsx"; // Import CoachLayout
 import CoachDashboard from "./page/coach/CoachDashboard.jsx"; // Import CoachDashboard
 import CoachBookings from "./page/coach/CoachBookings.jsx"; // Import CoachBookings
+import CoachMessaging from "./page/coach/CoachMessaging.jsx"; // Import CoachMessaging
 import { AuthProvider } from "./context/AuthContext.jsx"; // Import AuthProvider
 import { MembershipProvider } from "./context/MembershipContext.jsx"; // Import MembershipProvider
 import "./style.css";
@@ -33,6 +37,7 @@ import SettingsPage from "./page/Settings.jsx"; // Import component Settings
 import Pay from "./page/Pay.jsx";
 import PaymentSuccess from "./page/PaymentSuccess.jsx";
 import MembershipTest from "./components/MembershipTest.jsx";
+import EmailVerification from "./page/EmailVerification.jsx"; // Import EmailVerification
 /**
  * App - Component chính của ứng dụng
  *
@@ -262,10 +267,10 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: "/verify-email",
+    path: "/reset-password",
     element: (
       <Layout>
-        <EmailVerification />
+        <ResetPassword />
       </Layout>
     ),
   },
@@ -314,6 +319,16 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/change-password",
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <ChangePassword />
+        </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
     path: "/appointment",
     element: (
       <Layout>
@@ -339,14 +354,34 @@ const router = createBrowserRouter([
       {
         path: "bookings",
         element: <CoachBookings />
+      },
+      {
+        path: "messages",
+        element: <CoachMessaging />
       }
     ]
+  },
+  {
+    path: "/api-test",
+    element: (
+      <Layout>
+        <BackendConnectionTest />
+      </Layout>
+    ),
   },
   {
     path: "/access-denied",
     element: (
       <Layout>
         <AccessDenied />
+      </Layout>
+    ),
+  },
+  {
+    path: "/verify-email",
+    element: (
+      <Layout>
+        <EmailVerification />
       </Layout>
     ),
   },
@@ -385,6 +420,19 @@ const SimpleBackToTop = () => {
     </button>
   );
 };
+
+// Import debug utilities for development
+import debugAuth from "./utils/authDebug.js";
+import debugAuthNew from "./utils/authDebugNew.js";
+
+// Make debug utilities available globally in development
+if (import.meta.env.DEV) {
+  window.debugAuth = debugAuth;
+  window.debugAuthNew = debugAuthNew;
+  console.log('🔧 Debug utilities loaded:');
+  console.log('- window.debugAuth.fullReport() - Original debug functions');
+  console.log('- window.debugAuthNew.fullAuthReport() - Enhanced debug functions');
+}
 
 export default function App() {
   return (

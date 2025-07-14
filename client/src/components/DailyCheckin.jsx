@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaCalendarCheck, FaSave } from 'react-icons/fa';
-import progressService from '../services/progressService';
-import { getCurrentUserId } from '../utils/userUtils';
 
-const DailyCheckin = ({ onProgressUpdate }) => {
+const DailyCheckin = ({ onProgressUpdate, currentPlan }) => {
     const [todayData, setTodayData] = useState({
         date: new Date().toISOString().split('T')[0],
         targetCigarettes: 12, // Sẽ được tính từ kế hoạch
@@ -14,395 +12,197 @@ const DailyCheckin = ({ onProgressUpdate }) => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [currentWeek, setCurrentWeek] = useState(1); // Tuần hiện tại
     const [streakDays, setStreakDays] = useState(0); // Số ngày liên tiếp đạt mục tiêu
-    const [toast, setToast] = useState({ show: false, message: '', type: 'success' }); // Thông báo dạng toast
-    const [currentPlan, setCurrentPlan] = useState(null); // Lưu kế hoạch hiện tại    // Load kế hoạch từ database
-    const loadUserPlan = async () => {
-        try {
-            const auth_token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-            
-            if (auth_token) {
-                const quitPlanService = await import('../services/quitPlanService');
-                const response = await quitPlanService.getUserActivePlan();
-                
-                if (response && response.success && response.plan) {
-                    let plan = response.plan;
-                    
-                    // Parse plan_details nếu nó là string
-                    if (plan.plan_details && typeof plan.plan_details === 'string') {
-                        try {
-                            const parsedDetails = JSON.parse(plan.plan_details);
-                            plan = { ...plan, ...parsedDetails };
-                        } catch (e) {
-                            console.error('Error parsing plan_details:', e);
-                        }
-                    }
-                    
-                    setCurrentPlan(plan);
-                    return plan;
-                }
-            }
-            
-            // Fallback: Load từ localStorage
-            const localPlan = localStorage.getItem('activePlan');
-            if (localPlan) {
-                const parsedPlan = JSON.parse(localPlan);
-                setCurrentPlan(parsedPlan);
-                return parsedPlan;
-            }
-            
-            return null;
-        } catch (error) {
-            console.error('❌ Error loading plan:', error);
-            return null;
-        }
-    };
-
-    // Tính target cigarettes dựa trên kế hoạch và ngày hiện tại
-    const calculateTodayTarget = (plan = currentPlan) => {
-        if (!plan || !plan.weeks || !Array.isArray(plan.weeks) || plan.weeks.length === 0) {
-            return 12;
-        }
-        
-        const planStartDate = plan.startDate || plan.start_date;
-        
-        if (!planStartDate) {
-            const firstWeek = plan.weeks[0];
-            if (firstWeek) {
-                return firstWeek.amount ?? firstWeek.target ?? 
-                       firstWeek.cigarettes ?? firstWeek.dailyCigarettes ?? 
-                       firstWeek.targetCigarettes ?? 12;
-            }
-            return 12;
-        }
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' }); // Thông báo dạng toast    // Tính target cigarettes dựa trên kế hoạch và ngày hiện tại
+    const calculateTodayTarget = () => {
+        // Kiểm tra kỹ các trường hợp null/undefined
+        if (!currentPlan) return 12;
+        if (!currentPlan.weeks || !Array.isArray(currentPlan.weeks) || currentPlan.weeks.length === 0) return 12;
+        if (!currentPlan.startDate) return currentPlan.weeks[0]?.amount || 12;
         
         try {
             const today = new Date();
-            const startDate = new Date(planStartDate);
+            const startDate = new Date(currentPlan.startDate);
             
-            if (isNaN(startDate.getTime())) {
-                return plan.weeks[0]?.amount || 12;
-            }
+            // Kiểm tra ngày bắt đầu hợp lệ
+            if (isNaN(startDate.getTime())) return currentPlan.weeks[0]?.amount || 12;
             
             const daysDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
             const currentWeekNumber = Math.floor(daysDiff / 7) + 1;
             
             setCurrentWeek(currentWeekNumber);
             
-            let currentWeekPlan;
-            
-            if (currentWeekNumber <= plan.weeks.length && currentWeekNumber > 0) {
-                const weekByIndex = plan.weeks[currentWeekNumber - 1];
-                const weekByProperty = plan.weeks.find(w => w.week === currentWeekNumber);
-                currentWeekPlan = weekByProperty || weekByIndex;
-            }
-            
+            // Tìm tuần hiện tại trong plan
+            const currentWeekPlan = currentPlan.weeks.find(w => w.week === currentWeekNumber);
             if (currentWeekPlan) {
-                const getTargetAmount = (weekPlan) => {
-                    if (!weekPlan) return null;
-                    return weekPlan.amount ?? weekPlan.target ?? 
-                           weekPlan.cigarettes ?? weekPlan.dailyCigarettes ?? 
-                           weekPlan.targetCigarettes ?? weekPlan.dailyTarget ?? 
-                           weekPlan.daily_cigarettes ?? weekPlan.day_cigarettes ?? null;
-                };
-                
-                const currentAmount = getTargetAmount(currentWeekPlan);
-                
-                if (currentWeekNumber > 1) {
-                    const prevWeekByIndex = plan.weeks[currentWeekNumber - 2];
-                    const prevWeekByProperty = plan.weeks.find(w => w.week === currentWeekNumber - 1);
-                    const prevWeekPlan = prevWeekByProperty || prevWeekByIndex;
-                    const prevAmount = getTargetAmount(prevWeekPlan);
+                // Lấy target của tuần trước nếu có
+                const prevWeekPlan = currentPlan.weeks.find(w => w.week === currentWeekNumber - 1);
+                if (prevWeekPlan && prevWeekPlan.amount > currentWeekPlan.amount) {
+                    const reduction = prevWeekPlan.amount - currentWeekPlan.amount;
+                    const percentReduction = Math.round((reduction / prevWeekPlan.amount) * 100);
                     
-                    if (prevAmount && currentAmount && prevAmount > currentAmount) {
-                        const reduction = prevAmount - currentAmount;
-                        const percentReduction = Math.round((reduction / prevAmount) * 100);
-                        
-                        setTodayData(prev => ({
-                            ...prev,
-                            weeklyProgress: {
-                                reduction,
-                                percentReduction,
-                                prevAmount: prevAmount
-                            }
-                        }));
-                    }
+                    // Lưu thông tin tiến độ so với tuần trước
+                    setTodayData(prev => ({
+                        ...prev,
+                        weeklyProgress: {
+                            reduction,
+                            percentReduction,
+                            prevAmount: prevWeekPlan.amount
+                        }
+                    }));
                 }
                 
-                return currentAmount || 12;
+                return currentWeekPlan.amount;
             }
             
-            if (currentWeekNumber > plan.weeks.length) {
+            // Nếu đã qua hết kế hoạch, target = 0
+            if (currentWeekNumber > currentPlan.weeks.length) {
                 return 0;
             }
             
-            const firstWeek = plan.weeks[0];
-            if (firstWeek) {
-                return firstWeek.amount ?? firstWeek.target ?? 
-                       firstWeek.cigarettes ?? firstWeek.dailyCigarettes ?? 
-                       firstWeek.targetCigarettes ?? 12;
-            }
-            
-            return 12;
+            // Fallback
+            return currentPlan.weeks[0]?.amount || 12;
         } catch (error) {
-            return 12;
+            console.error("Lỗi khi tính toán mục tiêu hôm nay:", error);
+            return 12; // Fallback an toàn nếu có lỗi
         }
     };
 
-    // Tính streak days
+    // Tính streak days (chỉ tính từ ngày bắt đầu kế hoạch)
     const calculateStreakDays = () => {
         let streak = 0;
         const today = new Date();
         
-        for (let i = 0; i < 30; i++) {
+        // Nếu có kế hoạch, chỉ tính từ ngày bắt đầu kế hoạch
+        let startDate = today;
+        if (currentPlan && currentPlan.startDate) {
+            const planStartDate = new Date(currentPlan.startDate);
+            if (!isNaN(planStartDate.getTime())) {
+                startDate = planStartDate;
+            }
+        }
+        
+        // Tính số ngày từ start date đến hôm nay
+        const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+        const maxDaysToCheck = Math.min(daysSinceStart + 1, 30); // Không quá 30 ngày và không quá số ngày từ khi bắt đầu
+        
+        console.log(`Tính streak từ ${startDate.toISOString().split('T')[0]} (${maxDaysToCheck} ngày để kiểm tra)`);
+        
+        for (let i = 0; i < maxDaysToCheck; i++) {
             const checkDate = new Date(today);
             checkDate.setDate(checkDate.getDate() - i);
-            const dateStr = checkDate.toISOString().split('T')[0];
             
+            // Không kiểm tra những ngày trước khi bắt đầu kế hoạch
+            if (checkDate < startDate) {
+                console.log(`Bỏ qua ngày ${checkDate.toISOString().split('T')[0]} vì trước ngày bắt đầu kế hoạch`);
+                break;
+            }
+            
+            const dateStr = checkDate.toISOString().split('T')[0];
             const savedData = localStorage.getItem(`checkin_${dateStr}`);
+            
             if (savedData) {
                 const data = JSON.parse(savedData);
                 if (data.actualCigarettes <= data.targetCigarettes) {
                     streak++;
+                    console.log(`✅ Ngày ${dateStr}: ${data.actualCigarettes}/${data.targetCigarettes} - Streak: ${streak}`);
                 } else {
+                    console.log(`❌ Ngày ${dateStr}: ${data.actualCigarettes}/${data.targetCigarettes} - Streak bị phá`);
                     break; // Streak bị phá
                 }
             } else {
+                console.log(`⚪ Ngày ${dateStr}: Không có dữ liệu - Streak dừng`);
                 break; // Không có dữ liệu
             }
         }
         
+        console.log(`Streak days cuối cùng: ${streak}`);
         setStreakDays(streak);
     };
 
-    // Load kế hoạch và cập nhật target khi component mount
+    // Cập nhật target khi component mount hoặc plan thay đổi
     useEffect(() => {
-        const loadPlanAndCalculateTarget = async () => {
-            const plan = await loadUserPlan();
-            
-            if (plan) {
-                const target = calculateTodayTarget(plan);
-                setTodayData(prev => ({
-                    ...prev,
-                    targetCigarettes: target
-                }));
-            } else {
-                setTodayData(prev => ({
-                    ...prev,
-                    targetCigarettes: 12
-                }));
-            }
-            
-            calculateStreakDays();
-        };
-        
-        loadPlanAndCalculateTarget();
-    }, []);    // Bỏ useEffect này vì đã xử lý trong useEffect chính
-        // Load dữ liệu từ database khi component mount
+        const target = calculateTodayTarget();
+        setTodayData(prev => ({
+            ...prev,
+            targetCigarettes: target
+        }));
+        calculateStreakDays();
+    }, [currentPlan]);    // Kiểm tra xem hôm nay đã checkin chưa
     useEffect(() => {
-        const loadUserData = async () => {
-            try {
-                // Lấy userId từ getCurrentUserId utility function
-                const userId = getCurrentUserId();
-                
-                const today = new Date().toISOString().split('T')[0];
-                
-                // Thử load từ database bằng userId API (working endpoint)
-                try {
-                    const fallbackUserId = 13; // fallback for testing
-                    const actualUserId = userId || fallbackUserId;
-                    
-                    // Cảnh báo khi sử dụng fallback
-                    if (!userId) {
-                        console.warn('⚠️ User ID not detected, using fallback ID 13 for development');
-                    }
-                    
-                    const response = await progressService.getProgressByUserId(actualUserId);
-                    
-                    if (response && response.success && response.data && response.data.length > 0) {
-                        // Tìm dữ liệu cho ngày hôm nay
-                        const todayProgress = response.data.find(item => 
-                            item.date.split('T')[0] === today
-                        );
-                        
-                        if (todayProgress) {
-                            const loadedData = {
-                                date: today,
-                                targetCigarettes: todayProgress.target_cigarettes || 0,
-                                actualCigarettes: todayProgress.actual_cigarettes || 0,
-                                notes: todayProgress.notes || '',
-                                healthScore: todayProgress.health_score || 0,
-                                moneySaved: todayProgress.money_saved || 0,
-                                cigarettesAvoided: todayProgress.cigarettes_avoided || 0
-                            };
-                            
-                            setTodayData(loadedData);
-                            setIsSubmitted(true);
-                            
-                            // Sync với localStorage
-                            localStorage.setItem(`checkin_${today}`, JSON.stringify(loadedData));
-                            
-                            setToast({
-                                show: true,
-                                message: '🔄 Dữ liệu được khôi phục từ database',
-                                type: 'success'
-                            });
-                            
-                            setTimeout(() => {
-                                setToast(prev => ({ ...prev, show: false }));
-                            }, 2000);
-                            return; // Dừng ở đây nếu đã load được từ database
-                        }
-                    }
-                } catch (dbError) {
-                    console.log('Database load failed, trying localStorage fallback');
-                }
-                
-                // Fallback: Load từ localStorage (submitted data hoặc draft)
-                const savedData = localStorage.getItem(`checkin_${today}`);
-                const draftData = localStorage.getItem(`checkin_${today}_draft`);
-                
-                if (savedData) {
-                    try {
-                        const data = JSON.parse(savedData);
-                        setTodayData(data);
-                        setIsSubmitted(true);
-                    } catch (e) {
-                        // Nếu có lỗi parse JSON
-                        localStorage.removeItem(`checkin_${today}`);
-                    }
-                } else if (draftData) {
-                    try {
-                        const data = JSON.parse(draftData);
-                        setTodayData(data);
-                        setIsSubmitted(false);
-                        
-                        setToast({
-                            show: true,
-                            message: '📝 Khôi phục dữ liệu nháp đã nhập',
-                            type: 'info'
-                        });
-                        
-                        setTimeout(() => {
-                            setToast(prev => ({ ...prev, show: false }));
-                        }, 2000);
-                    } catch (e) {
-                        // Nếu có lỗi parse JSON
-                        localStorage.removeItem(`checkin_${today}_draft`);
-                    }
-                }
-                
-            } catch (error) {
-                console.error('❌ Error loading user data:', error);
-            }
-        };
-        
-        loadUserData();
-    }, []);
-
-    const handleInputChange = (field, value) => {
-        const updatedData = {
-            ...todayData,
-            [field]: value
-        };
-        
-        setTodayData(updatedData);
-        
-        // Auto-save to localStorage để tránh mất dữ liệu khi chuyển trang
         const today = new Date().toISOString().split('T')[0];
-        localStorage.setItem(`checkin_${today}_draft`, JSON.stringify(updatedData));
-    };
-
-    const handleSubmit = async () => {
+        const savedData = localStorage.getItem(`checkin_${today}`);
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            setTodayData(data);
+            setIsSubmitted(true);
+        }
+    }, []);    const handleInputChange = (field, value) => {
+        setTodayData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };    const handleSubmit = () => {
         // Lưu dữ liệu vào localStorage
         const today = new Date().toISOString().split('T')[0];
         const isUpdate = localStorage.getItem(`checkin_${today}`) !== null;
-        
         localStorage.setItem(`checkin_${today}`, JSON.stringify(todayData));
-        
-        // Clear draft data khi submit thành công
-        localStorage.removeItem(`checkin_${today}_draft`);
 
         // Cập nhật streak bằng cách tính toán lại từ dữ liệu đã lưu
+        // thay vì tăng giá trị hiện tại
         calculateStreakDays();
-
-        // Gửi dữ liệu lên server để lưu vào cơ sở dữ liệu
-        try {
-            // Lấy userId từ getCurrentUserId utility function
-            const userId = getCurrentUserId();
-            
-            // Always use the new userId-based API which works without auth issues
-            const fallbackUserId = 13; // fallback for testing
-            const actualUserId = userId || fallbackUserId;
-            
-            // Cảnh báo khi sử dụng fallback
-            if (!userId) {
-                console.warn('⚠️ User ID not detected, using fallback ID 13 for development');
-            }
-            
-            console.log('Using userId for API call:', actualUserId);
-            const result = await progressService.createCheckinByUserId(actualUserId, todayData);
-
-            setToast({ 
-                show: true, 
-                message: '✅ Đã lưu dữ liệu vào cơ sở dữ liệu!', 
-                type: 'success' 
-            });
-            // Gọi callback cập nhật dashboard
-            if (onProgressUpdate) onProgressUpdate({ ...todayData, date: today });
-        } catch (error) {
-            console.error('❌ Error saving to database:', error);
-            let errorMessage = '❌ Không thể lưu dữ liệu vào cơ sở dữ liệu. Đã lưu cục bộ.';
-
-            if (error.response?.status === 401) {
-                errorMessage = '❌ Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.';
-            } else if (error.response?.status === 500) {
-                errorMessage = '❌ Lỗi máy chủ. Vui lòng thử lại sau.';
-            }
-
-            setToast({ 
-                show: true, 
-                message: errorMessage, 
-                type: 'error' 
-            });
-        }
 
         setIsSubmitted(true);
 
-        // Callback để cập nhật component cha (đã gọi ở trên)
-        // ...existing code...
+        // Callback để cập nhật component cha
+        if (onProgressUpdate) {
+            onProgressUpdate({
+                week: currentWeek,
+                amount: todayData.actualCigarettes,
+                achieved: todayData.actualCigarettes <= todayData.targetCigarettes
+            });
+        }
+
+        // Hiển thị thông báo toast thay vì alert
+        if (isUpdate) {
+            setToast({ 
+                show: true, 
+                message: '✅ Đã cập nhật thông tin checkin hôm nay!', 
+                type: 'success' 
+            });
+        } else {
+            setToast({ 
+                show: true, 
+                message: '✅ Đã lưu thông tin checkin hôm nay!', 
+                type: 'success' 
+            });
+        }
+        
+        // Auto hide toast sau 5 giây
         setTimeout(() => {
             setToast(prev => ({ ...prev, show: false }));
         }, 5000);
-    };    const handleEdit = () => {
-        // Cho phép chỉnh sửa lại form
+    };const handleEdit = () => {
         setIsSubmitted(false);
+        // Đảm bảo input field được kích hoạt
+        setTimeout(() => {
+            const inputField = document.querySelector('.actual-input');
+            if (inputField) {
+                inputField.disabled = false;
+                inputField.focus();
+            }
+        }, 100);
         
-        // Hiển thị thông báo
+        // Hiển thị toast thông báo thay vì alert
         setToast({ 
             show: true, 
             message: '📝 Bạn có thể cập nhật số điếu thuốc đã hút hôm nay', 
             type: 'info' 
         });
         
+        // Auto hide toast sau 4 giây
         setTimeout(() => {
             setToast(prev => ({ ...prev, show: false }));
-        }, 3000);
-    };
-    
-    // Thêm hàm mới để cập nhật dữ liệu lên server
-    const updateServerData = async (date) => {
-        try {
-            const result = await progressService.updateCheckin(date, todayData);
-            return true;
-        } catch (error) {
-            console.error('❌ Lỗi khi cập nhật dữ liệu checkin vào cơ sở dữ liệu:', error);
-            setToast({ 
-                show: true, 
-                message: '❌ Không thể cập nhật dữ liệu lên cơ sở dữ liệu. Đã lưu cục bộ.', 
-                type: 'error' 
-            });
-            return false;
-        }
+        }, 4000);
     };const isTargetAchieved = todayData.actualCigarettes <= todayData.targetCigarettes;    // Hàm đóng toast notification
     const closeToast = () => {
         // Thêm class để animation chạy trước khi ẩn
@@ -419,8 +219,6 @@ const DailyCheckin = ({ onProgressUpdate }) => {
     
     return (
         <div className="daily-checkin">
-
-            
             <div className="checkin-header">                <div className="header-content">
                     <div className="header-icon">
                         <FaCalendarCheck />
@@ -431,6 +229,10 @@ const DailyCheckin = ({ onProgressUpdate }) => {
                     </div>
                 </div>
 
+                {/* Streak counter */}                <div className="streak-badge">
+                    <span className="streak-number">{streakDays}</span>
+                    <span className="streak-text">ngày liên tiếp</span>
+                </div>
             </div>
             
             <div className="checkin-separator"></div>
@@ -464,7 +266,7 @@ const DailyCheckin = ({ onProgressUpdate }) => {
                             <button 
                                 type="button" 
                                 className="number-decrement" 
-                                onClick={() => handleInputChange('actualCigarettes', Math.max(0, todayData.actualCigarettes - 1))}
+                                onClick={() => !isSubmitted && handleInputChange('actualCigarettes', Math.max(0, todayData.actualCigarettes - 1))}
                                 disabled={isSubmitted || todayData.actualCigarettes <= 0}
                             >
                                 -
@@ -473,31 +275,16 @@ const DailyCheckin = ({ onProgressUpdate }) => {
                                 type="number"
                                 min="0"
                                 max="50"
-                                value={todayData.actualCigarettes || 0}
-                                onChange={(e) => {
-                                    if (!isSubmitted) {
-                                        const value = parseInt(e.target.value) || 0;
-                                        handleInputChange('actualCigarettes', value);
-                                    }
-                                }}
+                                value={todayData.actualCigarettes}
+                                onChange={(e) => handleInputChange('actualCigarettes', parseInt(e.target.value) || 0)}
                                 className="actual-input"
                                 disabled={isSubmitted}
                                 placeholder="0"
-                                style={{
-                                    backgroundColor: isSubmitted ? '#f5f5f5' : 'white',
-                                    border: isSubmitted ? '2px solid #ddd' : '2px solid #4CAF50',
-                                    padding: '8px',
-                                    fontSize: '18px',
-                                    textAlign: 'center',
-                                    borderRadius: '4px',
-                                    width: '80px',
-                                    color: isSubmitted ? '#999' : '#333'
-                                }}
                             />
                             <button 
                                 type="button" 
                                 className="number-increment" 
-                                onClick={() => handleInputChange('actualCigarettes', Math.min(50, todayData.actualCigarettes + 1))}
+                                onClick={() => !isSubmitted && handleInputChange('actualCigarettes', Math.min(50, todayData.actualCigarettes + 1))}
                                 disabled={isSubmitted || todayData.actualCigarettes >= 50}
                             >
                                 +
@@ -530,6 +317,5 @@ const DailyCheckin = ({ onProgressUpdate }) => {
         </div>
     );
 };
-
 
 export default DailyCheckin;
