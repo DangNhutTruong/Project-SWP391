@@ -10,6 +10,7 @@ const ensureAllTablesExist = async () => {
     await createProgressTable();
     // Migrate existing tables if needed
     await migrateProgressTable();
+    
     console.log('✅ All tables checked, created, and migrated if needed');
 };
 
