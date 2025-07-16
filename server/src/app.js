@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
@@ -119,7 +120,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/appointments-update', createAppointmentsStatusRoutes());
 app.use('/api', healthRoutes);
-app.use('/api/packages', packageRoutes);
+// app.use('/api/packages', packageRoutes);
 app.use('/api/coaches', coachRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/messages', messageRoutes);

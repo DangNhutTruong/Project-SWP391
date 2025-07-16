@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useMembership } from '../context/MembershipContext';
 import '../styles/RequireMembership.css';
-import { FaLock, FaCrown } from 'react-icons/fa';
+import { FaLock, FaCrown, FaSpinner } from 'react-icons/fa';
 import { hasAccessToFeature, getMinimumRequiredMembership, formatMembershipName } from '../utils/membershipUtils';
 
 /**
@@ -18,6 +18,11 @@ const RequireMembership = ({ allowedMemberships = [], showModal = false, feature
   const { user } = useAuth();
   const { checkFeatureAccess } = useMembership();
   const navigate = useNavigate();
+  const [loading, setLoading] = React.useState(true);
+  const [accessInfo, setAccessInfo] = React.useState(null);
+
+  // Mock backend check function to avoid ReferenceError
+  const checkFeatureAccessFromBackend = async () => ({ success: false });
   
   // Normalize membership function to handle different formats - moved outside to prevent re-creation
   const normalizeMembership = React.useCallback((membership) => {
