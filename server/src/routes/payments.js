@@ -1,8 +1,13 @@
 import express from 'express';
 import paymentController from '../controllers/paymentController.js';
-import { requireAuth } from '../middleware/authMiddleware.js';
+import paymentStatusController from '../controllers/paymentStatusController.js';
+import zaloPayRoutes from './zaloPayRoutes.js';
+import { authenticateToken as requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Include ZaloPay routes
+router.use('/', zaloPayRoutes);
 
 /**
  * @route POST /api/payments/create
@@ -55,6 +60,13 @@ router.get('/user/history', requireAuth, paymentController.getUserPaymentHistory
 router.get('/:id', requireAuth, paymentController.getPaymentById);
 
 /**
+ * @route GET /api/payments/transaction/:transactionId
+ * @desc Lấy chi tiết thanh toán theo transaction ID
+ * @access Private - Yêu cầu đăng nhập
+ */
+router.get('/transaction/:transactionId', requireAuth, paymentController.getPaymentByTransactionId);
+
+/**
  * @route POST /api/payments/:id/refund
  * @desc Hoàn tiền cho thanh toán
  * @access Private - Chỉ admin có quyền
@@ -62,8 +74,86 @@ router.get('/:id', requireAuth, paymentController.getPaymentById);
 router.post('/:id/refund', requireAuth, paymentController.refundPayment);
 
 /**
+ * @route POST /api/payments/check-pending
+ * @desc Kiểm tra và cập nhật tất cả pending payments
+ * @access Private - Yêu cầu đăng nhập
+ */
+router.post('/check-pending', requireAuth, paymentStatusController.checkAndUpdatePendingPayments);
+
+/**
+ * @route POST /api/payments/force-update-pending
+ * @desc Force update tất cả pending payments thành completed - KHÔNG CẦN AUTH (chỉ dùng cho debug)
+ * @access Public
+ */
+router.post('/force-update-pending', async (req, res) => {
+  try {
+    console.log('🔄 Force updating pending payments...');
+    
+    // Import trong route để tránh circular dependency
+    const PaymentTransaction = await import('../models/PaymentTransaction.js');
+    const { pool } = await import('../config/database.js');
+    
+    // Lấy tất cả pending payments
+    const [pendingPayments] = await pool.execute(`
+      SELECT * FROM payment_transactions 
+      WHERE status = 'pending' 
+      ORDER BY created_at DESC
+    `);
+    
+    console.log(`📋 Tìm thấy ${pendingPayments.length} payments đang pending`);
+    
+    if (pendingPayments.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'Không có payments pending nào',
+        data: { updated: 0, payments: [] }
+      });
+    }
+    
+    // Cập nhật tất cả thành completed
+    const [updateResult] = await pool.execute(`
+      UPDATE payment_transactions 
+      SET status = 'completed', updated_at = CURRENT_TIMESTAMP 
+      WHERE status = 'pending'
+    `);
+    
+    // Cập nhật payments table cũng
+    const [updatePaymentsResult] = await pool.execute(`
+      UPDATE payments 
+      SET payment_status = 'completed' 
+      WHERE payment_status = 'pending'
+    `);
+    
+    console.log(`✅ Đã cập nhật ${updateResult.affectedRows} payment_transactions và ${updatePaymentsResult.affectedRows} payments`);
+    
+    return res.status(200).json({
+      success: true,
+      message: `Đã cập nhật ${updateResult.affectedRows} payments từ pending thành completed`,
+      data: {
+        updated: updateResult.affectedRows,
+        updatedPayments: updatePaymentsResult.affectedRows,
+        payments: pendingPayments.map(p => ({
+          id: p.id,
+          transaction_id: p.transaction_id,
+          user_id: p.user_id,
+          amount: p.amount
+        }))
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Lỗi force update pending payments:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi force update pending payments',
+      error: error.message
+    });
+  }
+});
+
+/**
  * @route GET /api/payments/test
- * @desc Route test đơn giản để kiểm tra API hoạt động
+ * @desc Test endpoint để kiểm tra API hoạt động
  * @access Public
  */
 router.get('/test', (req, res) => {

@@ -1,4 +1,4 @@
-import * as Payment from '../models/Payment.js';
+import * as PaymentTransaction from '../models/PaymentTransaction.js';
 import * as Package from '../models/Package.js';
 
 /**
@@ -80,7 +80,7 @@ export const createPayment = async (req, res) => {
     };
     
     // Thêm bản ghi thanh toán mới
-    const payment = await Payment.createPayment(paymentData);
+    const payment = await PaymentTransaction.createPayment(paymentData);
     
     // Trả về kết quả thành công
     res.status(201).json({
@@ -109,7 +109,7 @@ export const getUserPayments = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    const payments = await Payment.getUserPayments(userId);
+    const payments = await PaymentTransaction.getUserPayments(userId);
     
     res.status(200).json({
       success: true,
@@ -154,7 +154,7 @@ export const updatePaymentStatus = async (req, res) => {
       });
     }
     
-    const updatedPayment = await Payment.updatePaymentStatus(id, status, transactionId);
+    const updatedPayment = await PaymentTransaction.updatePaymentStatus(id, status, transactionId);
     
     if (!updatedPayment) {
       return res.status(404).json({
@@ -211,8 +211,8 @@ export const getUserPaymentHistory = async (req, res) => {
       endDate
     };
     
-    const payments = await Payment.getUserPaymentHistory(userId, options);
-    const total = await Payment.countUserPayments(userId, countOptions);
+    const payments = await PaymentTransaction.getUserPaymentHistory(userId, options);
+    const total = await PaymentTransaction.countUserPayments(userId, countOptions);
     
     res.status(200).json({
       success: true,
@@ -248,7 +248,7 @@ export const getPaymentById = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
     
-    const payment = await Payment.getPaymentById(id);
+    const payment = await PaymentTransaction.getPaymentById(id);
     
     if (!payment) {
       return res.status(404).json({
@@ -275,6 +275,61 @@ export const getPaymentById = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error getting payment details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve payment details',
+      error: error.message,
+      data: null
+    });
+  }
+};
+
+/**
+ * Lấy chi tiết thanh toán theo transaction ID
+ * @route GET /api/payments/transaction/:transactionId
+ * @access Private
+ */
+export const getPaymentByTransactionId = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+    const userId = req.user.id;
+    
+    if (!transactionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Transaction ID is required',
+        data: null
+      });
+    }
+    
+    // Sử dụng findPaymentByTransactionId thay vì getPaymentByTransactionId để dùng đúng bảng payments
+    const payment = await PaymentTransaction.findPaymentByTransactionId(transactionId);
+    
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: `Payment with transaction ID ${transactionId} not found`,
+        data: null
+      });
+    }
+    
+    // Kiểm tra xem người dùng có quyền xem thanh toán này không
+    // Chỉ admin hoặc chủ sở hữu thanh toán mới được xem
+    if (payment.user_id !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to view this payment',
+        data: null
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Payment details retrieved successfully',
+      data: payment
+    });
+  } catch (error) {
+    console.error('❌ Error getting payment by transaction ID:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve payment details',
@@ -313,7 +368,7 @@ export const refundPayment = async (req, res) => {
     }
     
     // Lấy thông tin thanh toán
-    const payment = await Payment.getPaymentById(id);
+    const payment = await PaymentTransaction.getPaymentById(id);
     
     if (!payment) {
       return res.status(404).json({
@@ -341,7 +396,7 @@ export const refundPayment = async (req, res) => {
       timestamp: new Date()
     };
     
-    const refundResult = await Payment.refundPayment(id, refundData);
+    const refundResult = await PaymentTransaction.refundPayment(id, refundData);
     
     // Cập nhật gói thành viên nếu hoàn tiền thành công
     if (refundResult) {
@@ -419,7 +474,7 @@ export const verifyPayment = async (req, res) => {
     }
     
     // Tìm payment có transaction_id tương ứng
-    const payment = await Payment.findPaymentByTransactionId(transactionId);
+    const payment = await PaymentTransaction.findPaymentByTransactionId(transactionId);
     
     if (!payment) {
       return res.status(404).json({
@@ -430,7 +485,7 @@ export const verifyPayment = async (req, res) => {
     }
     
     // Cập nhật trạng thái thanh toán
-    const updatedPayment = await Payment.updatePaymentStatus(
+    const updatedPayment = await PaymentTransaction.updatePaymentStatus(
       payment.id,
       paymentStatus,
       transactionId
@@ -438,7 +493,7 @@ export const verifyPayment = async (req, res) => {
     
     // Thêm chi tiết thanh toán nếu có
     if (paymentDetails) {
-      await Payment.updatePaymentDetails(payment.id, paymentDetails);
+      await PaymentTransaction.updatePaymentDetails(payment.id, paymentDetails);
     }
     
     // Nếu thanh toán hoàn tất, cập nhật gói thành viên của người dùng
@@ -486,5 +541,6 @@ export default {
   verifyPayment,
   getUserPaymentHistory,
   getPaymentById,
-  refundPayment
+  refundPayment,
+  getPaymentByTransactionId
 };

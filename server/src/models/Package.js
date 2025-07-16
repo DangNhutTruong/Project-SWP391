@@ -1,277 +1,320 @@
 import { pool } from '../config/database.js';
 
-/**
- * Tạo bảng package nếu chưa tồn tại
- */
-export const ensurePackageTable = async () => {
-  try {
-    // Tạo bảng package nếu chưa tồn tại
-    await pool.execute(`
-      CREATE TABLE IF NOT EXISTS package (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        description VARCHAR(255),
-        price INT NOT NULL,
-        period ENUM('tháng', 'năm') NOT NULL,
-        popular BOOLEAN DEFAULT FALSE,
-        active BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    `);
-    
-    // Kiểm tra xem cột period đã tồn tại chưa và thêm nếu chưa có
+class Package {
+  constructor(data) {
+    this.id = data.id;
+    this.name = data.name;
+    this.price = data.price;
+    this.period = data.period;
+    this.membershipType = data.membershipType;
+    this.description = data.description;
+    this.features = data.features;
+    this.disabledFeatures = data.disabledFeatures;
+    this.popular = data.popular;
+    this.created_at = data.created_at;
+    this.updated_at = data.updated_at;
+  }
+
+  // Lấy tất cả các gói
+  static async getAllPackages() {
     try {
-      // Kiểm tra xem cột period có tồn tại không
-      const [periodColumns] = await pool.execute(`
-        SELECT COLUMN_NAME 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-        AND TABLE_NAME = 'package' 
-        AND COLUMN_NAME = 'period'
+      console.log('📦 Fetching all packages from database...');
+      
+      // Lấy dữ liệu từ database thực
+      const [packages] = await pool.execute(`
+        SELECT 
+          id, name, description, price, created_at
+        FROM packages 
+        ORDER BY id ASC
       `);
       
-      // Nếu cột period không tồn tại, thêm vào
-      if (periodColumns.length === 0) {
-        console.log('Adding missing period column to package table...');
-        await pool.execute(`
-          ALTER TABLE package 
-          ADD COLUMN period ENUM('tháng', 'năm') NOT NULL DEFAULT 'tháng'
-        `);
-        console.log('✅ period column added successfully');
+      if (!packages || packages.length === 0) {
+        console.log('⚠️ No packages found in database, returning default packages');
+        return this.getDefaultPackages();
       }
-
-      // Kiểm tra xem cột popular có tồn tại không
-      const [popularColumns] = await pool.execute(`
-        SELECT COLUMN_NAME 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-        AND TABLE_NAME = 'package' 
-        AND COLUMN_NAME = 'popular'
-      `);
       
-      // Nếu cột popular không tồn tại, thêm vào
-      if (popularColumns.length === 0) {
-        console.log('Adding missing popular column to package table...');
-        await pool.execute(`
-          ALTER TABLE package 
-          ADD COLUMN popular BOOLEAN DEFAULT FALSE
-        `);
-        console.log('✅ popular column added successfully');
-      }
-
-      // Kiểm tra xem cột active có tồn tại không
-      const [activeColumns] = await pool.execute(`
-        SELECT COLUMN_NAME 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-        AND TABLE_NAME = 'package' 
-        AND COLUMN_NAME = 'active'
-      `);
+      // Lấy features cho từng package
+      const packagesWithFeatures = await Promise.all(
+        packages.map(async (pkg) => {
+          const [features] = await pool.execute(`
+            SELECT feature_name, enabled 
+            FROM package_features 
+            WHERE package_id = ?
+            ORDER BY id ASC
+          `, [pkg.id]);
+          
+          const enabledFeatures = features.filter(f => f.enabled).map(f => f.feature_name);
+          const disabledFeatures = features.filter(f => !f.enabled).map(f => f.feature_name);
+          
+          return {
+            id: pkg.id,
+            name: pkg.name,
+            price: parseFloat(pkg.price),
+            period: pkg.id === 3 ? 'năm' : 'tháng', // Pro package = năm, others = tháng
+            membershipType: this.getMembershipType(pkg.id),
+            description: pkg.description,
+            features: enabledFeatures,
+            disabledFeatures: disabledFeatures,
+            popular: pkg.id === 2, // Premium is popular
+            created_at: pkg.created_at,
+            updated_at: pkg.created_at // Fallback
+          };
+        })
+      );
       
-      // Nếu cột active không tồn tại, thêm vào
-      if (activeColumns.length === 0) {
-        console.log('Adding missing active column to package table...');
-        await pool.execute(`
-          ALTER TABLE package 
-          ADD COLUMN active BOOLEAN DEFAULT TRUE
-        `);
-        console.log('✅ active column added successfully');
-      }
-
-      // Kiểm tra xem cột duration_months có tồn tại không
-      const [durationColumns] = await pool.execute(`
-        SELECT COLUMN_NAME 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-        AND TABLE_NAME = 'package' 
-        AND COLUMN_NAME = 'duration_months'
-      `);
+      console.log(`✅ Retrieved ${packagesWithFeatures.length} packages from database`);
+      return packagesWithFeatures.map(pkg => new Package(pkg));
       
-      // Nếu cột duration_months tồn tại và chưa có default value
-      if (durationColumns.length > 0) {
-        // Kiểm tra xem column đã có default value chưa
-        const [defaultCheck] = await pool.execute(`
-          SELECT COLUMN_DEFAULT 
-          FROM INFORMATION_SCHEMA.COLUMNS 
-          WHERE TABLE_SCHEMA = DATABASE() 
-          AND TABLE_NAME = 'package' 
-          AND COLUMN_NAME = 'duration_months'
-        `);
-        
-        if (defaultCheck[0].COLUMN_DEFAULT === null) {
-          console.log('Setting default value for duration_months column...');
-          await pool.execute(`
-            ALTER TABLE package 
-            MODIFY COLUMN duration_months INT NOT NULL DEFAULT 1
-          `);
-          console.log('✅ duration_months default value set successfully');
-        }
-      }
-    } catch (columnError) {
-      console.error('❌ Error checking or adding columns:', columnError);
+    } catch (error) {
+      console.error('❌ Error fetching packages from database:', error);
+      console.log('⚠️ Falling back to default packages');
+      return this.getDefaultPackages();
     }
-    
-    // Tạo bảng package_features để lưu trữ tính năng của từng gói
-    await pool.execute(`
-      CREATE TABLE IF NOT EXISTS package_features (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        package_id INT NOT NULL,
-        feature_name VARCHAR(255) NOT NULL,
-        enabled BOOLEAN DEFAULT TRUE,
-        FOREIGN KEY (package_id) REFERENCES package(id),
-        UNIQUE KEY unique_package_feature (package_id, feature_name)
-      )
-    `);
-    
-    console.log('✅ Packages tables created or already exist');
-    
-    // Kiểm tra xem đã có dữ liệu trong bảng package chưa
-    const [rows] = await pool.execute('SELECT COUNT(*) as count FROM package');
-    
-    // Nếu chưa có dữ liệu, thêm dữ liệu mặc định
-    if (rows[0].count === 0) {
-      await insertDefaultPackages();
+  }
+
+  // Helper method để xác định membershipType từ package ID
+  static getMembershipType(packageId) {
+    switch (packageId) {
+      case 1: return 'free';
+      case 2: return 'premium';
+      case 3: return 'pro';
+      default: return 'free';
     }
-  } catch (error) {
-    console.error('❌ Error creating packages tables:', error);
-    throw error;
   }
-};
 
-/**
- * Thêm các gói membership mặc định
- */
-const insertDefaultPackages = async () => {
-  try {
-    // Thêm 3 gói mặc định: free, premium, pro
-    await pool.execute(`
-      INSERT INTO package (name, description, price, period, popular, duration_months) VALUES
-      ('Free', 'Bắt đầu miễn phí', 0, 'tháng', FALSE, 1),
-      ('Premium', 'Hỗ trợ toàn diện', 99000, 'tháng', TRUE, 1),
-      ('Pro', 'Hỗ trợ toàn diện', 999000, 'năm', FALSE, 12)
-    `);
+  // Fallback packages nếu database fail
+  static getDefaultPackages() {
+    const packages = [
+      {
+        id: 1,
+        name: "Free",
+        price: 0,
+        period: "tháng",
+        membershipType: "free",
+        description: "Bắt đầu miễn phí",
+        features: ["Theo dõi cai thuốc", "Lập kế hoạch cá nhân"],
+        disabledFeatures: ["Huy hiệu & cộng đồng", "Chat huấn luyện viên", "Video call tư vấn"],
+        popular: false,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: 2,
+        name: "Premium",
+        price: 99000,
+        period: "tháng",
+        membershipType: "premium",
+        description: "Hỗ trợ toàn diện",
+        features: ["Theo dõi cai thuốc", "Lập kế hoạch cá nhân", "Huy hiệu & cộng đồng", "Chat huấn luyện viên", "Video call tư vấn"],
+        disabledFeatures: [],
+        popular: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: 3,
+        name: "Pro",
+        price: 999000,
+        period: "năm",
+        membershipType: "pro",
+        description: "Hỗ trợ toàn diện",
+        features: ["Theo dõi cai thuốc", "Lập kế hoạch cá nhân", "Huy hiệu & cộng đồng", "Chat huấn luyện viên", "Video call tư vấn"],
+        disabledFeatures: [],
+        popular: false,
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+    ];
     
-    // Lấy ID của các gói vừa thêm
-    const [freePackage] = await pool.execute('SELECT id FROM package WHERE name = ? LIMIT 1', ['Free']);
-    const [premiumPackage] = await pool.execute('SELECT id FROM package WHERE name = ? LIMIT 1', ['Premium']);
-    const [proPackage] = await pool.execute('SELECT id FROM package WHERE name = ? LIMIT 1', ['Pro']);
-    
-    const freeId = freePackage[0].id;
-    const premiumId = premiumPackage[0].id;
-    const proId = proPackage[0].id;
-    
-    // Thêm tính năng cho gói free
-    await pool.execute(`
-      INSERT INTO package_features (package_id, feature_name, enabled) VALUES
-      (?, 'Theo dõi cai thuốc', TRUE),
-      (?, 'Lập kế hoạch cá nhân', TRUE),
-      (?, 'Huy hiệu & cộng đồng', FALSE),
-      (?, 'Chat huấn luyện viên', FALSE),
-      (?, 'Video call tư vấn', FALSE)
-    `, [freeId, freeId, freeId, freeId, freeId]);
-    
-    // Thêm tính năng cho gói premium
-    await pool.execute(`
-      INSERT INTO package_features (package_id, feature_name, enabled) VALUES
-      (?, 'Theo dõi cai thuốc', TRUE),
-      (?, 'Lập kế hoạch cá nhân', TRUE),
-      (?, 'Huy hiệu & cộng đồng', TRUE),
-      (?, 'Chat huấn luyện viên', TRUE),
-      (?, 'Video call tư vấn', TRUE)
-    `, [premiumId, premiumId, premiumId, premiumId, premiumId]);
-    
-    // Thêm tính năng cho gói pro
-    await pool.execute(`
-      INSERT INTO package_features (package_id, feature_name, enabled) VALUES
-      (?, 'Theo dõi cai thuốc', TRUE),
-      (?, 'Lập kế hoạch cá nhân', TRUE),
-      (?, 'Huy hiệu & cộng đồng', TRUE),
-      (?, 'Chat huấn luyện viên', TRUE),
-      (?, 'Video call tư vấn', TRUE)
-    `, [proId, proId, proId, proId, proId]);
-    
-    console.log('✅ Default packages inserted successfully');
-  } catch (error) {
-    console.error('❌ Error inserting default packages:', error);
-    throw error;
+    return packages.map(pkg => new Package(pkg));
   }
-};
 
-/**
- * Lấy tất cả các gói
- */
-export const getAllPackages = async () => {
-  try {
-    // Sử dụng điều kiện phù hợp với cách lưu trữ boolean trong MySQL
-    const [packages] = await pool.execute(`
-      SELECT * FROM package WHERE active = 1 OR active IS NULL ORDER BY price ASC
-    `);
-    
-    console.log('Found packages:', packages.map(p => p.name));
-    
-    // Lấy tính năng cho từng gói
-    for (const pkg of packages) {
-      try {
+  // Lấy gói theo ID
+  static async getPackageById(id) {
+    try {
+      console.log(`📦 Fetching package with ID: ${id} from database`);
+      
+      // Lấy package từ database
+      const [packages] = await pool.execute(`
+        SELECT 
+          id, name, description, price, created_at
+        FROM packages 
+        WHERE id = ?
+      `, [id]);
+      
+      if (!packages || packages.length === 0) {
+        throw new Error(`Package with ID ${id} not found in database`);
+      }
+      
+      const pkg = packages[0];
+      
+      // Lấy features cho package này
+      const [features] = await pool.execute(`
+        SELECT feature_name, enabled 
+        FROM package_features 
+        WHERE package_id = ?
+        ORDER BY id ASC
+      `, [id]);
+      
+      const enabledFeatures = features.filter(f => f.enabled).map(f => f.feature_name);
+      const disabledFeatures = features.filter(f => !f.enabled).map(f => f.feature_name);
+      
+      const packageData = {
+        id: pkg.id,
+        name: pkg.name,
+        price: parseFloat(pkg.price),
+        period: pkg.id === 3 ? 'năm' : 'tháng', // Pro package = năm, others = tháng
+        membershipType: this.getMembershipType(pkg.id),
+        description: pkg.description,
+        features: enabledFeatures,
+        disabledFeatures: disabledFeatures,
+        popular: pkg.id === 2, // Premium is popular
+        created_at: pkg.created_at,
+        updated_at: pkg.created_at // Fallback
+      };
+      
+      console.log(`✅ Found package: ${packageData.name} with ${enabledFeatures.length} features`);
+      return new Package(packageData);
+      
+    } catch (error) {
+      console.error(`❌ Error fetching package ${id} from database:`, error);
+      throw error;
+    }
+  }
+
+  // Lấy features của gói
+  static async getPackageFeatures(packageId = null) {
+    try {
+      console.log(`📦 Fetching features for package: ${packageId || 'all'} from database`);
+      
+      if (packageId) {
+        // Lấy features cho một package cụ thể
         const [features] = await pool.execute(`
-          SELECT feature_name, enabled FROM package_features WHERE package_id = ? ORDER BY id ASC
-        `, [pkg.id]);
+          SELECT feature_name, enabled 
+          FROM package_features 
+          WHERE package_id = ?
+          ORDER BY id ASC
+        `, [packageId]);
         
-        console.log(`Package ${pkg.name} (ID: ${pkg.id}) - Raw features:`, features);
+        const enabledFeatures = features.filter(f => f.enabled).map(f => f.feature_name);
+        const disabledFeatures = features.filter(f => !f.enabled).map(f => f.feature_name);
         
-        // Chuyển đổi Boolean để đảm bảo hoạt động đúng
-        pkg.features = features.filter(f => f.enabled == 1).map(f => f.feature_name);
-        pkg.disabledFeatures = features.filter(f => f.enabled == 0).map(f => f.feature_name);
+        console.log(`✅ Found ${enabledFeatures.length} enabled and ${disabledFeatures.length} disabled features for package ${packageId}`);
         
-        console.log(`Package ${pkg.name} - Features:`, pkg.features);
-        console.log(`Package ${pkg.name} - Disabled features:`, pkg.disabledFeatures);
-      } catch (featureError) {
-        console.error(`Error getting features for package ${pkg.id}:`, featureError);
-        pkg.features = [];
-        pkg.disabledFeatures = [];
+        return {
+          features: enabledFeatures,
+          disabledFeatures: disabledFeatures
+        };
+      } else {
+        // Lấy features cho tất cả packages
+        const [allFeatures] = await pool.execute(`
+          SELECT package_id, feature_name, enabled 
+          FROM package_features 
+          ORDER BY package_id ASC, id ASC
+        `);
+        
+        const featuresMap = {};
+        
+        allFeatures.forEach(feature => {
+          if (!featuresMap[feature.package_id]) {
+            featuresMap[feature.package_id] = {
+              features: [],
+              disabledFeatures: []
+            };
+          }
+          
+          if (feature.enabled) {
+            featuresMap[feature.package_id].features.push(feature.feature_name);
+          } else {
+            featuresMap[feature.package_id].disabledFeatures.push(feature.feature_name);
+          }
+        });
+        
+        console.log(`✅ Retrieved features for ${Object.keys(featuresMap).length} packages from database`);
+        return featuresMap;
       }
+      
+    } catch (error) {
+      console.error(`❌ Error fetching features from database:`, error);
+      throw error;
+    }
+  }
+
+  // Validate package data
+  static validatePackageData(data) {
+    const required = ['name', 'price', 'membershipType'];
+    const missing = required.filter(field => !(field in data));
+    
+    if (missing.length > 0) {
+      throw new Error(`Missing required fields: ${missing.join(', ')}`);
     }
     
-    return packages;
-  } catch (error) {
-    console.error('❌ Error getting all packages:', error);
-    throw new Error('Failed to retrieve packages: ' + error.message);
-  }
-};
-
-/**
- * Lấy chi tiết một gói cụ thể theo ID
- */
-export const getPackageById = async (packageId) => {
-  try {
-    const [packages] = await pool.execute(`
-      SELECT * FROM package WHERE id = ? AND (active = 1 OR active IS NULL)
-    `, [packageId]);
-    
-    if (packages.length === 0) {
-      return null;
+    if (typeof data.price !== 'number' || data.price < 0) {
+      throw new Error('Price must be a non-negative number');
     }
     
-    const package_data = packages[0];
+    if (!['free', 'premium', 'pro'].includes(data.membershipType)) {
+      throw new Error('Invalid membership type');
+    }
     
-    // Lấy tính năng cho gói
-    const [features] = await pool.execute(`
-      SELECT feature_name, enabled FROM package_features WHERE package_id = ? ORDER BY id ASC
-    `, [packageId]);
-    
-    // Chuyển đổi Boolean để đảm bảo hoạt động đúng
-    package_data.features = features.filter(f => f.enabled == 1).map(f => f.feature_name);
-    package_data.disabledFeatures = features.filter(f => f.enabled == 0).map(f => f.feature_name);
-    
-    return package_data;
-  } catch (error) {
-    console.error(`❌ Error getting package ${packageId}:`, error);
-    throw new Error(`Failed to retrieve package ${packageId}: ${error.message}`);
+    return true;
   }
-};
 
-export default {
-  ensurePackageTable,
-  getAllPackages,
-  getPackageById
-};
+  // Kiểm tra và đồng bộ dữ liệu mặc định vào database
+  static async ensureDefaultPackages() {
+    try {
+      console.log('🔄 Checking if packages exist in database...');
+      
+      const [existingPackages] = await pool.execute(
+        'SELECT COUNT(*) as count FROM packages'
+      );
+      
+      if (existingPackages[0].count === 0) {
+        console.log('📦 No packages found, inserting default packages...');
+        const defaultPackages = this.getDefaultPackages();
+        
+        for (const pkg of defaultPackages) {
+          // Insert package
+          const [packageResult] = await pool.execute(`
+            INSERT INTO packages (id, name, price, membership_type, description) 
+            VALUES (?, ?, ?, ?, ?)
+          `, [pkg.id, pkg.name, pkg.price, pkg.membershipType, pkg.description]);
+          
+          // Insert features
+          if (pkg.features && pkg.features.length > 0) {
+            for (const feature of pkg.features) {
+              await pool.execute(`
+                INSERT INTO package_features (package_id, feature_name, enabled) 
+                VALUES (?, ?, ?)
+              `, [pkg.id, feature, true]);
+            }
+          }
+          
+          // Insert disabled features
+          if (pkg.disabledFeatures && pkg.disabledFeatures.length > 0) {
+            for (const feature of pkg.disabledFeatures) {
+              await pool.execute(`
+                INSERT INTO package_features (package_id, feature_name, enabled) 
+                VALUES (?, ?, ?)
+              `, [pkg.id, feature, false]);
+            }
+          }
+          
+          console.log(`✅ Inserted package: ${pkg.name} with ${pkg.features?.length || 0} features`);
+        }
+        
+        console.log('🎉 Default packages successfully inserted into database');
+        return true;
+      } else {
+        console.log(`📦 Found ${existingPackages[0].count} packages in database`);
+        return false;
+      }
+      
+    } catch (error) {
+      console.error('❌ Error ensuring default packages:', error);
+      return false;
+    }
+  }
+}
+
+export default Package;
