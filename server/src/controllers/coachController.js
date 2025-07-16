@@ -1,4 +1,4 @@
-import Coach from '../models/Coach-updated.js';
+import Coach from '../models/Coach.js';
 import { sendResponse } from '../utils/response.js';
 
 export const getAllCoaches = async (req, res) => {
